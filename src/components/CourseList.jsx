@@ -235,12 +235,12 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
     return (
         <div style={{ flex: 1 }}>
             {/* Top Controls */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: '400' }}>
                     Courses <span style={{ fontSize: '16px', color: '#666', marginLeft: '8px' }}>({filteredCourses.length})</span>
                 </h2>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <div className="input-group" style={{ width: '300px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="input-group" style={{ width: '250px', maxWidth: '100%' }}>
                         <input
                             type="text"
                             placeholder="Search"
@@ -249,7 +249,7 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                         />
                         <button><Search size={18} /></button>
                     </div>
-                    <button className="btn btn-success" onClick={() => navigate('/courses/create')}>
+                    <button className="btn btn-success" onClick={() => navigate('/courses/create')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
                         <Plus size={18} /> Create course
                     </button>
                 </div>
@@ -304,7 +304,7 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                                                         <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '4px' }}>{course.title}</h3>
                                                         {course.subtitle && <p style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '4px' }}>{course.subtitle}</p>}
 
-                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--primary-color)', marginTop: '8px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px', fontSize: '13px', color: 'var(--primary-color)', marginTop: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                                                             <span
                                                                 style={{ cursor: 'pointer', textDecoration: 'underline' }}
                                                                 onClick={() => navigate(`/courses/${course.id}/chapters`)}

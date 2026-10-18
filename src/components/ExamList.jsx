@@ -89,12 +89,12 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
     return (
         <div style={{ flex: 1 }}>
             {/* Top Controls */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: '400' }}>
                     {activeTab === 'running' ? 'Running Tests' : activeTab === 'upcoming' ? 'Upcoming Tests' : 'Completed Tests'}
                 </h2>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    <div className="input-group" style={{ width: '300px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="input-group" style={{ width: '250px', maxWidth: '100%' }}>
                         <input
                             type="text"
                             placeholder="Search"

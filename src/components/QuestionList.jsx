@@ -133,7 +133,7 @@ const QuestionList = () => {
     return (
         <div style={{ flex: 1, padding: '0', marginTop: '20px' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <h1 style={{ fontSize: '32px', fontWeight: '400', margin: 0, color: '#1a1a1a' }}>
                         Questions
@@ -149,7 +149,7 @@ const QuestionList = () => {
                         {totalCount} Total
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
                         <input

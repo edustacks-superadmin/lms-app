@@ -48,20 +48,23 @@ const Header = () => {
     const getLinkStyle = ({ isActive }) => ({
         display: 'flex',
         alignItems: 'center',
-        gap: '6px',
+        gap: '4px',
         color: isActive ? 'var(--white)' : 'var(--text-light)',
         fontWeight: isActive ? '500' : '400',
         background: isActive ? 'var(--primary-color)' : 'transparent',
-        padding: '8px 12px',
-        borderRadius: '4px'
+        padding: '6px 10px',
+        borderRadius: '4px',
+        fontSize: '13px',
+        whiteSpace: 'nowrap',
+        flexShrink: 0
     });
 
     return (
         <header className="app-header">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%', width: '100%', padding: '0 40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%', width: '100%', padding: '0 24px', boxSizing: 'border-box', minWidth: 0 }}>
 
                 {/* Logo Area */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
                         {institute?.logo_url ? (
                             <img src={institute.logo_url} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
@@ -82,18 +85,18 @@ const Header = () => {
                 </div>
 
                 {/* Navigation */}
-                <nav style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                <nav style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 1, minWidth: 0 }}>
                     <NavLink to="/courses" style={getLinkStyle}>
-                        <FileText size={18} /> Courses
+                        <FileText size={16} /> Courses
                     </NavLink>
                     <NavLink to="/exams" style={getLinkStyle}>
-                        <PenTool size={18} /> Exams
+                        <PenTool size={16} /> Exams
                     </NavLink>
                     <NavLink to="/questions" style={getLinkStyle}>
-                        <FileText size={18} /> Questions
+                        <FileText size={16} /> Questions
                     </NavLink>
                     <NavLink to="/store" style={getLinkStyle}>
-                        <ShoppingCart size={18} /> Store
+                        <ShoppingCart size={16} /> Store
                     </NavLink>
                     <div
                         style={{ position: 'relative' }}
@@ -165,9 +168,9 @@ const Header = () => {
                 </nav>
 
                 {/* User Actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#e0e0e0' }}></div>
-                    <Search size={20} color="var(--primary-color)" />
+                    <Search size={18} color="var(--primary-color)" style={{ cursor: 'pointer' }} />
 
                     {/* Profile Dropdown Container */}
                     <div
@@ -175,7 +178,7 @@ const Header = () => {
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#333' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#333', flexShrink: 0 }}>
                                 {currentUser?.photo ? (
                                     <img src={currentUser.photo} alt={currentUser.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
@@ -184,7 +187,17 @@ const Header = () => {
                                     </div>
                                 )}
                             </div>
-                            <span style={{ fontWeight: '500', fontSize: '14px', color: 'var(--primary-color)' }}>{currentUser?.name || 'User'}</span>
+                            <span style={{
+                                fontWeight: '500',
+                                fontSize: '14px',
+                                color: 'var(--primary-color)',
+                                maxWidth: '120px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {currentUser?.name || 'User'}
+                            </span>
                             <span style={{ fontSize: '10px' }}>▼</span>
                         </div>
 
