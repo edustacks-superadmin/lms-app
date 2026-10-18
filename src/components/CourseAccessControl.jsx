@@ -48,13 +48,16 @@ const CourseAccessControl = () => {
                         data = {
                             ...dbCourse,
                             tags: dbCourse.course_tags?.map(ct => ct.tag_id) || [],
-                            accessControl: dbCourse.access_control,
-                            allowedBatches: dbCourse.batch_courses?.map(bc => bc.batch_id) || [],
-                            allowedProducts: dbCourse.allowed_products,
-                            allowedNetwork: dbCourse.allowed_network,
-                            allowedDevices: dbCourse.allowed_devices,
-                            videoWatchCount: dbCourse.video_watch_count,
-                            videoWatchTimeLimit: dbCourse.video_watch_time_limit
+                            accessControl: dbCourse.is_public ? 'Public' : 'Private',
+                            allowedBatches: dbCourse.batch_courses?.map(bc => bc.batch_id) || dbCourse.allowed_batches || [],
+                            allowedProducts: dbCourse.allowed_products || [],
+                            allowedDevices: dbCourse.platform_availability || {
+                                web: dbCourse.allowed_platforms?.includes('web') || false,
+                                mobile: dbCourse.allowed_platforms?.includes('mobile') || true,
+                                desktop: dbCourse.allowed_platforms?.includes('desktop') || false
+                            },
+                            videoWatchCount: dbCourse.max_video_views || '',
+                            videoWatchTimeLimit: dbCourse.watch_time_multiplier ? `${dbCourse.watch_time_multiplier}x` : 'Unlimited'
                         };
                     }
                 } catch (e) {

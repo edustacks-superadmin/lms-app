@@ -29,13 +29,16 @@ export const CourseProvider = ({ children }) => {
             const mappedData = (data || []).map(course => ({
                 ...course,
                 tags: course.course_tags?.map(ct => ct.tag_id) || [],
-                accessControl: course.access_control,
-                allowedBatches: course.batch_courses?.map(bc => bc.batch_id) || [],
-                allowedProducts: course.allowed_products,
-                allowedNetwork: course.allowed_network,
-                allowedDevices: course.allowed_devices,
-                videoWatchCount: course.video_watch_count,
-                videoWatchTimeLimit: course.video_watch_time_limit
+                accessControl: course.is_public ? 'Public' : 'Private',
+                allowedBatches: course.batch_courses?.map(bc => bc.batch_id) || course.allowed_batches || [],
+                allowedProducts: course.allowed_products || [],
+                allowedDevices: course.platform_availability || {
+                    web: course.allowed_platforms?.includes('web') || false,
+                    mobile: course.allowed_platforms?.includes('mobile') || true,
+                    desktop: course.allowed_platforms?.includes('desktop') || false
+                },
+                videoWatchCount: course.max_video_views || '',
+                videoWatchTimeLimit: course.watch_time_multiplier ? `${course.watch_time_multiplier}x` : 'Unlimited'
             }));
 
             setCourses(mappedData);
@@ -122,29 +125,58 @@ export const CourseProvider = ({ children }) => {
                 imageUrl = uploadResult.url;
             }
 
-            // Map frontend camelCase to backend snake_case
-            const dbData = {
-                ...updatedData,
-                image: imageUrl,
-                access_control: updatedData.accessControl,
-                allowed_batches: updatedData.allowedBatches,
-                allowed_products: updatedData.allowedProducts,
-                allowed_network: updatedData.allowedNetwork,
-                allowed_devices: updatedData.allowedDevices,
-                video_watch_count: updatedData.videoWatchCount,
-                video_watch_time_limit: updatedData.videoWatchTimeLimit
-            };
+            // Map frontend fields to backend schema
+            const dbData = { ...updatedData };
+            if (imageUrl) dbData.image = imageUrl;
 
-            // Remove camelCase keys and tags to avoid errors
+            // Handle access control (is_public boolean)
+            if (updatedData.accessControl !== undefined) {
+                dbData.is_public = updatedData.accessControl === 'Public';
+            }
+
+            // Handle allowed batches & products
+            if (updatedData.allowedBatches !== undefined) {
+                dbData.allowed_batches = updatedData.allowedBatches;
+            }
+            if (updatedData.allowedProducts !== undefined) {
+                dbData.allowed_products = updatedData.allowedProducts;
+            }
+
+            // Handle devices / platforms
+            if (updatedData.allowedDevices !== undefined) {
+                dbData.platform_availability = updatedData.allowedDevices;
+                const platforms = [];
+                if (updatedData.allowedDevices.web) platforms.push('web');
+                if (updatedData.allowedDevices.mobile) platforms.push('mobile');
+                if (updatedData.allowedDevices.desktop) platforms.push('desktop');
+                dbData.allowed_platforms = platforms;
+            }
+
+            // Handle video views and watch time
+            if (updatedData.videoWatchCount !== undefined) {
+                dbData.max_video_views = updatedData.videoWatchCount === '' ? null : parseInt(updatedData.videoWatchCount);
+            }
+            if (updatedData.videoWatchTimeLimit !== undefined) {
+                const multiplier = parseFloat(updatedData.videoWatchTimeLimit);
+                dbData.watch_time_multiplier = isNaN(multiplier) ? null : multiplier;
+            }
+
+            // Remove non-existent or unneeded columns
             delete dbData.accessControl;
+            delete dbData.access_control;
             delete dbData.allowedBatches;
             delete dbData.allowedProducts;
             delete dbData.allowedNetwork;
+            delete dbData.allowed_network;
             delete dbData.allowedDevices;
+            delete dbData.allowed_devices;
             delete dbData.videoWatchCount;
+            delete dbData.video_watch_count;
             delete dbData.videoWatchTimeLimit;
+            delete dbData.video_watch_time_limit;
             delete dbData.tags;
             delete dbData.course_tags;
+            delete dbData.batch_courses;
 
             const { error } = await supabase
                 .from('courses')
