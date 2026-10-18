@@ -46,22 +46,23 @@ export const ExamProvider = ({ children }) => {
 
     const getExamById = async (id) => {
         try {
-            const { data, error } = await supabase
+            // First fetch the exam record
+            const { data: examData, error: examError } = await supabase
                 .from('exams')
-                .select(`
-                    *,
-                    exam_questions (
-                        question_id,
-                        marks,
-                        order,
-                        questions (*)
-                    )
-                `)
+                .select('*')
                 .eq('id', id)
                 .single();
 
-            if (error) throw error;
-            return data;
+            if (examError) throw examError;
+            if (!examData) return null;
+
+            // Then fetch the associated questions
+            const questions = await fetchExamQuestions(id);
+
+            return {
+                ...examData,
+                exam_questions: questions || []
+            };
         } catch (error) {
             console.error('Error fetching exam:', error.message);
             return null;
@@ -212,6 +213,7 @@ export const ExamProvider = ({ children }) => {
 
     const fetchExamQuestions = async (examId) => {
         try {
+            // First attempt nested join
             const { data, error } = await supabase
                 .from('exam_questions')
                 .select(`
@@ -225,8 +227,36 @@ export const ExamProvider = ({ children }) => {
                 .eq('exam_id', examId)
                 .order('order', { ascending: true });
 
-            if (error) throw error;
-            return data;
+            if (!error && data) return data;
+
+            // Fallback: fetch separately if schema relationship cache is missing
+            const { data: eqList, error: eqError } = await supabase
+                .from('exam_questions')
+                .select('*')
+                .eq('exam_id', examId)
+                .order('order', { ascending: true });
+
+            if (eqError || !eqList || eqList.length === 0) return [];
+
+            const questionIds = eqList.map(eq => eq.question_id).filter(Boolean);
+            if (questionIds.length === 0) return eqList;
+
+            const { data: questionsData, error: qError } = await supabase
+                .from('questions')
+                .select(`
+                    *,
+                    options:question_options(*),
+                    tags:question_tags(*)
+                `)
+                .in('id', questionIds);
+
+            if (qError) throw qError;
+
+            const questionsMap = new Map((questionsData || []).map(q => [q.id, q]));
+            return eqList.map(eq => ({
+                ...eq,
+                questions: questionsMap.get(eq.question_id) || null
+            }));
         } catch (error) {
             console.error('Error fetching exam questions:', error.message);
             return [];
@@ -440,6 +470,7 @@ export const ExamProvider = ({ children }) => {
 
     const fetchExamQuestionsWithSections = async (examId) => {
         try {
+            // First attempt nested join
             const { data, error } = await supabase
                 .from('exam_questions')
                 .select(`
@@ -467,8 +498,47 @@ export const ExamProvider = ({ children }) => {
                 .eq('exam_id', examId)
                 .order('order', { ascending: true });
 
-            if (error) throw error;
-            return data || [];
+            if (!error && data) return data || [];
+
+            // Fallback: manual join if relationship cache is missing
+            const { data: eqList, error: eqError } = await supabase
+                .from('exam_questions')
+                .select('*')
+                .eq('exam_id', examId)
+                .order('order', { ascending: true });
+
+            if (eqError || !eqList || eqList.length === 0) return [];
+
+            const questionIds = eqList.map(eq => eq.question_id).filter(Boolean);
+            const { data: questionsData } = await supabase
+                .from('questions')
+                .select(`
+                    id,
+                    question_text,
+                    options:question_options (
+                        id,
+                        option_label,
+                        option_text,
+                        is_correct
+                    )
+                `)
+                .in('id', questionIds);
+
+            const questionsMap = new Map((questionsData || []).map(q => [q.id, q]));
+
+            // Fetch sections if any
+            const { data: sectionsData } = await supabase
+                .from('exam_sections')
+                .select('*')
+                .eq('exam_id', examId);
+
+            const sectionsMap = new Map((sectionsData || []).map(s => [s.id, s]));
+
+            return eqList.map(eq => ({
+                ...eq,
+                questions: questionsMap.get(eq.question_id) || null,
+                exam_sections: eq.section_id ? sectionsMap.get(eq.section_id) || null : null
+            }));
         } catch (error) {
             console.error('Error fetching exam questions with sections:', error.message);
             return [];
