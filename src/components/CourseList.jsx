@@ -94,12 +94,7 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                     description: courseToClone.description,
                     allowed_batches: [],
                     allowed_products: [],
-                    allowed_devices: courseToClone.allowed_devices,
-                    video_watch_count: courseToClone.video_watch_count,
-                    image: courseToClone.image,
-                    video_watch_time_limit: courseToClone.video_watch_time_limit,
-                    access_control: courseToClone.access_control,
-                    allowed_network: courseToClone.allowed_network,
+                    is_public: courseToClone.is_public ?? false,
                     category: courseToClone.category,
                     level: courseToClone.level,
                     duration: courseToClone.duration

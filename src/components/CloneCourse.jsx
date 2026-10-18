@@ -37,12 +37,7 @@ const CloneCourse = () => {
                     description: course.description,
                     allowed_batches: [], // Clear batches
                     allowed_products: [], // Clear products
-                    allowed_devices: course.allowed_devices,
-                    video_watch_count: course.video_watch_count,
-                    image: course.image,
-                    video_watch_time_limit: course.video_watch_time_limit,
-                    access_control: course.access_control,
-                    allowed_network: course.allowed_network,
+                    is_public: course.is_public ?? false,
                     category: course.category,
                     level: course.level,
                     duration: course.duration,

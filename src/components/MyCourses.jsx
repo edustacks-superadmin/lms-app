@@ -163,7 +163,7 @@ const MyCourses = () => {
                 const { data: privateCourses, error: privateError } = await supabase
                     .from('courses')
                     .select('*')
-                    .eq('access_control', 'Private');
+                    .eq('is_public', false);
 
                 if (privateError) {
                     console.error('Error fetching private courses:', privateError);
@@ -198,11 +198,11 @@ const MyCourses = () => {
                 console.log('Student has no batches assigned');
             }
 
-            // 3. Fetch public courses
+            // 3. Fetch public courses (is_public: true)
             const { data: publicCourseData, error: publicError } = await supabase
                 .from('courses')
                 .select('*')
-                .eq('access_control', 'Public');
+                .eq('is_public', true);
 
             if (publicError) {
                 console.error('Error fetching public courses:', publicError);
