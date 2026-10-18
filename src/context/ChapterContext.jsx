@@ -5,6 +5,17 @@ const ChapterContext = createContext();
 
 export const useChapters = () => useContext(ChapterContext);
 
+const normalizeChapter = (ch) => {
+    if (!ch) return ch;
+    return {
+        ...ch,
+        title: ch.name || ch.title || '',
+        name: ch.name || ch.title || '',
+        image: ch.icon || ch.image || null,
+        icon: ch.icon || ch.image || null,
+    };
+};
+
 export const ChapterProvider = ({ children }) => {
     const [chapters, setChapters] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -69,10 +80,10 @@ export const ChapterProvider = ({ children }) => {
                     return content;
                 }));
 
-                return {
+                return normalizeChapter({
                     ...chapter,
                     chapter_contents: contentsWithMarks.sort((a, b) => a.order - b.order)
-                };
+                });
             }));
 
             setChapters(chaptersWithCalculatedMarks || []);
@@ -100,9 +111,8 @@ export const ChapterProvider = ({ children }) => {
 
             const newChapter = {
                 course_id: courseId,
-                title: chapterData.title,
-                description: chapterData.description,
-                image: chapterData.image,
+                name: chapterData.name || chapterData.title || '',
+                icon: chapterData.icon || chapterData.image || null,
                 order: nextOrder,
                 parent_id: chapterData.parent_id || null
             };
@@ -115,7 +125,7 @@ export const ChapterProvider = ({ children }) => {
             if (error) throw error;
 
             // Initialize with empty contents
-            const chapterWithContents = { ...data[0], chapter_contents: [] };
+            const chapterWithContents = normalizeChapter({ ...data[0], chapter_contents: [] });
 
             setChapters(prev => [...prev, chapterWithContents]);
             return { success: true, data: chapterWithContents };
@@ -127,16 +137,28 @@ export const ChapterProvider = ({ children }) => {
 
     const updateChapter = async (id, updates) => {
         try {
+            const dbUpdates = { ...updates };
+            if (dbUpdates.title !== undefined) {
+                dbUpdates.name = dbUpdates.title;
+                delete dbUpdates.title;
+            }
+            if (dbUpdates.image !== undefined) {
+                dbUpdates.icon = dbUpdates.image;
+                delete dbUpdates.image;
+            }
+            delete dbUpdates.description;
+
             const { data, error } = await supabase
                 .from('chapters')
-                .update(updates)
+                .update(dbUpdates)
                 .eq('id', id)
                 .select();
 
             if (error) throw error;
 
-            setChapters(prev => prev.map(ch => ch.id === id ? { ...ch, ...data[0] } : ch));
-            return { success: true, data: data[0] };
+            const updatedChapter = normalizeChapter(data[0]);
+            setChapters(prev => prev.map(ch => ch.id === id ? { ...ch, ...updatedChapter } : ch));
+            return { success: true, data: updatedChapter };
         } catch (err) {
             console.error('Error updating chapter:', err);
             return { success: false, error: err.message };

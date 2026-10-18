@@ -10,6 +10,7 @@ import { supabase } from '../supabaseClient';
 const ChapterIcon = ({ chapter, index, isActive, size = 32 }) => {
     const [imgError, setImgError] = useState(false);
 
+    const imgSrc = chapter.image || chapter.icon;
     return (
         <div style={{
             width: `${size}px`,
@@ -25,10 +26,10 @@ const ChapterIcon = ({ chapter, index, isActive, size = 32 }) => {
             overflow: 'hidden',
             flexShrink: 0
         }}>
-            {chapter.image && !imgError ? (
+            {imgSrc && !imgError ? (
                 <img
-                    src={chapter.image}
-                    alt={chapter.title}
+                    src={imgSrc}
+                    alt={chapter.title || chapter.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={() => setImgError(true)}
                 />
@@ -342,8 +343,11 @@ const CoursePlayer = () => {
                                     <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} />
                                 </button>
                                 <div>
-                                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: 0 }}>{activeChapter.title}</h2>
-                                    <p style={{ color: '#6b7280', margin: 0 }}>{visibleChapters.length} Sub-chapters • {visibleContents.length} Content</p>
+                                    <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: 0 }}>{activeChapter.title || activeChapter.name}</h2>
+                                    <p style={{ color: '#6b7280', margin: 0 }}>
+                                        {visibleChapters.length > 0 && `${visibleChapters.length} ${visibleChapters.length === 1 ? 'Sub-chapter' : 'Sub-chapters'} • `}
+                                        {visibleContents.length} {visibleContents.length === 1 ? 'Content' : 'Contents'}
+                                    </p>
                                 </div>
                             </div>
                         ) : (
@@ -357,7 +361,20 @@ const CoursePlayer = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', backgroundColor: 'white' }}>
                         {/* Render Sub-chapters */}
                         {visibleChapters.map((chapter, index) => {
-                            const hasChildren = chapters.some(child => child.parent_id === chapter.id);
+                            const subChaptersCount = chapters.filter(c => c.parent_id === chapter.id).length;
+                            const contentsCount = chapter.chapter_contents ? chapter.chapter_contents.length : 0;
+                            const chapterTitle = chapter.title || chapter.name || `Chapter ${index + 1}`;
+                            const chapterImg = chapter.image || chapter.icon;
+
+                            let subtitle = 'Empty folder';
+                            if (subChaptersCount > 0 && contentsCount > 0) {
+                                subtitle = `${subChaptersCount} ${subChaptersCount === 1 ? 'Sub-chapter' : 'Sub-chapters'} • ${contentsCount} ${contentsCount === 1 ? 'Item' : 'Items'}`;
+                            } else if (subChaptersCount > 0) {
+                                subtitle = `${subChaptersCount} ${subChaptersCount === 1 ? 'Sub-chapter' : 'Sub-chapters'}`;
+                            } else if (contentsCount > 0) {
+                                subtitle = `${contentsCount} ${contentsCount === 1 ? 'Item' : 'Items'}`;
+                            }
+
                             return (
                                 <div
                                     key={chapter.id}
@@ -382,18 +399,19 @@ const CoursePlayer = () => {
                                         <div style={{
                                             width: '48px', height: '48px', borderRadius: '50%',
                                             backgroundColor: '#e0f2fe', color: '#0284c7',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            overflow: 'hidden', flexShrink: 0
                                         }}>
-                                            {chapter.image ? (
-                                                <img src={chapter.image} alt={chapter.title} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                            {chapterImg ? (
+                                                <img src={chapterImg} alt={chapterTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             ) : (
                                                 <Folder size={24} />
                                             )}
                                         </div>
                                         <div>
-                                            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>{chapter.title}</h3>
+                                            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', margin: '0 0 4px 0' }}>{chapterTitle}</h3>
                                             <span style={{ fontSize: '14px', color: '#6b7280' }}>
-                                                {chapters.filter(c => c.parent_id === chapter.id).length} Sub-chapters
+                                                {subtitle}
                                             </span>
                                         </div>
                                     </div>
