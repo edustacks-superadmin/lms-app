@@ -1,0 +1,24 @@
+[
+  {
+    "id": 4,
+    "name": "LAKSHMAN RAJ G",
+    "role": "Assistant Engineer (WRD)",
+    "message": "Mahesh IES Academy stands out for its disciplined teaching methodology and exam-focused content. The mobile app is well designed, easy to use, and packed with relevant MCQs, detailed explanations, and systematic revision materials. The guidance provided is practical and aligned with actual exam standards, which builds confidence in preparation. This academy is an excellent choice for aspirants who are serious about achieving results rather than just enrolling in a course.",
+    "image_url": "https://pub-7ebc64389e3648b195eaa7d615ca4216.r2.devNEXT_PUBLIC_SUPABASE_URL=\"https://xalbtjoykovnlbjeddtv.supabase.co\"/testimonials/1767816522332_0htzjsxom7xo.jpeg",
+    "rating": 5,
+    "status": "Active",
+    "created_at": "2026-01-07T20:07:31.110Z",
+    "institute_id": "10"
+  },
+  {
+    "id": 3,
+    "name": "Aathavan",
+    "role": "Assistant Engineer (TNPCB - Tamil Nadu Pollution Control Board)",
+    "message": "Mahesh IES Academy has completely transformed my preparation journey. The app delivers high-quality content with a structured and exam-oriented approach. The MCQs, explanations, and regular updates make learning effective and engaging. What truly sets it apart is the clarity of teaching and the consistent support provided to students. Compared to many other platforms, this academy genuinely offers value for money. I strongly recommend Mahesh IES Academy to any serious aspirant aiming for technical competitive exams.",
+    "image_url": "https://pub-7ebc64389e3648b195eaa7d615ca4216.r2.dev/testimonials/1767813840175_6at61ohixyu.jpeg",
+    "rating": 5,
+    "status": "Active",
+    "created_at": "2026-01-07T19:16:22.578Z",
+    "institute_id": "10"
+  }
+]

@@ -1,0 +1,118 @@
+{
+  "count": 2000,
+  "next": "https://thapovaninstitute.testpress.in/api/v2.5/admin/question_sets/2491/questions/?page=2&page_size=5",
+  "previous": null,
+  "per_page": 5,
+  "results": [
+    {
+      "question_html": "<p class=\"MsoNormal\"> Which colour is predominantly used on a Mandatory\nSafety Sign according to standard industrial practice?</p>",
+      "answers": [
+        {
+          "text_html": "<p class=\"MsoNormal\"> Red with white pictogram</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Blue with white pictogram</p>",
+          "is_correct": true
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Yellow with black border</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Green with white text</p>",
+          "is_correct": false
+        }
+      ],
+      "explanation_html": "<p class=\"MsoNormal\"> Mandatory action signs, which dictate a specific\nbehaviour (e.g., 'Wear Hand Protection'), are signified by a blue circle with a\nwhite pictogram.</p>"
+    },
+    {
+      "question_html": "<p class=\"MsoNormal\"> What is the primary action to be taken immediately upon\nrescuing an unconscious victim from an electrical shock, assuming they are now\nsafe from the source?</p>",
+      "answers": [
+        {
+          "text_html": "<p class=\"MsoNormal\"> Give the victim water or a stimulating beverage.</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Cover the victim with a blanket and keep them warm.</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Begin Cardiopulmonary Resuscitation (CPR) if breathing\nhas stopped.</p>",
+          "is_correct": true
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Treat any burns by applying an antiseptic cream.</p>",
+          "is_correct": false
+        }
+      ],
+      "explanation_html": "<p class=\"MsoNormal\"> After ensuring the victim is safe, the immediate\npriority is to check for breathing and pulse. CPR must be commenced instantly\nif breathing or heart activity is absent.</p>"
+    },
+    {
+      "question_html": "<p class=\"MsoNormal\"> A fire involving flammable gases such as Propane,\nButane, or Methane is classified as which type of fire?</p>",
+      "answers": [
+        {
+          "text_html": "<p class=\"MsoNormal\"> Class C fire</p>",
+          "is_correct": true
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Class B fire</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Class A fire</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Class D fire</p>",
+          "is_correct": false
+        }
+      ],
+      "explanation_html": "<p class=\"MsoNormal\"> Fires involving flammable gases are designated as Class\nC (European/Australian systems) or Class B (US/NFPA, often listed as Class C\nfor electrical fires being the safe choice), requiring a suppressant that\ndisplaces oxygen.</p>"
+    },
+    {
+      "question_html": "<p class=\"MsoNormal\"> What is the primary function of a Miniature Circuit\nBreaker (<span class=\"math-tex\">\\(\\text{MCB}\\)</span>) in electrical hazard prevention?</p>",
+      "answers": [
+        {
+          "text_html": "<p class=\"MsoNormal\"> To prevent electric shock to personnel.</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> To regulate the incoming supply voltage.</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> To automatically disconnect the circuit during overload\nor short-circuit conditions.</p>",
+          "is_correct": true
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> To sense and interrupt an earth fault current.</p>",
+          "is_correct": false
+        }
+      ],
+      "explanation_html": "<p class=\"MsoNormal\"> The <span class=\"math-tex\">\\(\\text{MCB}\\)</span> provides both thermal protection\nagainst persistent overcurrent (overload) and magnetic protection against high\ncurrent surges (short circuits).</p>"
+    },
+    {
+      "question_html": "<p class=\"MsoNormal\"> Which of the following Personal Protective Equipment\n(PPE) is mandatory when working on overhead electrical lines in bright\nsunlight?</p>",
+      "answers": [
+        {
+          "text_html": "<p class=\"MsoNormal\"> Leather apron</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Safety harness</p>",
+          "is_correct": false
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Safety glasses with UV protection</p>",
+          "is_correct": true
+        },
+        {
+          "text_html": "<p class=\"MsoNormal\"> Ear plugs</p>",
+          "is_correct": false
+        }
+      ],
+      "explanation_html": "<p class=\"MsoNormal\"> Safety glasses or goggles are crucial for protecting\neyes from dust, debris, and flash burns, and UV protection is essential when\nworking outdoors in sunlight.</p>"
+    }
+  ]
+}

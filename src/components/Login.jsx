@@ -1,0 +1,286 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useInstitute } from '../context/InstituteContext';
+import { useToast } from '../context/ToastContext';
+import { supabase } from '../supabaseClient';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+
+const Login = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { signIn } = useAuth();
+    const { institute } = useInstitute();
+    const { showToast } = useToast();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        const { data, error } = await signIn(email, password);
+
+        if (error) {
+            showToast(error.message || 'Invalid email or password', 'error');
+            setLoading(false);
+        } else {
+            // Check user role
+            try {
+                const { data: memberData, error: memberError } = await supabase
+                    .from('members')
+                    .select('role')
+                    .eq('email', email)
+                    .single();
+
+                if (memberError) throw memberError;
+
+                if (memberData?.role === 'student') {
+                    navigate('/student/dashboard');
+                } else {
+                    navigate('/courses');
+                }
+            } catch (err) {
+                console.error('Error fetching user role:', err);
+                // Fallback to default route if role check fails
+                navigate('/courses');
+            }
+        }
+    };
+
+    return (
+        <div style={{
+            minHeight: 'calc(100vh - var(--header-height))', // Adjust for header
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            padding: '20px'
+        }}>
+            <div style={{
+                backgroundColor: 'white',
+                padding: '40px',
+                borderRadius: '16px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.05), 0 5px 10px rgba(0,0,0,0.01)',
+                width: '100%',
+                maxWidth: '420px',
+                transition: 'transform 0.3s ease',
+            }}>
+                {/* Institute Branding */}
+                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                    {institute?.logo_url ? (
+                        <img
+                            src={institute.logo_url}
+                            alt="Logo"
+                            style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '16px' }}
+                        />
+                    ) : institute?.name ? (
+                        <div style={{
+                            width: '70px',
+                            height: '70px',
+                            margin: '0 auto 16px',
+                            background: 'linear-gradient(135deg, var(--primary-color) 0%, #2563eb 100%)',
+                            borderRadius: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '28px',
+                            color: 'white',
+                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
+                        }}>
+                            {institute.name.substring(0, 2).toUpperCase()}
+                        </div>
+                    ) : null}
+
+                    <h1 style={{
+                        fontSize: '26px',
+                        fontWeight: '800',
+                        marginBottom: '8px',
+                        color: '#1a1a1a',
+                        letterSpacing: '-0.5px'
+                    }}>
+                        Welcome Back
+                    </h1>
+
+                    <p style={{
+                        fontSize: '15px',
+                        color: '#6b7280',
+                        margin: '0',
+                        lineHeight: '1.5'
+                    }}>
+                        Sign in to continue to {institute?.name || 'your dashboard'}
+                    </p>
+                </div>
+
+                {/* Login Form */}
+                <form onSubmit={handleSubmit}>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{
+                            display: 'block',
+                            marginBottom: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: '#374151'
+                        }}>
+                            Email Address
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: '#9ca3af'
+                            }}>
+                                <Mail size={18} />
+                            </div>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                disabled={loading}
+                                placeholder="name@example.com"
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 12px 12px 40px',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    transition: 'all 0.2s',
+                                    backgroundColor: '#f9fafb'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = 'var(--primary-color)';
+                                    e.target.style.backgroundColor = 'white';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#e5e7eb';
+                                    e.target.style.backgroundColor = '#f9fafb';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <label style={{
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                color: '#374151'
+                            }}>
+                                Password
+                            </label>
+                            <a href="#" style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '500' }}>
+                                Forgot password?
+                            </a>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{
+                                position: 'absolute',
+                                left: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: '#9ca3af'
+                            }}>
+                                <Lock size={18} />
+                            </div>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                disabled={loading}
+                                placeholder="Enter your password"
+                                style={{
+                                    width: '100%',
+                                    padding: '12px 12px 12px 40px',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    outline: 'none',
+                                    transition: 'all 0.2s',
+                                    backgroundColor: '#f9fafb'
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = 'var(--primary-color)';
+                                    e.target.style.backgroundColor = 'white';
+                                    e.target.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = '#e5e7eb';
+                                    e.target.style.backgroundColor = '#f9fafb';
+                                    e.target.style.boxShadow = 'none';
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            backgroundColor: loading ? '#93c5fd' : 'var(--primary-color)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '15px',
+                            fontWeight: '600',
+                            cursor: loading ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)'
+                        }}
+                        onMouseEnter={(e) => !loading && (e.target.style.transform = 'translateY(-1px)')}
+                        onMouseLeave={(e) => !loading && (e.target.style.transform = 'translateY(0)')}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                                Signing in...
+                            </>
+                        ) : (
+                            <>
+                                Sign In <ArrowRight size={18} />
+                            </>
+                        )}
+                    </button>
+                    <style>{`
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                    `}</style>
+                </form>
+
+                <div style={{ marginTop: '24px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                        Don't have an account?{' '}
+                        <Link
+                            to="/student/signup"
+                            style={{
+                                color: 'var(--primary-color)',
+                                textDecoration: 'none',
+                                fontWeight: '600',
+                                transition: 'color 0.2s'
+                            }}
+                        >
+                            Create account
+                        </Link>
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Login;

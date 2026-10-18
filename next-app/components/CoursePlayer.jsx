@@ -1,0 +1,658 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useChapters } from '../context/ChapterContext';
+import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder } from 'lucide-react';
+import PDFViewer from './PDFViewer';
+
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
+import FeedbackModal from './FeedbackModal';
+
+const ChapterIcon = ({ chapter, index, isActive, size = 32 }) => {
+    const [imgError, setImgError] = useState(false);
+
+    return (
+        <div
+            className={`rounded-full flex items-center justify-center font-semibold overflow-hidden flex-shrink-0 ${isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                }`}
+            style={{ width: size, height: size, fontSize: size < 32 ? '12px' : '14px' }}
+        >
+            {chapter.image && !imgError ? (
+                <img
+                    src={chapter.image}
+                    alt={chapter.title}
+                    className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
+                />
+            ) : (
+                <span>{index + 1}</span>
+            )}
+        </div>
+    );
+};
+
+const ContentIcon = ({ content, isActive }) => {
+    const [imgError, setImgError] = useState(false);
+
+    const getIcon = () => {
+        if (content.type === 'video') return <PlayCircle size={16} />;
+        if (content.type === 'exam') return <FileQuestion size={16} />;
+        return <FileText size={16} />;
+    };
+
+    return (
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
+            }`}>
+            {content.image && !imgError ? (
+                <img
+                    src={content.image}
+                    alt={content.title}
+                    className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
+                />
+            ) : (
+                getIcon()
+            )}
+        </div>
+    );
+};
+
+const CoursePlayer = () => {
+    const { id } = useParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { user } = useAuth();
+    const { chapters, fetchChapters, loading } = useChapters();
+
+    // Helper to update search params
+    const updateSearchParams = (newParams) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        // If passed null/undefined, remove them? Or just set?
+        // Assuming object like { chapterId: '...' }
+        Object.entries(newParams).forEach(([key, value]) => {
+            if (value === null || value === undefined) {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+
+        router.push(`?${params.toString()}`);
+    };
+
+    // Derived state from URL params
+    const chapterId = searchParams.get('chapterId');
+    const contentId = searchParams.get('contentId');
+
+    const [activeChapter, setActiveChapter] = useState(null);
+    const [activeContent, setActiveContent] = useState(null);
+
+    const [memberId, setMemberId] = useState(null);
+    const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
+    const [contentProgress, setContentProgress] = useState({});
+    const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+    const [videoAccess, setVideoAccess] = useState(null);
+    const [videoBlocked, setVideoBlocked] = useState(false);
+    const [lastWatchUpdate, setLastWatchUpdate] = useState(0);
+
+    // Feedback State
+    const [feedbackForm, setFeedbackForm] = useState(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+    // Function to check for feedback triggers
+    const checkFeedback = async () => {
+        try {
+            if (!id) return;
+            const response = await fetch(`/api/courses/${id}/feedback/check`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.should_trigger && data.form) {
+                    setFeedbackForm(data.form);
+                    setShowFeedbackModal(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking feedback:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (user?.email) {
+            const fetchMemberId = async () => {
+                const { data } = await supabase.from('members').select('id').eq('email', user.email).single();
+                if (data) setMemberId(data.id);
+            };
+            fetchMemberId();
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchChapters(id);
+        if (id) checkFeedback(); // Check on mount/id change
+    }, [id, fetchChapters]);
+
+    // Sync state with URL params and loaded chapters
+    useEffect(() => {
+        if (chapters.length > 0) {
+            if (contentId) {
+                let foundContent = null;
+                let foundChapter = null;
+
+                // Try to find content in all chapters (flattened search)
+                for (const chapter of chapters) {
+                    const content = chapter.chapter_contents?.find(c => c.id.toString() === contentId);
+                    if (content) {
+                        foundContent = content;
+                        foundChapter = chapter;
+                        break;
+                    }
+                }
+
+                if (foundContent && foundChapter) {
+                    setActiveChapter(foundChapter);
+                    setActiveContent(foundContent);
+                }
+            } else if (chapterId) {
+                const chapter = chapters.find(c => c.id.toString() === chapterId);
+                if (chapter) {
+                    setActiveChapter(chapter);
+                    setActiveContent(null);
+                }
+            } else {
+                setActiveChapter(null);
+                setActiveContent(null);
+            }
+        }
+    }, [chapters, chapterId, contentId]);
+
+    const handleChapterClick = (chapter) => {
+        updateSearchParams({ chapterId: chapter.id });
+    };
+
+    const handleContentClick = (chapter, content) => {
+        updateSearchParams({ chapterId: chapter.id, contentId: content.id });
+        localStorage.setItem(`lastAccessedChapter_${id}`, chapter.id);
+    };
+
+    const handleBackToParent = () => {
+        if (activeContent) {
+            // Back to current chapter contents
+            updateSearchParams({ chapterId: activeChapter.id, contentId: null });
+        } else if (activeChapter && activeChapter.parent_id) {
+            // Back to parent chapter
+            const parent = chapters.find(c => c.id === activeChapter.parent_id);
+            updateSearchParams({ chapterId: parent.id, contentId: null });
+        } else {
+            // Back to root
+            // To clear params, we need to basically restart. 
+            // Or just pass nulls if updateSearchParams handles it.
+            // Simplified:
+            router.push(`?`);
+        }
+    };
+
+    // Check video access before playing
+    const checkVideoAccess = async (videoContent) => {
+        if (!videoContent || !id) return { canAccess: true };
+
+        try {
+            const response = await fetch('/api/student/video/check-access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contentId: videoContent.id,
+                    courseId: id
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setVideoAccess(data);
+                return data;
+            }
+        } catch (error) {
+            console.error('Error checking video access:', error);
+        }
+        return { canAccess: true };
+    };
+
+    // Track video view when it starts playing
+    const trackVideoView = async (videoContent) => {
+        if (!videoContent || !memberId || !id) return;
+
+        try {
+            // Check access first
+            const access = await checkVideoAccess(videoContent);
+            if (!access.canAccess) {
+                setVideoBlocked(true);
+                alert('Video limit reached: ' + access.reason);
+                return false;
+            }
+
+            // Track view via API
+            await fetch('/api/student/video/track-view', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contentId: videoContent.id,
+                    courseId: id,
+                    chapterId: activeChapter?.id,
+                    contentTitle: videoContent.title
+                })
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error tracking video view:', error);
+            return true;
+        }
+    };
+
+    // Update video progress and watch time
+    const updateVideoProgress = async (videoContent, percentage, currentTime) => {
+        if (!videoContent || !memberId || !id) return;
+
+        try {
+            const contentId = videoContent.id;
+            const completed = percentage >= 90; // Consider 90% as completed
+
+            // Update watch time every 10 seconds
+            if (currentTime && currentTime - lastWatchUpdate >= 10) {
+                const secondsToAdd = currentTime - lastWatchUpdate;
+                await fetch('/api/student/video/update-watch-time', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contentId: contentId,
+                        secondsWatched: secondsToAdd
+                    })
+                });
+                setLastWatchUpdate(currentTime);
+            }
+
+            const { error } = await supabase
+                .from('content_progress')
+                .upsert({
+                    member_id: memberId,
+                    course_id: id,
+                    chapter_id: activeChapter?.id,
+                    content_type: 'video',
+                    content_id: contentId,
+                    content_title: videoContent.title,
+                    completed: completed,
+                    completion_percentage: Math.round(percentage),
+                    completed_at: completed ? new Date().toISOString() : null
+                }, {
+                    onConflict: 'member_id,content_id'
+                });
+
+            if (error) {
+                console.error('Error updating video progress:', error);
+            } else if (completed && !contentProgress[contentId]) {
+                // Update local state if newly completed
+                setContentProgress(prev => ({ ...prev, [contentId]: true }));
+
+                // Recalculate course progress
+                await supabase.rpc('calculate_course_progress', {
+                    p_member_id: memberId,
+                    p_course_id: id
+                });
+            }
+        } catch (error) {
+            console.error('Error updating video progress:', error);
+        }
+    };
+
+    // Mark content as complete
+    const markContentComplete = async () => {
+        if (!activeContent || !memberId || !id || isMarkingComplete) return;
+
+        setIsMarkingComplete(true);
+
+        try {
+            // Determine content ID based on type
+            let contentId = activeContent.id;
+            if (activeContent.type === 'exam') {
+                contentId = activeContent.exam_id || activeContent.content_url;
+            }
+
+            // Insert/update content_progress
+            const { error: progressError } = await supabase
+                .from('content_progress')
+                .upsert({
+                    member_id: memberId,
+                    course_id: id,
+                    chapter_id: activeChapter?.id,
+                    content_type: activeContent.type,
+                    content_id: contentId,
+                    content_title: activeContent.type === 'exam' && activeContent.exams
+                        ? activeContent.exams.title
+                        : activeContent.title,
+                    completed: true,
+                    completion_percentage: 100,
+                    completed_at: new Date().toISOString()
+                }, {
+                    onConflict: 'member_id,content_id'
+                });
+
+            if (progressError) throw progressError;
+
+            // Update local progress state
+            setContentProgress(prev => ({ ...prev, [contentId]: true }));
+
+            // Recalculate course progress
+            const { data: newProgress, error: calcError } = await supabase
+                .rpc('calculate_course_progress', {
+                    p_member_id: memberId,
+                    p_course_id: id
+                });
+
+            if (calcError) {
+                console.error('Error calculating progress:', calcError);
+            } else {
+                console.log('Course progress updated:', newProgress + '%');
+            }
+
+            // Check feedback triggers after completion
+            await checkFeedback();
+
+            alert('Content marked as complete!');
+        } catch (error) {
+            console.error('Error marking content complete:', error);
+            alert('Failed to mark content as complete: ' + error.message);
+        } finally {
+            setIsMarkingComplete(false);
+        }
+    };
+
+    // Helper to check if content is complete
+    const isContentComplete = (content) => {
+        let contentId = content.id;
+        if (content.type === 'exam') {
+            contentId = content.exam_id || content.content_url;
+        }
+        return contentProgress[contentId] === true;
+    };
+
+    if (loading) {
+        return <div className="p-10 text-center text-slate-500">Loading course content...</div>;
+    }
+
+    if (pdfViewerUrl) {
+        return <PDFViewer url={pdfViewerUrl} onClose={() => setPdfViewerUrl(null)} />;
+    }
+
+    // Filter chapters to show
+    const visibleChapters = chapters.filter(c => activeChapter ? c.parent_id === activeChapter.id : c.parent_id === null);
+    const visibleContents = activeChapter ? (activeChapter.chapter_contents || []) : [];
+
+    return (
+        <div className="min-h-[calc(100vh-64px)] bg-slate-50 p-4 md:p-6">
+
+            {/* List View (Chapters + Contents) */}
+            {!activeContent && (
+                <div className="max-w-4xl mx-auto">
+                    <div className="mb-6">
+                        {activeChapter ? (
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleBackToParent}
+                                    className="bg-white p-2 rounded-full shadow-sm border border-gray-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all"
+                                >
+                                    <ArrowRight size={20} className="rotate-180" />
+                                </button>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 m-0">{activeChapter.title}</h2>
+                                    <p className="text-slate-500 text-sm">{visibleChapters.length} Sub-chapters • {visibleContents.length} Content</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">Course Curriculum</h2>
+                                <p className="text-slate-500 text-sm mt-1">Select a chapter to view content</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden divide-y divide-gray-100">
+                        {/* Render Sub-chapters */}
+                        {visibleChapters.map((chapter, index) => {
+                            const hasChildren = chapters.some(child => child.parent_id === chapter.id);
+                            return (
+                                <div
+                                    key={chapter.id}
+                                    onClick={() => handleChapterClick(chapter)}
+                                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0 group-hover:bg-sky-100 transition-colors">
+                                            {chapter.image ? (
+                                                <img src={chapter.image} alt={chapter.title} className="w-full h-full object-cover rounded-full" />
+                                            ) : (
+                                                <Folder size={24} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">{chapter.title}</h3>
+                                            <span className="text-xs text-slate-500 font-medium">
+                                                {chapters.filter(c => c.parent_id === chapter.id).length} Sub-chapters
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={20} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                </div>
+                            );
+                        })}
+
+                        {/* Render Contents */}
+                        {visibleContents.map((content, index) => (
+                            <div
+                                key={content.id}
+                                onClick={() => handleContentClick(activeChapter, content)}
+                                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-slate-50 transition-colors group"
+                            >
+                                <ContentIcon content={content} isActive={false} />
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="text-base font-semibold text-slate-800 mb-1 truncate group-hover:text-blue-600 transition-colors">
+                                        {content.type === 'exam' && content.exams ? content.exams.title : content.title}
+                                    </h4>
+                                    <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 uppercase tracking-wide text-[10px]">
+                                            {content.type === 'video' ? 'Video' : content.type === 'exam' ? 'Quiz' : 'PDF'}
+                                        </span>
+                                        {isContentComplete(content) && (
+                                            <span className="flex items-center gap-1 text-emerald-600">
+                                                <CheckCircle size={12} /> Completed
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="text-slate-300 group-hover:text-blue-500 transition-colors">
+                                    <PlayCircle size={20} />
+                                </div>
+                            </div>
+                        ))}
+
+                        {visibleChapters.length === 0 && visibleContents.length === 0 && (
+                            <div className="p-10 text-center text-slate-400">
+                                <FileQuestion size={48} className="mx-auto mb-3 text-slate-200" />
+                                <p>No content found in this folder.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Player View */}
+            {/* Player View */}
+            {activeContent && (
+                <div className="max-w-4xl mx-auto">
+                    <button
+                        onClick={handleBackToParent}
+                        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium mb-5 px-1 py-1 -ml-1 transition-colors"
+                    >
+                        <ArrowRight size={20} className="rotate-180" /> Back to {activeChapter?.title}
+                    </button>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        {/* Player Content */}
+                        <div className="p-6 md:p-8">
+                            {activeContent.type === 'video' ? (
+                                <div>
+                                    {/* Video Access Info */}
+                                    {videoAccess && (
+                                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <div className="flex items-center justify-between text-sm">
+                                                {videoAccess.viewsRemaining !== null && videoAccess.viewsRemaining !== undefined && (
+                                                    <span className="text-blue-700 font-medium">
+                                                        📹 {videoAccess.viewsRemaining} views remaining
+                                                    </span>
+                                                )}
+                                                {videoAccess.watchTimeRemaining !== null && videoAccess.watchTimeRemaining !== undefined && (
+                                                    <span className="text-blue-700 font-medium">
+                                                        ⏱️ {Math.round(videoAccess.watchTimeRemaining / 60)} minutes remaining
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-sm mb-6 relative group">
+                                        {videoBlocked ? (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                                                <div className="text-center text-white p-8">
+                                                    <div className="text-6xl mb-4">🚫</div>
+                                                    <h3 className="text-2xl font-bold mb-2">Video Limit Reached</h3>
+                                                    <p className="text-gray-300">{videoAccess?.reason}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <video
+                                                key={activeContent.url || activeContent.content_url}
+                                                controls
+                                                controlsList="nodownload"
+                                                className="w-full h-full object-contain"
+                                                onPlay={async () => {
+                                                    const canPlay = await trackVideoView(activeContent);
+                                                    if (!canPlay) {
+                                                        const video = document.querySelector('video');
+                                                        if (video) video.pause();
+                                                    }
+                                                }}
+                                                onTimeUpdate={(e) => {
+                                                    const video = e.target;
+                                                    if (video.duration) {
+                                                        const percentage = (video.currentTime / video.duration) * 100;
+                                                        if (Math.floor(percentage / 10) > Math.floor((video.dataset.lastProgress || 0) / 10)) {
+                                                            video.dataset.lastProgress = percentage;
+                                                            updateVideoProgress(activeContent, percentage, video.currentTime);
+                                                        }
+                                                    }
+                                                }}
+                                                onEnded={() => updateVideoProgress(activeContent, 100)}
+                                            >
+                                                <source src={activeContent.url || activeContent.content_url} type="video/mp4" />
+                                                <source src={activeContent.url || activeContent.content_url} type="video/webm" />
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : activeContent.type === 'exam' ? (
+                                <div className="text-center py-12">
+                                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <FileText size={40} />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-slate-800 mb-3">{activeContent.exams?.title || activeContent.title}</h2>
+                                    <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">{activeContent.exams?.description || 'Ready to take this exam? Click below to start.'}</p>
+                                    <div className="flex gap-4 justify-center">
+                                        <button
+                                            onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/take?courseId=${id}`)}
+                                            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all"
+                                        >
+                                            Start Exam
+                                        </button>
+                                        <button
+                                            onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/results?courseId=${id}`)}
+                                            className="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                                        >
+                                            View Results
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : activeContent.type === 'pdf' ? (
+                                <div className="text-center py-12">
+                                    <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <FileText size={40} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-6">{activeContent.title}</h2>
+                                    <button
+                                        onClick={() => {
+                                            setPdfViewerUrl(activeContent.url || activeContent.content_url);
+                                            setTimeout(() => markContentComplete(), 2000);
+                                        }}
+                                        className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all mx-auto"
+                                    >
+                                        <Eye size={20} /> View PDF
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="py-12 text-center">
+                                    <h2 className="text-2xl font-bold text-slate-800 mb-4">{activeContent.title}</h2>
+                                    <p className="text-slate-600 mb-6">{activeContent.description}</p>
+                                    {(activeContent.url || activeContent.content_url) && (
+                                        <a
+                                            href={activeContent.url || activeContent.content_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 font-semibold hover:underline"
+                                        >
+                                            View Content
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Mark Complete Button */}
+                            {activeContent.type !== 'exam' && (
+                                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+                                    <button
+                                        onClick={markContentComplete}
+                                        disabled={isContentComplete(activeContent) || isMarkingComplete}
+                                        className={`
+                                            px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all
+                                            ${isContentComplete(activeContent)
+                                                ? 'bg-emerald-50 text-emerald-600 cursor-default'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 cursor-pointer'}
+                                            ${isMarkingComplete ? 'opacity-70 cursor-not-allowed' : ''}
+                                        `}
+                                    >
+                                        <CheckCircle size={18} />
+                                        {isContentComplete(activeContent) ? 'Completed' : 'Mark as Complete'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Feedback Modal */}
+            {showFeedbackModal && feedbackForm && (
+                <FeedbackModal
+                    form={feedbackForm}
+                    onClose={() => setShowFeedbackModal(false)}
+                    onSuccess={() => {
+                        setShowFeedbackModal(false);
+                        alert('Thank you for your feedback!');
+                    }}
+                />
+            )}
+        </div>
+    );
+};
+
+export default CoursePlayer;

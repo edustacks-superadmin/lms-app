@@ -1,0 +1,22 @@
+{
+  "question_html": "<p class=\"MsoNormal\"> Which colour is predominantly used on a Mandatory\nSafety Sign according to standard industrial practice?</p>",
+  "answers": [
+    {
+      "text_html": "<p class=\"MsoNormal\"> Red with white pictogram</p>",
+      "is_correct": false
+    },
+    {
+      "text_html": "<p class=\"MsoNormal\"> Blue with white pictogram</p>",
+      "is_correct": true
+    },
+    {
+      "text_html": "<p class=\"MsoNormal\"> Yellow with black border</p>",
+      "is_correct": false
+    },
+    {
+      "text_html": "<p class=\"MsoNormal\"> Green with white text</p>",
+      "is_correct": false
+    }
+  ],
+  "explanation_html": "<p class=\"MsoNormal\"> Mandatory action signs, which dictate a specific\nbehaviour (e.g., 'Wear Hand Protection'), are signified by a blue circle with a\nwhite pictogram.</p>"
+}

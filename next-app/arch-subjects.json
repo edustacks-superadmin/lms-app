@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Construction Technology & Project Management",
+        "testpress_id": 258,
+        "parent_name": "Architecture Engineering"
+    },
+    {
+        "name": "Professional Ethics & Tools for Practice",
+        "testpress_id": 259,
+        "parent_name": "Architecture Engineering"
+    },
+    {
+        "name": "Theory of Architecture",
+        "testpress_id": 250,
+        "parent_name": "Architecture Engineering"
+    }
+]

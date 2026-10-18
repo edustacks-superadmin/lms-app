@@ -1,0 +1,1914 @@
+[
+  {
+    "testpress_id": 1008,
+    "lms_id": "3185b6fd-8201-4885-a3a2-63d9d9344aad",
+    "name": "NEET",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1008/",
+    "created": "2025-11-29T15:55:29.630602+05:30",
+    "modified": "2025-11-29T15:55:29.630602+05:30"
+  },
+  {
+    "testpress_id": 1006,
+    "lms_id": "ae047c06-6641-43d9-86da-63841fe0a739",
+    "name": "Video Batch (TNPSC-JDO 2026)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1006/",
+    "created": "2025-11-24T11:59:00.431556+05:30",
+    "modified": "2025-11-24T11:59:00.431556+05:30"
+  },
+  {
+    "testpress_id": 1005,
+    "lms_id": "23ece054-ebd4-44b8-bed1-2e6e406f1c83",
+    "name": "Unitwise PYQs EBooklet (Code: 387, 388 &amp; 490) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1005/",
+    "created": "2025-11-22T12:13:53.870700+05:30",
+    "modified": "2025-11-28T23:54:32.675794+05:30"
+  },
+  {
+    "testpress_id": 1004,
+    "lms_id": "ae5a999c-82da-4f2f-a996-51e3dd06475e",
+    "name": "Quick Revision Chart (Code: 443) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1004/",
+    "created": "2025-11-07T10:35:15.876623+05:30",
+    "modified": "2025-11-07T10:35:15.876623+05:30"
+  },
+  {
+    "testpress_id": 1003,
+    "lms_id": "4dccabfb-5c9f-4ea3-a7b4-7fe50b817cfd",
+    "name": "Test Series (Code: 590) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1003/",
+    "created": "2025-10-24T17:01:04.959241+05:30",
+    "modified": "2025-10-24T17:01:04.959241+05:30"
+  },
+  {
+    "testpress_id": 1002,
+    "lms_id": "ed7813fa-7d81-43b4-948d-01687a7b18aa",
+    "name": "ENotes (Code: 393) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1002/",
+    "created": "2025-10-24T15:44:47.588677+05:30",
+    "modified": "2025-10-24T15:44:47.588677+05:30"
+  },
+  {
+    "testpress_id": 1000,
+    "lms_id": "dbc01109-edbe-4cc8-b9c3-3554bd03d1c3",
+    "name": "Topicwise PYQs E-Booklet (Code: 398) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/1000/",
+    "created": "2025-10-16T19:48:45.712200+05:30",
+    "modified": "2025-11-05T09:42:12.995684+05:30"
+  },
+  {
+    "testpress_id": 998,
+    "lms_id": "55236257-f5f5-4a8e-8b96-8e4b3aebc9c8",
+    "name": "Test Series (Code: 400) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/998/",
+    "created": "2025-10-01T11:17:36.139996+05:30",
+    "modified": "2025-10-01T11:17:36.139996+05:30"
+  },
+  {
+    "testpress_id": 996,
+    "lms_id": "1ce867a0-bf36-4cbe-beb4-d72f609e9147",
+    "name": "Quick Revision Chart (Code: 400) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/996/",
+    "created": "2025-09-29T15:21:41.117864+05:30",
+    "modified": "2025-09-29T15:21:41.117864+05:30"
+  },
+  {
+    "testpress_id": 993,
+    "lms_id": "be194735-a872-45b5-b816-22d27bc615b4",
+    "name": "Test Series (Code: 398) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/993/",
+    "created": "2025-09-23T11:42:36.435667+05:30",
+    "modified": "2025-09-23T11:42:36.435667+05:30"
+  },
+  {
+    "testpress_id": 990,
+    "lms_id": "e8a7e182-692d-4b1e-b133-b1eb35477902",
+    "name": "Quick Revision Chart (Code: 398) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/990/",
+    "created": "2025-09-23T11:20:26.316181+05:30",
+    "modified": "2025-09-23T11:20:26.316181+05:30"
+  },
+  {
+    "testpress_id": 989,
+    "lms_id": "eaa0a366-8ef9-43bf-b75b-12e7f5ec36c3",
+    "name": "Chapterwise PYQs E-Booklet (Code: 443) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/989/",
+    "created": "2025-09-23T09:21:36.451255+05:30",
+    "modified": "2025-09-23T09:21:36.451255+05:30"
+  },
+  {
+    "testpress_id": 986,
+    "lms_id": "56dbd1b6-047f-4a79-95b1-0427fb6f49c8",
+    "name": "ENotes (Code: 443) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/986/",
+    "created": "2025-09-22T15:28:35.919761+05:30",
+    "modified": "2025-09-22T15:28:35.919761+05:30"
+  },
+  {
+    "testpress_id": 984,
+    "lms_id": "54096b51-f27b-42bf-bb13-2e0aa6112e67",
+    "name": "Test Series (Code: 443) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/984/",
+    "created": "2025-09-22T14:57:41.667782+05:30",
+    "modified": "2025-09-22T14:57:41.667782+05:30"
+  },
+  {
+    "testpress_id": 982,
+    "lms_id": "13abd243-58e9-4c6f-9ca5-f46a8325765b",
+    "name": "Tech Quest — Civil Engineering Technical Quiz2",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/982/",
+    "created": "2025-09-20T12:57:53.059246+05:30",
+    "modified": "2025-09-20T12:57:53.059246+05:30"
+  },
+  {
+    "testpress_id": 981,
+    "lms_id": "5a8b611a-8732-4d55-8d9b-44d0dea7dddd",
+    "name": "Tech Quest — Civil Engineering Technical Quiz",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/981/",
+    "created": "2025-09-20T08:38:31.266975+05:30",
+    "modified": "2025-09-20T08:38:31.266975+05:30"
+  },
+  {
+    "testpress_id": 978,
+    "lms_id": "4592b52b-f561-48a1-934c-aadd02260396",
+    "name": "Quick Revision Chart (Code: 388) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/978/",
+    "created": "2025-09-18T18:16:56.849031+05:30",
+    "modified": "2025-09-18T18:16:56.849031+05:30"
+  },
+  {
+    "testpress_id": 977,
+    "lms_id": "b0590e2d-9edc-40e1-ab27-99e9f684188f",
+    "name": "ENotes (Code: 398) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/977/",
+    "created": "2025-09-18T08:47:38.630777+05:30",
+    "modified": "2025-09-18T08:47:38.630777+05:30"
+  },
+  {
+    "testpress_id": 976,
+    "lms_id": "07e27218-cdd9-40d3-9736-236f6c1639e9",
+    "name": "ENotes (Code: 590) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/976/",
+    "created": "2025-09-14T08:49:20.659182+05:30",
+    "modified": "2025-09-14T08:49:20.659182+05:30"
+  },
+  {
+    "testpress_id": 973,
+    "lms_id": "e11f5d4e-9c45-4f8f-9813-f82bafac58c7",
+    "name": "ENotes (Code: 560) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/973/",
+    "created": "2025-08-29T18:43:20.486342+05:30",
+    "modified": "2025-08-29T18:43:20.486342+05:30"
+  },
+  {
+    "testpress_id": 972,
+    "lms_id": "ca4ba191-9d4a-4b96-a220-da299f199015",
+    "name": "FREE TET and GS 2025 (REMOVE BY 31/08/2025)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/972/",
+    "created": "2025-08-25T10:21:33.680798+05:30",
+    "modified": "2025-08-25T10:22:02.329686+05:30"
+  },
+  {
+    "testpress_id": 971,
+    "lms_id": "fa06e6db-1ebf-404e-93d7-e07640437f4b",
+    "name": "Quick Revision Chart (Code: 446) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/971/",
+    "created": "2025-08-20T10:45:26.914344+05:30",
+    "modified": "2025-08-20T10:45:26.914344+05:30"
+  },
+  {
+    "testpress_id": 968,
+    "lms_id": "a793e313-090b-479e-9293-9ba15c9339c6",
+    "name": "TET and GS 2025 (FREE & SEND MESSAGES & REMOVE BY 17/08/2025)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/968/",
+    "created": "2025-08-11T09:36:18.231366+05:30",
+    "modified": "2025-08-11T09:40:49.877968+05:30"
+  },
+  {
+    "testpress_id": 963,
+    "lms_id": "6fecc1a5-fbc7-4c73-aea2-0a97b9098223",
+    "name": "Quick Revision Chart (Code: 510) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/963/",
+    "created": "2025-07-30T17:20:58.785814+05:30",
+    "modified": "2025-07-30T17:20:58.785814+05:30"
+  },
+  {
+    "testpress_id": 962,
+    "lms_id": "75ee9fb5-7f23-4706-ad0a-f034d28834a6",
+    "name": "Test Series (Code: 554) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/962/",
+    "created": "2025-07-28T21:19:33.631705+05:30",
+    "modified": "2025-07-28T21:19:33.631705+05:30"
+  },
+  {
+    "testpress_id": 961,
+    "lms_id": "3f2fa4af-6363-4624-8363-3dd47f090717",
+    "name": "Quick Revision Chart (Code: 554) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/961/",
+    "created": "2025-07-27T18:25:36.702778+05:30",
+    "modified": "2025-07-27T18:25:36.702778+05:30"
+  },
+  {
+    "testpress_id": 956,
+    "lms_id": "5e08a0e8-a020-4ab7-8eca-7d384e5f62c5",
+    "name": "ENotes (Code: 554) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/956/",
+    "created": "2025-07-27T18:16:02.463029+05:30",
+    "modified": "2025-07-27T18:16:02.463029+05:30"
+  },
+  {
+    "testpress_id": 950,
+    "lms_id": "fa9cc210-b9ee-47cd-bfef-41d90b96a556",
+    "name": "Special Offer Andavar (Code: 398 GT & MT 2025)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/950/",
+    "created": "2025-07-23T19:18:02.317783+05:30",
+    "modified": "2025-07-23T19:18:02.317783+05:30"
+  },
+  {
+    "testpress_id": 948,
+    "lms_id": "e27c7a3a-2426-4615-9360-935c75afad84",
+    "name": "Test Series (Code: 438) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/948/",
+    "created": "2025-07-21T13:03:05.391957+05:30",
+    "modified": "2025-07-21T13:03:05.391957+05:30"
+  },
+  {
+    "testpress_id": 946,
+    "lms_id": "d125471f-ac4e-4d24-ad17-7bdf339d85e3",
+    "name": "Mathematics QB Series | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/946/",
+    "created": "2025-07-20T20:00:46.261288+05:30",
+    "modified": "2025-07-20T20:00:46.261288+05:30"
+  },
+  {
+    "testpress_id": 944,
+    "lms_id": "e37a8fea-d813-4324-86f9-4b284bd3ed9b",
+    "name": "Chemistry QB Series | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/944/",
+    "created": "2025-07-20T13:32:30.237003+05:30",
+    "modified": "2025-07-20T13:32:30.237003+05:30"
+  },
+  {
+    "testpress_id": 942,
+    "lms_id": "154235af-cec5-4431-ba31-60c02e02b377",
+    "name": "Botany QB Series | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/942/",
+    "created": "2025-07-20T09:52:14.219807+05:30",
+    "modified": "2025-07-20T09:52:14.219807+05:30"
+  },
+  {
+    "testpress_id": 939,
+    "lms_id": "e82a89b6-f3ef-4e4d-b203-bf2ce5c1bfe5",
+    "name": "Physics QB Series | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/939/",
+    "created": "2025-07-19T20:10:25.568522+05:30",
+    "modified": "2025-07-19T20:10:25.568522+05:30"
+  },
+  {
+    "testpress_id": 936,
+    "lms_id": "6be89c44-7cd0-4045-806a-699979518160",
+    "name": "Test Series (Code: 542) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/936/",
+    "created": "2025-07-18T08:56:21.573264+05:30",
+    "modified": "2025-07-18T08:56:21.573264+05:30"
+  },
+  {
+    "testpress_id": 932,
+    "lms_id": "c79d6b24-56e8-46dd-b99e-bd95b3a53616",
+    "name": "ENotes (Code: 542) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/932/",
+    "created": "2025-07-15T18:10:09.630563+05:30",
+    "modified": "2025-07-15T18:10:09.630563+05:30"
+  },
+  {
+    "testpress_id": 930,
+    "lms_id": "c010b087-774a-4b17-82a5-9bb0d93ce6ef",
+    "name": "ENotes (Code: 537) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/930/",
+    "created": "2025-07-15T01:25:27.188823+05:30",
+    "modified": "2025-07-15T01:25:27.188823+05:30"
+  },
+  {
+    "testpress_id": 927,
+    "lms_id": "65085f00-9be3-45b6-b5bc-17944ce49c52",
+    "name": "ENotes (Code: 550) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/927/",
+    "created": "2025-07-14T05:24:12.669827+05:30",
+    "modified": "2025-07-14T05:24:12.669827+05:30"
+  },
+  {
+    "testpress_id": 925,
+    "lms_id": "29c66979-108a-4d2e-a925-0addcf4895b8",
+    "name": "ENotes (Code: 436) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/925/",
+    "created": "2025-07-13T14:20:41.188288+05:30",
+    "modified": "2025-07-13T14:20:41.188288+05:30"
+  },
+  {
+    "testpress_id": 922,
+    "lms_id": "ab320b05-3c55-49f3-8d22-411c9f2ec4f4",
+    "name": "Aptitude PYQs EBooklet | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/922/",
+    "created": "2025-07-10T17:11:23.192193+05:30",
+    "modified": "2025-07-10T17:11:23.192193+05:30"
+  },
+  {
+    "testpress_id": 920,
+    "lms_id": "65a069a5-eadc-423b-bab7-5622e9ccca3e",
+    "name": "Test Series (Code: 382) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/920/",
+    "created": "2025-07-10T00:29:59.155930+05:30",
+    "modified": "2025-07-10T00:29:59.155930+05:30"
+  },
+  {
+    "testpress_id": 917,
+    "lms_id": "ab321d5b-a85e-4b1a-babe-376ff9eb11fe",
+    "name": "ENotes (Civil) | GATE 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/917/",
+    "created": "2025-07-09T11:47:38.847724+05:30",
+    "modified": "2025-07-09T11:47:38.847724+05:30"
+  },
+  {
+    "testpress_id": 914,
+    "lms_id": "1f799949-2522-4a31-bb1b-c29edbc42710",
+    "name": "Quick Revision Chart (Code: 551) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/914/",
+    "created": "2025-07-08T21:15:42.780425+05:30",
+    "modified": "2025-07-08T21:17:35.545442+05:30"
+  },
+  {
+    "testpress_id": 912,
+    "lms_id": "a5d90911-b5e0-4fdf-b9b8-ce25e4b57b94",
+    "name": "Quick Revision Chart (Code: 540) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/912/",
+    "created": "2025-07-08T19:30:08.458717+05:30",
+    "modified": "2025-07-08T21:17:48.613640+05:30"
+  },
+  {
+    "testpress_id": 911,
+    "lms_id": "f43c17fa-d9d9-4f3c-a7f0-38276e1d4fc2",
+    "name": "Combo Pack (Code: 551) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/911/",
+    "created": "2025-07-07T23:32:38.622316+05:30",
+    "modified": "2025-07-07T23:32:38.622316+05:30"
+  },
+  {
+    "testpress_id": 907,
+    "lms_id": "ea2c44cc-6522-4584-b888-e047581394a9",
+    "name": "ENotes (Code: 440) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/907/",
+    "created": "2025-07-07T20:03:07.116181+05:30",
+    "modified": "2025-07-07T20:03:07.116181+05:30"
+  },
+  {
+    "testpress_id": 905,
+    "lms_id": "91e4bfc2-8b3d-4a61-b40a-56acb7883207",
+    "name": "ENotes (Code: 438) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/905/",
+    "created": "2025-07-07T14:34:53.353128+05:30",
+    "modified": "2025-07-07T14:34:53.353128+05:30"
+  },
+  {
+    "testpress_id": 904,
+    "lms_id": "f3e762de-a0b6-415f-adb7-0e8d9d9ae694",
+    "name": "Quick Revision Chart (Code: 562) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/904/",
+    "created": "2025-07-07T07:45:24.070537+05:30",
+    "modified": "2025-07-07T07:45:24.070537+05:30"
+  },
+  {
+    "testpress_id": 902,
+    "lms_id": "64295732-7d08-42a7-8ab1-4e83f8a55e05",
+    "name": "ENotes (Code: 437) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/902/",
+    "created": "2025-07-07T06:33:18.183143+05:30",
+    "modified": "2025-07-07T06:33:18.183143+05:30"
+  },
+  {
+    "testpress_id": 895,
+    "lms_id": "84a36b03-a634-42d2-9f5c-b08529c2a1d0",
+    "name": "ENotes (Code: 400) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/895/",
+    "created": "2025-07-06T02:27:53.790824+05:30",
+    "modified": "2025-07-06T02:27:53.790824+05:30"
+  },
+  {
+    "testpress_id": 894,
+    "lms_id": "0c3fb10f-91ed-4b05-b48d-ea522547005d",
+    "name": "ENotes (New Topics) Code: 443 | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/894/",
+    "created": "2025-07-05T18:54:12.510986+05:30",
+    "modified": "2025-07-05T18:54:12.510986+05:30"
+  },
+  {
+    "testpress_id": 891,
+    "lms_id": "4437afd7-87f7-416b-bc18-ac1d725c8d88",
+    "name": "Quick Revision Chart (Code: 560) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/891/",
+    "created": "2025-07-05T12:54:49.373479+05:30",
+    "modified": "2025-07-05T12:54:49.373479+05:30"
+  },
+  {
+    "testpress_id": 889,
+    "lms_id": "32f06e03-dae3-4bc8-9918-d7fb8cb53b8c",
+    "name": "Quick Revision Chart (Code: 400) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/889/",
+    "created": "2025-07-05T09:35:27.242044+05:30",
+    "modified": "2025-07-05T09:35:27.242044+05:30"
+  },
+  {
+    "testpress_id": 888,
+    "lms_id": "78de24f2-7990-4fd7-bde8-3cb479f22f9c",
+    "name": "Quick Revision Chart (Code: 393) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/888/",
+    "created": "2025-07-04T19:25:52.271458+05:30",
+    "modified": "2025-07-04T19:25:52.271458+05:30"
+  },
+  {
+    "testpress_id": 886,
+    "lms_id": "8fbae8e1-debd-439b-a55e-98e71e8c779b",
+    "name": "ENotes (Code: 562) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/886/",
+    "created": "2025-07-03T16:46:34.347885+05:30",
+    "modified": "2025-07-03T16:46:34.347885+05:30"
+  },
+  {
+    "testpress_id": 884,
+    "lms_id": "20c26f99-82aa-439c-ab83-e652f5c1a8ff",
+    "name": "ENotes (Code: 543) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/884/",
+    "created": "2025-07-03T09:07:38.354187+05:30",
+    "modified": "2025-07-03T09:07:38.354187+05:30"
+  },
+  {
+    "testpress_id": 883,
+    "lms_id": "183c93b0-710c-4934-9de8-31e8dce1e4d7",
+    "name": "Quick Revision Chart (Code: 387) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/883/",
+    "created": "2025-07-02T14:26:56.042358+05:30",
+    "modified": "2025-07-02T14:26:56.042358+05:30"
+  },
+  {
+    "testpress_id": 881,
+    "lms_id": "8f20bc92-b7f6-46c7-ba6d-6737d2e367c9",
+    "name": "Test Series (Code: 562) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/881/",
+    "created": "2025-07-02T10:30:28.670164+05:30",
+    "modified": "2025-07-02T10:30:28.670164+05:30"
+  },
+  {
+    "testpress_id": 878,
+    "lms_id": "ba9e39a4-8d1d-4d1b-9edc-4a4367475985",
+    "name": "Test Series (Code: 432) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/878/",
+    "created": "2025-07-02T06:48:22.311618+05:30",
+    "modified": "2025-07-02T06:48:22.311618+05:30"
+  },
+  {
+    "testpress_id": 877,
+    "lms_id": "252cba4d-a80a-4b0d-96ea-e6fb409650c1",
+    "name": "Test Series (Code: 431) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/877/",
+    "created": "2025-07-02T06:48:10.945228+05:30",
+    "modified": "2025-07-02T06:48:10.945228+05:30"
+  },
+  {
+    "testpress_id": 875,
+    "lms_id": "d3a128aa-e664-4b81-9e27-e0db86580d06",
+    "name": "ENotes (Code: 432) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/875/",
+    "created": "2025-07-02T06:45:11.169970+05:30",
+    "modified": "2025-07-02T06:45:11.169970+05:30"
+  },
+  {
+    "testpress_id": 873,
+    "lms_id": "b85fc79e-8412-4feb-b2d0-0c941a3d1706",
+    "name": "ENotes (Code: 431) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/873/",
+    "created": "2025-07-02T06:44:01.190010+05:30",
+    "modified": "2025-07-02T06:44:01.190010+05:30"
+  },
+  {
+    "testpress_id": 863,
+    "lms_id": "efdcb644-919b-4d9e-be35-d8f8bc4b06b9",
+    "name": "ENotes (Code: 387) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/863/",
+    "created": "2025-06-29T20:47:24.576506+05:30",
+    "modified": "2025-06-29T20:47:24.576506+05:30"
+  },
+  {
+    "testpress_id": 862,
+    "lms_id": "6c9741cc-b1a3-47bc-b666-b3eb40f59e03",
+    "name": "Test Series (Code: 510) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/862/",
+    "created": "2025-06-29T18:52:25.037560+05:30",
+    "modified": "2025-06-29T18:52:25.037560+05:30"
+  },
+  {
+    "testpress_id": 859,
+    "lms_id": "571d07e2-39a4-4c65-85c6-5d0c550feef8",
+    "name": "ENotes (Code: 538) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/859/",
+    "created": "2025-06-29T13:06:36.205851+05:30",
+    "modified": "2025-06-29T13:06:36.205851+05:30"
+  },
+  {
+    "testpress_id": 853,
+    "lms_id": "f98482ab-1e92-4ed1-8148-00c618dc6748",
+    "name": "Test Series (Code: 400) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/853/",
+    "created": "2025-06-26T20:24:40.057429+05:30",
+    "modified": "2025-06-26T20:24:40.057429+05:30"
+  },
+  {
+    "testpress_id": 852,
+    "lms_id": "334fe80b-d69b-475c-a5c0-ef509ab6eb56",
+    "name": "Test Series (Code: 543) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/852/",
+    "created": "2025-06-26T20:24:09.694328+05:30",
+    "modified": "2025-06-26T20:24:09.694328+05:30"
+  },
+  {
+    "testpress_id": 851,
+    "lms_id": "a2327dda-f34c-4b6d-8b96-ae84b365762e",
+    "name": "Test Series (Code: 560) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/851/",
+    "created": "2025-06-26T20:23:07.063343+05:30",
+    "modified": "2025-06-26T20:23:35.215936+05:30"
+  },
+  {
+    "testpress_id": 850,
+    "lms_id": "afbb35f4-8238-4233-85c7-cd79ccfa3871",
+    "name": "GT & MT (Code: 398) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/850/",
+    "created": "2025-06-26T20:20:27.868295+05:30",
+    "modified": "2025-06-26T20:20:27.868295+05:30"
+  },
+  {
+    "testpress_id": 848,
+    "lms_id": "3c5c3942-58e8-4d5e-9157-446d45378017",
+    "name": "Test Batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/848/",
+    "created": "2025-06-26T15:52:23.193630+05:30",
+    "modified": "2025-06-26T15:52:23.193630+05:30"
+  },
+  {
+    "testpress_id": 845,
+    "lms_id": "6c01363f-f7a8-4312-acb0-319cf515e67a",
+    "name": "ENotes (Code: 446) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/845/",
+    "created": "2025-06-26T06:34:25.711482+05:30",
+    "modified": "2025-06-26T06:34:25.711482+05:30"
+  },
+  {
+    "testpress_id": 832,
+    "lms_id": "ef07391e-65c7-4c37-abea-b4c6f6bd17ee",
+    "name": "Test Series (Code: 538) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/832/",
+    "created": "2025-06-24T10:33:22.545853+05:30",
+    "modified": "2025-06-24T10:33:43.495555+05:30"
+  },
+  {
+    "testpress_id": 830,
+    "lms_id": "10cf5d1c-209a-4dbb-93e7-ab2cb09870f7",
+    "name": "ENotes (Code: 387, 388 & 490) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/830/",
+    "created": "2025-06-24T09:09:25.562898+05:30",
+    "modified": "2025-06-24T09:09:51.832760+05:30"
+  },
+  {
+    "testpress_id": 829,
+    "lms_id": "4429e300-9e17-40a5-b58c-da0d80752015",
+    "name": "ENotes (Code: 534) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/829/",
+    "created": "2025-06-24T09:04:30.711127+05:30",
+    "modified": "2025-06-24T09:04:30.711127+05:30"
+  },
+  {
+    "testpress_id": 827,
+    "lms_id": "87b83e6f-4d15-43d5-af8c-058490adab55",
+    "name": "Test Series (Code: 534) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/827/",
+    "created": "2025-06-23T20:47:56.889253+05:30",
+    "modified": "2025-06-23T20:47:56.889253+05:30"
+  },
+  {
+    "testpress_id": 824,
+    "lms_id": "be412681-d32d-47fa-bf1f-d4fe48d59f86",
+    "name": "Test Series (Code: 446) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/824/",
+    "created": "2025-06-23T07:33:53.200663+05:30",
+    "modified": "2025-06-23T07:33:53.200663+05:30"
+  },
+  {
+    "testpress_id": 822,
+    "lms_id": "0f08163d-172c-4145-8f6b-47d274c92d82",
+    "name": "Test Series (Code: 540) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/822/",
+    "created": "2025-06-20T13:35:28.752284+05:30",
+    "modified": "2025-06-20T13:35:28.752284+05:30"
+  },
+  {
+    "testpress_id": 819,
+    "lms_id": "555cb5eb-a341-4b11-a786-8ba8dffca29c",
+    "name": "Test Series (Code: 551) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/819/",
+    "created": "2025-06-18T17:19:40.039845+05:30",
+    "modified": "2025-06-18T17:19:40.039845+05:30"
+  },
+  {
+    "testpress_id": 815,
+    "lms_id": "4985c75b-3d2e-4f37-bb3e-9e924e6f75e5",
+    "name": "ENotes (Code: 540) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/815/",
+    "created": "2025-06-16T11:35:57.655106+05:30",
+    "modified": "2025-06-16T11:35:57.655106+05:30"
+  },
+  {
+    "testpress_id": 813,
+    "lms_id": "30f5c4a0-4bf2-4a34-af48-9814c11b86c5",
+    "name": "Mind Map 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/813/",
+    "created": "2025-06-14T20:38:02.622945+05:30",
+    "modified": "2025-06-14T20:39:02.025012+05:30"
+  },
+  {
+    "testpress_id": 810,
+    "lms_id": "cefe8a40-3bc2-4e97-b903-70e7cd523f9f",
+    "name": "ENotes (Code: 551) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/810/",
+    "created": "2025-06-14T09:51:51.421084+05:30",
+    "modified": "2025-06-14T09:51:51.421084+05:30"
+  },
+  {
+    "testpress_id": 807,
+    "lms_id": "bccb23d8-0cf4-4876-9e27-ea5f4f9b7aba",
+    "name": "Counselling on",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/807/",
+    "created": "2025-06-07T12:53:00.949931+05:30",
+    "modified": "2025-06-07T12:53:00.949931+05:30"
+  },
+  {
+    "testpress_id": 806,
+    "lms_id": "9f60abe8-a4c7-46b6-be3e-b1dc356332b7",
+    "name": "Test Series (Code: 393) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/806/",
+    "created": "2025-05-29T12:27:25.631065+05:30",
+    "modified": "2025-05-29T12:27:25.631065+05:30"
+  },
+  {
+    "testpress_id": 803,
+    "lms_id": "26f011e5-7781-46d3-9c62-a0417a8bced0",
+    "name": "QRC (Code: 398) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/803/",
+    "created": "2025-05-28T12:28:20.903057+05:30",
+    "modified": "2025-07-04T22:44:26.764773+05:30"
+  },
+  {
+    "testpress_id": 801,
+    "lms_id": "e8ead71a-65cd-482f-95da-9c2844e22edf",
+    "name": "560 one day enotes access",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/801/",
+    "created": "2025-05-27T12:11:42.833278+05:30",
+    "modified": "2025-05-27T12:11:42.833278+05:30"
+  },
+  {
+    "testpress_id": 800,
+    "lms_id": "a577a66f-c5f5-44f0-b338-40a7656607e9",
+    "name": "ENotes (Code: 393) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/800/",
+    "created": "2025-05-26T21:26:55.178593+05:30",
+    "modified": "2025-05-26T21:26:55.178593+05:30"
+  },
+  {
+    "testpress_id": 799,
+    "lms_id": "ff0850b8-f33a-4c1c-96e6-f0ca9fe57f70",
+    "name": "Videos (Code: 388) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/799/",
+    "created": "2025-05-26T13:52:19.843027+05:30",
+    "modified": "2025-07-04T22:43:20.117966+05:30"
+  },
+  {
+    "testpress_id": 798,
+    "lms_id": "472ec8bc-5635-42fa-a8e4-5f35cc7c2fe3",
+    "name": "ENotes (Code: 560) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/798/",
+    "created": "2025-05-25T18:23:22.083883+05:30",
+    "modified": "2025-05-25T18:23:22.083883+05:30"
+  },
+  {
+    "testpress_id": 797,
+    "lms_id": "860497fa-5131-45b1-a894-85be64438470",
+    "name": "ENotes (Code: 510) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/797/",
+    "created": "2025-05-23T08:26:32.733360+05:30",
+    "modified": "2025-05-23T08:26:32.733360+05:30"
+  },
+  {
+    "testpress_id": 793,
+    "lms_id": "a7d223c6-8851-457a-9e77-b2d9c3f86fe2",
+    "name": "QRC (Code: 443) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/793/",
+    "created": "2025-05-07T19:47:19.627421+05:30",
+    "modified": "2025-07-04T22:39:54.138596+05:30"
+  },
+  {
+    "testpress_id": 791,
+    "lms_id": "164e65f1-2a8e-49fb-805d-630e8eaafd88",
+    "name": "Test Series (Code: 387) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/791/",
+    "created": "2025-05-01T10:58:35.308187+05:30",
+    "modified": "2025-07-04T22:53:35.612929+05:30"
+  },
+  {
+    "testpress_id": 789,
+    "lms_id": "d5c69a94-eb9c-4a19-ab0f-c12e91330706",
+    "name": "GS Test Batch 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/789/",
+    "created": "2025-04-29T09:40:46.155485+05:30",
+    "modified": "2025-04-29T09:40:46.155485+05:30"
+  },
+  {
+    "testpress_id": 788,
+    "lms_id": "cf15641d-7cda-434f-93f5-c58b85349b98",
+    "name": "GS PYQs 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/788/",
+    "created": "2025-04-29T09:39:59.556470+05:30",
+    "modified": "2025-04-29T09:39:59.556470+05:30"
+  },
+  {
+    "testpress_id": 786,
+    "lms_id": "1496449c-9a1c-4b4f-b2f1-ee7b1a2109f0",
+    "name": "QRC (Code: 388) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/786/",
+    "created": "2025-04-25T12:41:53.300676+05:30",
+    "modified": "2025-07-04T22:41:08.568539+05:30"
+  },
+  {
+    "testpress_id": 785,
+    "lms_id": "747663df-74a3-4df2-8968-74a27f1e19e5",
+    "name": "Test Series (Code: 388) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/785/",
+    "created": "2025-04-25T12:41:08.643085+05:30",
+    "modified": "2025-07-04T22:42:49.691861+05:30"
+  },
+  {
+    "testpress_id": 784,
+    "lms_id": "e375b115-68b9-4126-af72-9cf28032c11d",
+    "name": "ENotes (Code: 388) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/784/",
+    "created": "2025-04-25T12:21:58.313888+05:30",
+    "modified": "2025-07-04T22:42:43.443160+05:30"
+  },
+  {
+    "testpress_id": 750,
+    "lms_id": "f2111cbb-94c5-4900-800c-fa58b0818a7c",
+    "name": "ENotes (Code: 490) | 2026",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/750/",
+    "created": "2025-04-19T11:15:32.328874+05:30",
+    "modified": "2025-10-23T14:48:33.260715+05:30"
+  },
+  {
+    "testpress_id": 749,
+    "lms_id": "879049f7-e474-4dbe-9cd2-9a0619f4c3cf",
+    "name": "Test Series (Code: 490) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/749/",
+    "created": "2025-04-18T05:54:35.211943+05:30",
+    "modified": "2025-04-18T05:54:35.211943+05:30"
+  },
+  {
+    "testpress_id": 745,
+    "lms_id": "6d3ac3eb-45f7-46e7-88a2-bfadabba3822",
+    "name": "AE 2025 Video Course",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/745/",
+    "created": "2025-03-05T10:24:33.040346+05:30",
+    "modified": "2025-03-05T10:24:33.040346+05:30"
+  },
+  {
+    "testpress_id": 742,
+    "lms_id": "b11ed054-d978-4391-a3e2-6f02084ce63c",
+    "name": "509 Enotes 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/742/",
+    "created": "2025-02-19T20:27:19.161571+05:30",
+    "modified": "2025-02-19T20:27:19.161571+05:30"
+  },
+  {
+    "testpress_id": 730,
+    "lms_id": "597864d4-a8a7-41c1-92fb-e5475ed45533",
+    "name": "SAD490 ENotes 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/730/",
+    "created": "2025-02-01T07:39:59.679637+05:30",
+    "modified": "2025-02-01T07:39:59.679637+05:30"
+  },
+  {
+    "testpress_id": 728,
+    "lms_id": "5a7a53f2-b512-44ce-8473-819856ac3c2b",
+    "name": "SAD490 Test Series 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/728/",
+    "created": "2025-02-01T07:36:31.990476+05:30",
+    "modified": "2025-02-01T07:36:31.990476+05:30"
+  },
+  {
+    "testpress_id": 716,
+    "lms_id": "6c4d1091-8074-4c19-894e-c469642f77ef",
+    "name": "SAD (Combo Pack) 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/716/",
+    "created": "2025-01-22T10:06:39.869171+05:30",
+    "modified": "2025-01-22T10:06:39.869171+05:30"
+  },
+  {
+    "testpress_id": 708,
+    "lms_id": "ec5cb29b-055f-4a6f-b6c9-1888363d13a7",
+    "name": "Test Series (Code-443) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/708/",
+    "created": "2025-01-11T09:23:07.117459+05:30",
+    "modified": "2025-07-04T22:39:33.025176+05:30"
+  },
+  {
+    "testpress_id": 707,
+    "lms_id": "4dcbd9bd-8487-4a69-9e6f-1f223d359445",
+    "name": "GT&MT FS&DM",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/707/",
+    "created": "2025-01-09T19:13:11.833121+05:30",
+    "modified": "2025-01-09T19:13:11.833121+05:30"
+  },
+  {
+    "testpress_id": 674,
+    "lms_id": "428cd4fa-4901-4fea-a1f1-d125f2c859cd",
+    "name": "Test Series (Code-398) |  2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/674/",
+    "created": "2025-01-01T19:52:58.617043+05:30",
+    "modified": "2025-07-04T22:38:42.418143+05:30"
+  },
+  {
+    "testpress_id": 670,
+    "lms_id": "f600c0b0-4ce8-4752-9a62-ec4fb02283d4",
+    "name": "Draftsman (QRC) 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/670/",
+    "created": "2024-12-27T12:48:49.094010+05:30",
+    "modified": "2024-12-27T12:48:49.094010+05:30"
+  },
+  {
+    "testpress_id": 668,
+    "lms_id": "06505033-b344-4c72-8f52-2236ca19a03c",
+    "name": "SA 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/668/",
+    "created": "2024-12-02T13:47:28.861910+05:30",
+    "modified": "2024-12-02T13:47:28.861910+05:30"
+  },
+  {
+    "testpress_id": 667,
+    "lms_id": "03dac846-ae1b-43d0-9420-9b30c92481bf",
+    "name": "SOM 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/667/",
+    "created": "2024-12-02T13:46:32.198863+05:30",
+    "modified": "2024-12-02T13:46:32.198863+05:30"
+  },
+  {
+    "testpress_id": 666,
+    "lms_id": "95b2291a-82ad-462c-824d-401e101625fa",
+    "name": "Chapterwise JDO PYQs EBooklet 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/666/",
+    "created": "2024-12-02T11:12:04.665175+05:30",
+    "modified": "2024-12-02T11:12:04.665175+05:30"
+  },
+  {
+    "testpress_id": 663,
+    "lms_id": "31e1c778-b455-4306-b0ff-3b0c99b94d9b",
+    "name": "Chapterwise AE PYQs EBooklet 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/663/",
+    "created": "2024-11-30T21:00:28.337627+05:30",
+    "modified": "2024-11-30T21:00:28.337627+05:30"
+  },
+  {
+    "testpress_id": 657,
+    "lms_id": "57fcf68a-eeb2-444e-8bba-8e38e99170ec",
+    "name": "Field Surveyor 2024 (Videos)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/657/",
+    "created": "2024-11-16T09:52:33.152083+05:30",
+    "modified": "2024-11-16T09:52:33.152083+05:30"
+  },
+  {
+    "testpress_id": 656,
+    "lms_id": "8ef0752b-b853-45b8-a18b-d8b21e6e29bb",
+    "name": "Chapterwise PYQs EBooklet 2024 (FS & DM)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/656/",
+    "created": "2024-11-12T18:14:42.690579+05:30",
+    "modified": "2024-11-12T18:14:42.690579+05:30"
+  },
+  {
+    "testpress_id": 655,
+    "lms_id": "2736d05b-7334-4d37-9858-6684dc3c30e7",
+    "name": "ENotes (Code-443) | 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/655/",
+    "created": "2024-11-12T15:27:08.260433+05:30",
+    "modified": "2025-07-04T22:39:20.943495+05:30"
+  },
+  {
+    "testpress_id": 650,
+    "lms_id": "b9e6c19a-7f46-4436-8c65-55054dac5372",
+    "name": "Field Surveyor - Test Series (CTSE 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/650/",
+    "created": "2024-11-11T21:22:42.708872+05:30",
+    "modified": "2024-11-11T21:22:42.708872+05:30"
+  },
+  {
+    "testpress_id": 648,
+    "lms_id": "547993d9-a524-4732-a7bc-5279a589ff73",
+    "name": "Video Batch (TNPSC-JDO 2025)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/648/",
+    "created": "2024-11-03T11:34:34.429901+05:30",
+    "modified": "2024-11-03T11:34:34.429901+05:30"
+  },
+  {
+    "testpress_id": 646,
+    "lms_id": "71a6ff2d-fccd-49ce-80c6-85da355674d9",
+    "name": "JDO Exam Free mock Test",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/646/",
+    "created": "2024-11-03T09:06:06.475675+05:30",
+    "modified": "2024-11-03T09:06:06.475675+05:30"
+  },
+  {
+    "testpress_id": 642,
+    "lms_id": "7979e66a-b40d-4cdd-865b-81acb14f5b1a",
+    "name": "AE Exam FREE Mock Test",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/642/",
+    "created": "2024-10-20T09:16:35.506751+05:30",
+    "modified": "2024-10-20T09:16:35.506751+05:30"
+  },
+  {
+    "testpress_id": 640,
+    "lms_id": "4b3ef01f-27ea-40a0-8eba-16298c8712b6",
+    "name": "ENotes (Code:398) |  2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/640/",
+    "created": "2024-10-17T11:47:26.595461+05:30",
+    "modified": "2025-06-29T17:04:27.680817+05:30"
+  },
+  {
+    "testpress_id": 636,
+    "lms_id": "3867168f-deae-4f52-a91d-ca41095c25b1",
+    "name": "MAWS 2024 Guidance Programme",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/636/",
+    "created": "2024-09-24T20:47:20.010344+05:30",
+    "modified": "2024-09-24T20:47:20.010344+05:30"
+  },
+  {
+    "testpress_id": 635,
+    "lms_id": "24358db0-7cc8-4428-8ef2-8f5bd4bfdf8c",
+    "name": "299 GT&MT 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/635/",
+    "created": "2024-09-24T14:51:41.679881+05:30",
+    "modified": "2024-09-24T14:51:41.679881+05:30"
+  },
+  {
+    "testpress_id": 630,
+    "lms_id": "61b8a757-dffb-4d01-9bba-77761d06df30",
+    "name": "JDO Scholarship Test 2024 (for one day)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/630/",
+    "created": "2024-09-17T12:29:35.937734+05:30",
+    "modified": "2024-09-17T12:29:35.937734+05:30"
+  },
+  {
+    "testpress_id": 628,
+    "lms_id": "bcb005aa-13a1-411f-8a45-71fe96c7304b",
+    "name": "398 GT&MT 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/628/",
+    "created": "2024-09-12T11:18:16.212090+05:30",
+    "modified": "2024-09-12T11:18:16.212090+05:30"
+  },
+  {
+    "testpress_id": 623,
+    "lms_id": "2be93343-ed23-41f7-9efe-b3c8e894cd03",
+    "name": "PBPYQs398",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/623/",
+    "created": "2024-09-09T20:09:04.248729+05:30",
+    "modified": "2024-09-09T20:09:04.248729+05:30"
+  },
+  {
+    "testpress_id": 622,
+    "lms_id": "4ff074f6-80e8-4532-840e-0b7c8531cdd9",
+    "name": "PN398",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/622/",
+    "created": "2024-09-09T19:58:26.202934+05:30",
+    "modified": "2024-09-09T19:58:26.202934+05:30"
+  },
+  {
+    "testpress_id": 621,
+    "lms_id": "819f5b2e-1053-4669-b1ca-cd7d4985f183",
+    "name": "PN299",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/621/",
+    "created": "2024-09-09T19:58:12.818256+05:30",
+    "modified": "2024-09-09T19:58:12.818256+05:30"
+  },
+  {
+    "testpress_id": 620,
+    "lms_id": "175816e6-9cde-49b2-82f5-fc81ff05b01e",
+    "name": "PT398",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/620/",
+    "created": "2024-09-09T19:54:51.359383+05:30",
+    "modified": "2024-09-09T19:54:51.359383+05:30"
+  },
+  {
+    "testpress_id": 619,
+    "lms_id": "00c93bd6-b644-402f-97be-5884e5360cb9",
+    "name": "PT299",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/619/",
+    "created": "2024-09-09T19:38:52.798278+05:30",
+    "modified": "2024-09-09T19:38:52.798278+05:30"
+  },
+  {
+    "testpress_id": 618,
+    "lms_id": "b2eede47-35fc-471f-9071-adb40c5506ce",
+    "name": "🔥CLASH OF MINDS",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/618/",
+    "created": "2024-09-08T08:57:00.184496+05:30",
+    "modified": "2024-09-08T08:57:00.184496+05:30"
+  },
+  {
+    "testpress_id": 615,
+    "lms_id": "082e7e0a-feb4-4ce5-a71a-7188fd0f3d75",
+    "name": "E-Booklet - Subjectwise PYQs (Diploma Std.) 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/615/",
+    "created": "2024-09-04T18:02:22.704158+05:30",
+    "modified": "2024-09-04T18:02:22.704158+05:30"
+  },
+  {
+    "testpress_id": 609,
+    "lms_id": "2c1dd2c7-c4b8-48c5-8938-328aed33815e",
+    "name": "G-Review Free ENotes",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/609/",
+    "created": "2024-09-01T17:34:30.316469+05:30",
+    "modified": "2024-09-25T11:28:08.160695+05:30"
+  },
+  {
+    "testpress_id": 606,
+    "lms_id": "c953809b-afbc-4cf7-bd1e-16363f2b204a",
+    "name": "Clash of Minds (Velammal College)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/606/",
+    "created": "2024-08-24T14:15:25.829573+05:30",
+    "modified": "2024-08-27T09:03:53.493985+05:30"
+  },
+  {
+    "testpress_id": 596,
+    "lms_id": "454e4fb2-1a3d-4341-b54c-aefe60cd61da",
+    "name": "Interview Guidance Programme 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/596/",
+    "created": "2024-08-17T10:39:56.949770+05:30",
+    "modified": "2024-08-17T10:39:56.949770+05:30"
+  },
+  {
+    "testpress_id": 591,
+    "lms_id": "1026b046-43b6-4516-aab8-92dda4da6aca",
+    "name": "Battle of Brains",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/591/",
+    "created": "2024-08-09T16:12:34.342017+05:30",
+    "modified": "2024-08-09T16:12:34.342017+05:30"
+  },
+  {
+    "testpress_id": 587,
+    "lms_id": "9f03c8c9-f91c-4da6-90dc-be485172f251",
+    "name": "Steel 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/587/",
+    "created": "2024-07-26T21:37:42.282816+05:30",
+    "modified": "2024-07-26T21:37:42.282816+05:30"
+  },
+  {
+    "testpress_id": 586,
+    "lms_id": "f851630b-d37a-4c9e-9400-cc666be3fe35",
+    "name": "RCC 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/586/",
+    "created": "2024-07-26T21:32:49.831835+05:30",
+    "modified": "2024-07-26T21:32:49.831835+05:30"
+  },
+  {
+    "testpress_id": 584,
+    "lms_id": "3f6aeda8-4fe9-4cc0-b91b-94723c5d28ad",
+    "name": "SA 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/584/",
+    "created": "2024-07-17T19:57:24.994492+05:30",
+    "modified": "2024-07-17T19:57:24.994492+05:30"
+  },
+  {
+    "testpress_id": 583,
+    "lms_id": "ed7bd5e3-a4e7-4d79-8330-2beb52d6def0",
+    "name": "SOM 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/583/",
+    "created": "2024-07-08T09:20:42.944600+05:30",
+    "modified": "2024-07-08T09:20:42.944600+05:30"
+  },
+  {
+    "testpress_id": 582,
+    "lms_id": "6e4f6cbf-7b3e-4c0a-b6f7-ee10c034bd0a",
+    "name": "Echart CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/582/",
+    "created": "2024-07-08T08:49:52.566056+05:30",
+    "modified": "2024-07-08T08:49:52.566056+05:30"
+  },
+  {
+    "testpress_id": 581,
+    "lms_id": "067518c1-ff2a-4ba7-ab9c-134b371688ef",
+    "name": "EChart CTSE 2024 (Code-299)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/581/",
+    "created": "2024-07-08T08:49:14.148194+05:30",
+    "modified": "2024-07-08T08:49:14.148194+05:30"
+  },
+  {
+    "testpress_id": 580,
+    "lms_id": "58cab051-4d5a-4b52-a07b-64e7e7ab7d4f",
+    "name": "AE Online Classes CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/580/",
+    "created": "2024-07-03T11:58:51.614092+05:30",
+    "modified": "2024-07-03T11:58:51.614092+05:30"
+  },
+  {
+    "testpress_id": 578,
+    "lms_id": "b3a69207-a12b-4949-8141-42d47adf49f4",
+    "name": "Test Series CTSE 2024 (Code-299)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/578/",
+    "created": "2024-07-03T11:13:27.550552+05:30",
+    "modified": "2024-07-03T11:13:27.550552+05:30"
+  },
+  {
+    "testpress_id": 577,
+    "lms_id": "68acbe8a-1c43-4edd-918f-6014895e0e71",
+    "name": "Test Series CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/577/",
+    "created": "2024-07-03T11:13:02.143529+05:30",
+    "modified": "2024-07-03T11:13:02.143529+05:30"
+  },
+  {
+    "testpress_id": 573,
+    "lms_id": "9cd752a8-8a12-4a1c-ab4f-712dd7bee671",
+    "name": "ENotes CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/573/",
+    "created": "2024-07-02T15:46:54.396491+05:30",
+    "modified": "2024-07-02T15:46:54.396491+05:30"
+  },
+  {
+    "testpress_id": 571,
+    "lms_id": "3fb88cb4-6724-4c9b-9dcb-79668fbf00b7",
+    "name": "Subjectwise PYQs Quiz CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/571/",
+    "created": "2024-07-02T15:24:28.035344+05:30",
+    "modified": "2024-07-02T15:24:28.035344+05:30"
+  },
+  {
+    "testpress_id": 569,
+    "lms_id": "7ea0c1a8-9874-433a-b4f8-f1498c47ba8d",
+    "name": "Subjectwise PYQs E-Booklet CTSE 2024 (Code-398)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/569/",
+    "created": "2024-07-01T12:39:35.338893+05:30",
+    "modified": "2024-07-02T15:07:08.073135+05:30"
+  },
+  {
+    "testpress_id": 561,
+    "lms_id": "cf5015fb-ff12-4fde-a217-948013bc02c5",
+    "name": "MAWS 201 E-Booklet",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/561/",
+    "created": "2024-06-28T08:14:10.967929+05:30",
+    "modified": "2024-06-28T08:14:10.967929+05:30"
+  },
+  {
+    "testpress_id": 555,
+    "lms_id": "d3d6ea43-d244-4d8c-b150-7bed3579e5cc",
+    "name": "MAWS Jayarami reddy",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/555/",
+    "created": "2024-06-04T09:13:51.000784+05:30",
+    "modified": "2024-06-04T09:13:51.000784+05:30"
+  },
+  {
+    "testpress_id": 554,
+    "lms_id": "6ff5fa15-b2c5-4650-976d-48a4043ea0c7",
+    "name": "MAWS201 GT & MT",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/554/",
+    "created": "2024-06-03T11:03:18.520161+05:30",
+    "modified": "2024-06-03T11:03:18.520161+05:30"
+  },
+  {
+    "testpress_id": 551,
+    "lms_id": "b4c3626d-c124-4d8b-add1-3d777eaadf57",
+    "name": "Book Back Questions - Test Batch 2025",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/551/",
+    "created": "2024-05-25T09:20:08.213526+05:30",
+    "modified": "2025-08-04T11:26:45.776818+05:30"
+  },
+  {
+    "testpress_id": 550,
+    "lms_id": "58145561-4c18-4a4d-977f-cea895a7ecc2",
+    "name": "FS 2024 Test Series",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/550/",
+    "created": "2024-05-20T14:21:04.978881+05:30",
+    "modified": "2024-05-20T14:21:04.978881+05:30"
+  },
+  {
+    "testpress_id": 549,
+    "lms_id": "cd810af9-3a17-403d-98ec-3e8cbc9ef8b5",
+    "name": "DM 2024 Video Batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/549/",
+    "created": "2024-05-20T11:19:50.667157+05:30",
+    "modified": "2024-05-20T11:19:50.667157+05:30"
+  },
+  {
+    "testpress_id": 548,
+    "lms_id": "bce9a935-11c2-4282-a93e-0a4f8157bf4d",
+    "name": "MAWS Gupta 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/548/",
+    "created": "2024-05-18T17:33:18.242563+05:30",
+    "modified": "2024-05-18T17:33:18.242563+05:30"
+  },
+  {
+    "testpress_id": 547,
+    "lms_id": "a5a44111-11a2-4c97-bf1c-927be5daa50e",
+    "name": "MAWS Khurmi 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/547/",
+    "created": "2024-05-18T17:32:26.158568+05:30",
+    "modified": "2024-05-18T17:32:35.112793+05:30"
+  },
+  {
+    "testpress_id": 546,
+    "lms_id": "4f5f0874-fafd-4d8d-9444-5ef58a5dfa9c",
+    "name": "DM 2024 Test Series",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/546/",
+    "created": "2024-05-12T21:03:36.646384+05:30",
+    "modified": "2024-05-12T21:03:36.646384+05:30"
+  },
+  {
+    "testpress_id": 545,
+    "lms_id": "fde5a881-3ba4-4c64-aed5-5fa30df78089",
+    "name": "MAWS101 FREE Mock Test for top 50 members",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/545/",
+    "created": "2024-05-12T09:51:53.881677+05:30",
+    "modified": "2024-05-12T09:51:53.881677+05:30"
+  },
+  {
+    "testpress_id": 543,
+    "lms_id": "03cff908-b9d5-4027-af2a-4f1db97aff81",
+    "name": "MAWS Objective Books",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/543/",
+    "created": "2024-05-10T09:57:36.604209+05:30",
+    "modified": "2024-05-10T09:57:36.604209+05:30"
+  },
+  {
+    "testpress_id": 542,
+    "lms_id": "0c70e5f9-a71f-4724-b709-ad1256b9342e",
+    "name": "MAWS101 GT & MT",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/542/",
+    "created": "2024-05-10T07:15:42.403354+05:30",
+    "modified": "2024-05-10T07:15:42.403354+05:30"
+  },
+  {
+    "testpress_id": 541,
+    "lms_id": "57737760-9892-461c-90c9-b7e6041e3dd6",
+    "name": "BBQs MAWS 2024 batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/541/",
+    "created": "2024-05-07T18:14:53.056530+05:30",
+    "modified": "2024-05-07T18:14:53.056530+05:30"
+  },
+  {
+    "testpress_id": 539,
+    "lms_id": "ac7c9f74-43b2-42e4-bb58-d4f08731c5d7",
+    "name": "FREE Mock Test Batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/539/",
+    "created": "2024-04-26T17:49:47.581844+05:30",
+    "modified": "2024-04-26T17:49:47.581844+05:30"
+  },
+  {
+    "testpress_id": 538,
+    "lms_id": "9b544e8e-c67b-48e7-8402-645b1963f2fd",
+    "name": "Draftsman - ENotes (CTSE 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/538/",
+    "created": "2024-04-25T17:49:54.536395+05:30",
+    "modified": "2024-04-25T17:49:54.536395+05:30"
+  },
+  {
+    "testpress_id": 536,
+    "lms_id": "c521671a-b08a-4199-aacc-07741080b14a",
+    "name": "Field Surveyor - ENotes (CTSE 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/536/",
+    "created": "2024-04-25T17:26:29.828698+05:30",
+    "modified": "2024-04-25T17:26:29.828698+05:30"
+  },
+  {
+    "testpress_id": 533,
+    "lms_id": "da54d3a0-b5b7-45ae-8e2d-308c7469b98b",
+    "name": "AE Subjectwise Quiz (PYQs) - 101",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/533/",
+    "created": "2024-04-20T13:06:33.686845+05:30",
+    "modified": "2024-04-20T13:06:33.686845+05:30"
+  },
+  {
+    "testpress_id": 532,
+    "lms_id": "d578c440-20fc-46a2-89a1-f1e6dfe36b66",
+    "name": "GS 2024",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/532/",
+    "created": "2024-04-19T19:53:07.515194+05:30",
+    "modified": "2024-04-19T19:53:07.515194+05:30"
+  },
+  {
+    "testpress_id": 531,
+    "lms_id": "e9f744d5-45c3-40d9-97be-55bdd962b06c",
+    "name": "MAWS AE Subjectwise PYQs (E-Booklet)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/531/",
+    "created": "2024-04-12T09:38:20.060401+05:30",
+    "modified": "2024-04-21T19:58:56.632460+05:30"
+  },
+  {
+    "testpress_id": 527,
+    "lms_id": "e481fa71-9a0f-48b5-bd86-5892075b0fcf",
+    "name": "Off",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/527/",
+    "created": "2024-03-16T16:37:42.368400+05:30",
+    "modified": "2024-03-16T16:37:42.368400+05:30"
+  },
+  {
+    "testpress_id": 526,
+    "lms_id": "91c32435-0932-4222-8031-48ca54900227",
+    "name": "E-chart Degree std 2024 MAWS",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/526/",
+    "created": "2024-03-14T16:51:12.275676+05:30",
+    "modified": "2024-03-14T16:51:12.275676+05:30"
+  },
+  {
+    "testpress_id": 525,
+    "lms_id": "799a146e-f50a-473b-b668-7d6c4138d79a",
+    "name": "E-chart Diploma std 2024 MAWS",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/525/",
+    "created": "2024-03-14T15:17:15.363095+05:30",
+    "modified": "2024-03-14T15:17:15.363095+05:30"
+  },
+  {
+    "testpress_id": 524,
+    "lms_id": "20900eb4-ddca-45ca-ae13-7bfc2297c46e",
+    "name": "MAWS Test Series (Mech Engg - Degree Std.) (Code No.102)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/524/",
+    "created": "2024-02-26T19:03:23.117017+05:30",
+    "modified": "2024-02-26T19:03:23.117017+05:30"
+  },
+  {
+    "testpress_id": 519,
+    "lms_id": "49fd306e-83e1-434b-bda8-d392e21a5e0f",
+    "name": "MAWS Civil Engg Videos (Degree Std) (Code: 101)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/519/",
+    "created": "2024-02-09T10:50:04.552725+05:30",
+    "modified": "2024-02-09T10:50:17.631730+05:30"
+  },
+  {
+    "testpress_id": 518,
+    "lms_id": "fdc1fbc6-9b6d-48dc-8ee6-bb2c13bdba66",
+    "name": "MAWS Civil Engg Videos (Diploma Std) (Code: 201)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/518/",
+    "created": "2024-02-09T10:49:44.037232+05:30",
+    "modified": "2024-02-09T10:49:44.037232+05:30"
+  },
+  {
+    "testpress_id": 514,
+    "lms_id": "42c0f1d9-8292-4dc5-9dde-a7ed7dd65941",
+    "name": "MAWS Architecture Engg ENotes (Degree Std) (Code: 105)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/514/",
+    "created": "2024-02-08T18:30:19.941928+05:30",
+    "modified": "2024-02-08T18:30:19.941928+05:30"
+  },
+  {
+    "testpress_id": 507,
+    "lms_id": "d3d2bf3b-e002-4396-acd8-690572000836",
+    "name": "MAWS Civil Engg ENotes (Diploma Std) (Code: 201)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/507/",
+    "created": "2024-02-07T06:07:45.820499+05:30",
+    "modified": "2024-02-07T06:07:45.820499+05:30"
+  },
+  {
+    "testpress_id": 506,
+    "lms_id": "54fecf22-0a85-4973-aecd-85251b09130f",
+    "name": "MAWS Civil Engg ENotes (Degree Std) (Code: 101)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/506/",
+    "created": "2024-02-07T06:07:25.910890+05:30",
+    "modified": "2024-02-07T06:07:25.910890+05:30"
+  },
+  {
+    "testpress_id": 505,
+    "lms_id": "7979fa97-0337-43b7-adb2-c9954234afdd",
+    "name": "MAWS Civil Engg Test Series (Diploma Std) (Code: 201)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/505/",
+    "created": "2024-02-07T06:07:07.765453+05:30",
+    "modified": "2024-02-07T06:07:07.765453+05:30"
+  },
+  {
+    "testpress_id": 504,
+    "lms_id": "fc61b6ce-ca04-4273-9cc8-0f7434ab6ae9",
+    "name": "MAWS Civil Engg Test Series (Degree Std) (Code: 101)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/504/",
+    "created": "2024-02-07T06:06:29.855218+05:30",
+    "modified": "2024-02-07T06:06:29.855218+05:30"
+  },
+  {
+    "testpress_id": 501,
+    "lms_id": "be6c83f4-7619-43b5-a912-a1dbcc255831",
+    "name": "ENotes Batch 2024 (Subject code: 255)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/501/",
+    "created": "2024-01-26T10:20:57.209681+05:30",
+    "modified": "2024-01-26T10:20:57.209681+05:30"
+  },
+  {
+    "testpress_id": 500,
+    "lms_id": "a1136616-fd34-4880-bb6e-cbd5c8618325",
+    "name": "ALL BOX (Updated)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/500/",
+    "created": "2024-01-22T12:50:44.517777+05:30",
+    "modified": "2024-01-22T12:50:58.981219+05:30"
+  },
+  {
+    "testpress_id": 496,
+    "lms_id": "0c178547-6d95-464e-9a23-9d0f837f0d7a",
+    "name": "10-01-2024 (Offline Batch)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/496/",
+    "created": "2024-01-10T09:52:17.465809+05:30",
+    "modified": "2024-01-10T09:52:17.465809+05:30"
+  },
+  {
+    "testpress_id": 491,
+    "lms_id": "606575c2-4824-4d24-b46a-825c5b41732b",
+    "name": "Combo Pack (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/491/",
+    "created": "2023-12-20T18:34:46.120299+05:30",
+    "modified": "2023-12-20T18:34:46.120299+05:30"
+  },
+  {
+    "testpress_id": 488,
+    "lms_id": "52bb0f99-a47c-492d-a1a7-bc7cae71e33d",
+    "name": "Quick Revision E-Chart (JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/488/",
+    "created": "2023-12-20T18:06:08.759936+05:30",
+    "modified": "2023-12-20T18:06:08.759936+05:30"
+  },
+  {
+    "testpress_id": 487,
+    "lms_id": "8a6d9a0a-3325-4495-b849-1a56ace053e6",
+    "name": "Mock Tests (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/487/",
+    "created": "2023-12-20T18:04:55.401896+05:30",
+    "modified": "2023-12-20T18:04:55.401896+05:30"
+  },
+  {
+    "testpress_id": 486,
+    "lms_id": "9d3da346-85af-4ea4-9e4a-68344397bdc0",
+    "name": "Unitwise Grand Tests (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/486/",
+    "created": "2023-12-20T18:04:43.308024+05:30",
+    "modified": "2023-12-20T18:04:43.308024+05:30"
+  },
+  {
+    "testpress_id": 485,
+    "lms_id": "eda47044-2a04-4957-878e-a6b74dfc9b3b",
+    "name": "GS Test Batch (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/485/",
+    "created": "2023-12-20T18:04:27.047879+05:30",
+    "modified": "2023-12-20T18:04:27.047879+05:30"
+  },
+  {
+    "testpress_id": 484,
+    "lms_id": "31220f51-ba33-4a42-af8b-afa3b5fef959",
+    "name": "Video Batch (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/484/",
+    "created": "2023-12-20T18:04:06.845077+05:30",
+    "modified": "2023-12-20T18:04:06.845077+05:30"
+  },
+  {
+    "testpress_id": 483,
+    "lms_id": "d9e65461-b08d-48a7-8961-f686994b6fa6",
+    "name": "Test Series (TNPSC-JDO 2024)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/483/",
+    "created": "2023-12-20T18:03:45.820893+05:30",
+    "modified": "2023-12-20T18:03:45.820893+05:30"
+  },
+  {
+    "testpress_id": 482,
+    "lms_id": "776da6bc-919f-444c-9c9a-0cb557bfe8fc",
+    "name": "ENotes CTSE 2024 (Code-299)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/482/",
+    "created": "2023-12-20T18:03:32.746933+05:30",
+    "modified": "2024-07-01T10:56:24.946451+05:30"
+  },
+  {
+    "testpress_id": 478,
+    "lms_id": "a3326837-4982-4584-9864-a52548e52755",
+    "name": "CESE AE PYQs Subjectwise Quiz - 2023 Batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/478/",
+    "created": "2023-12-11T10:59:00.691961+05:30",
+    "modified": "2023-12-11T10:59:00.691961+05:30"
+  },
+  {
+    "testpress_id": 475,
+    "lms_id": "0a0dc0c7-12f8-4ab4-ac84-9364f82f9866",
+    "name": "AE-2023 Technical Mock Tests",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/475/",
+    "created": "2023-12-02T16:28:37.086036+05:30",
+    "modified": "2023-12-02T16:28:37.086036+05:30"
+  },
+  {
+    "testpress_id": 466,
+    "lms_id": "0205fe0c-21ba-41e2-a3c2-8b153ddbf30d",
+    "name": "Unitwise Grand Tests (TNPSC-AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/466/",
+    "created": "2023-10-12T22:04:05.967002+05:30",
+    "modified": "2023-10-12T22:04:05.967002+05:30"
+  },
+  {
+    "testpress_id": 463,
+    "lms_id": "f9b52e6f-ea30-4e3a-aedc-6a898cb72093",
+    "name": "TNPSC-AE 2023",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/463/",
+    "created": "2023-10-11T17:27:38.222248+05:30",
+    "modified": "2023-10-11T17:27:38.222248+05:30"
+  },
+  {
+    "testpress_id": 460,
+    "lms_id": "bdaf242c-2318-491f-a3fb-0953d6aa59ea",
+    "name": "SSC-JE 2023 Free Mock Tests (Prelims)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/460/",
+    "created": "2023-10-07T12:18:14.373183+05:30",
+    "modified": "2023-10-07T12:18:14.373183+05:30"
+  },
+  {
+    "testpress_id": 456,
+    "lms_id": "56b6a83a-8d4d-4cf9-99cf-97aa032e1c9c",
+    "name": "Quick Revision E-Chart (AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/456/",
+    "created": "2023-10-01T18:31:15.836556+05:30",
+    "modified": "2023-12-20T18:05:57.424343+05:30"
+  },
+  {
+    "testpress_id": 453,
+    "lms_id": "8f70e9c2-6c65-4be2-ad27-150406252a00",
+    "name": "Scholarship test",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/453/",
+    "created": "2023-09-24T09:07:21.489420+05:30",
+    "modified": "2023-09-24T09:07:21.489420+05:30"
+  },
+  {
+    "testpress_id": 443,
+    "lms_id": "a78858d6-7ef2-405e-85fb-4aa13dfcc58d",
+    "name": "UNIT-1 TNPSC-AE",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/443/",
+    "created": "2023-09-16T11:26:05.311828+05:30",
+    "modified": "2023-09-16T11:26:05.311828+05:30"
+  },
+  {
+    "testpress_id": 437,
+    "lms_id": "62160f65-7797-409c-ae4f-08e07baee4b1",
+    "name": "SSC-JE Subjectwise PYQs 2023",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/437/",
+    "created": "2023-07-27T06:28:58.502918+05:30",
+    "modified": "2023-07-27T06:28:58.502918+05:30"
+  },
+  {
+    "testpress_id": 435,
+    "lms_id": "80c9172c-ac56-4427-a11c-5d3725643fbc",
+    "name": "SSC-JE 2023 test batch",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/435/",
+    "created": "2023-07-25T21:34:32.615524+05:30",
+    "modified": "2023-07-25T21:34:32.615524+05:30"
+  },
+  {
+    "testpress_id": 400,
+    "lms_id": "572c0d99-717b-400e-b67f-5402d5086e3d",
+    "name": "GS Test Batch (TNPSC-AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/400/",
+    "created": "2023-06-08T20:04:05.259192+05:30",
+    "modified": "2023-06-08T20:04:05.259192+05:30"
+  },
+  {
+    "testpress_id": 399,
+    "lms_id": "117c4b35-cabd-4d09-85bd-f8ea2844fa0b",
+    "name": "Engg Maths Videos",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/399/",
+    "created": "2023-06-02T05:11:52.312728+05:30",
+    "modified": "2023-06-02T05:11:52.312728+05:30"
+  },
+  {
+    "testpress_id": 396,
+    "lms_id": "ae254bd6-30c3-44ad-8786-0ffe4bfa7513",
+    "name": "Mock Tests (TNPSC-JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/396/",
+    "created": "2023-05-18T21:11:05.974907+05:30",
+    "modified": "2023-05-18T21:11:05.974907+05:30"
+  },
+  {
+    "testpress_id": 359,
+    "lms_id": "bc14d66b-10bd-481e-8738-509c5acf768a",
+    "name": "Free offline batch 2023",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/359/",
+    "created": "2023-05-15T09:03:23.330954+05:30",
+    "modified": "2023-05-15T09:03:23.330954+05:30"
+  },
+  {
+    "testpress_id": 358,
+    "lms_id": "dad14031-5ee1-411c-b871-47e8aed2354e",
+    "name": "teja",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/358/",
+    "created": "2023-05-13T15:34:46.610212+05:30",
+    "modified": "2023-05-13T15:34:46.610212+05:30"
+  },
+  {
+    "testpress_id": 350,
+    "lms_id": "5e16afbb-78b4-445d-bbe6-3988fb1739c9",
+    "name": "Combo Pack (TNPSC-AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/350/",
+    "created": "2023-05-06T12:59:38.767749+05:30",
+    "modified": "2023-05-10T19:47:35.939158+05:30"
+  },
+  {
+    "testpress_id": 349,
+    "lms_id": "c58f19ff-db5b-4b1b-9dae-da778dc7e705",
+    "name": "ENotes (TNPSC-AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/349/",
+    "created": "2023-05-06T12:59:09.996532+05:30",
+    "modified": "2023-05-10T19:47:46.310291+05:30"
+  },
+  {
+    "testpress_id": 348,
+    "lms_id": "379e758a-5eb4-4489-9287-0c87835afbcb",
+    "name": "Combo Pack (TRB-PL 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/348/",
+    "created": "2023-05-06T12:57:01.581291+05:30",
+    "modified": "2023-05-10T19:47:53.632084+05:30"
+  },
+  {
+    "testpress_id": 347,
+    "lms_id": "9a6d6c88-7797-4bd9-abc6-d096a3910e47",
+    "name": "Test Batch (TRB-PL 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/347/",
+    "created": "2023-05-06T12:56:44.677919+05:30",
+    "modified": "2023-05-10T19:48:00.373052+05:30"
+  },
+  {
+    "testpress_id": 346,
+    "lms_id": "0a521b3f-81a7-42b4-a250-cebffdde8217",
+    "name": "E-Notes (TRB-PL 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/346/",
+    "created": "2023-05-06T12:56:24.429559+05:30",
+    "modified": "2023-05-10T19:48:06.313425+05:30"
+  },
+  {
+    "testpress_id": 341,
+    "lms_id": "d1ee9a7f-b8e3-461c-8d4f-207020b9570f",
+    "name": "Mock Tests (TNPSC-RI 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/341/",
+    "created": "2023-04-28T17:50:34.178589+05:30",
+    "modified": "2023-05-10T19:40:34.311243+05:30"
+  },
+  {
+    "testpress_id": 340,
+    "lms_id": "5795f5bb-45c5-4cf9-8d41-6b61233f38bc",
+    "name": "Test Batch (TNPSC-AE 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/340/",
+    "created": "2023-04-26T11:55:31.533630+05:30",
+    "modified": "2023-05-10T19:48:13.295349+05:30"
+  },
+  {
+    "testpress_id": 335,
+    "lms_id": "1b68e08c-03b9-4c18-873f-94034deac14c",
+    "name": "Mahesh Sir",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/335/",
+    "created": "2023-03-22T07:15:30.878846+05:30",
+    "modified": "2023-03-22T07:15:30.878846+05:30"
+  },
+  {
+    "testpress_id": 334,
+    "lms_id": "6564dcc6-e3e4-4b9f-ba82-1cc13b05dccb",
+    "name": "Grand Tests (JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/334/",
+    "created": "2023-03-13T18:19:25.645038+05:30",
+    "modified": "2025-06-19T19:11:33.476370+05:30"
+  },
+  {
+    "testpress_id": 328,
+    "lms_id": "240c006a-ccae-477c-8c14-5cc24875dfd4",
+    "name": "Interview Guidance Programme 2022",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/328/",
+    "created": "2023-02-25T04:59:45.009302+05:30",
+    "modified": "2023-05-13T00:23:46.576121+05:30"
+  },
+  {
+    "testpress_id": 316,
+    "lms_id": "1d725f42-7476-48ea-b8e1-1ef4c442c71b",
+    "name": "Video Batch (TNPSC-RI 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/316/",
+    "created": "2023-01-13T01:38:25.224001+05:30",
+    "modified": "2023-05-10T19:47:00.108606+05:30"
+  },
+  {
+    "testpress_id": 309,
+    "lms_id": "1a2c0949-7b28-45db-b26e-1b5795e384cd",
+    "name": "Aptitude and Mental Ability",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/309/",
+    "created": "2022-12-29T09:56:49.078275+05:30",
+    "modified": "2022-12-29T09:56:49.078275+05:30"
+  },
+  {
+    "testpress_id": 300,
+    "lms_id": "93d96ec8-8cf1-43af-84fc-5667297e6990",
+    "name": "GS Test Batch (TNPSC-JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/300/",
+    "created": "2022-12-20T09:30:05.924548+05:30",
+    "modified": "2023-05-10T19:46:28.483968+05:30"
+  },
+  {
+    "testpress_id": 299,
+    "lms_id": "653c9dce-fa3a-49e1-8265-cc1435da510b",
+    "name": "ENotes (TNPSC-RI 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/299/",
+    "created": "2022-12-18T11:22:44.075543+05:30",
+    "modified": "2023-05-10T19:42:08.973303+05:30"
+  },
+  {
+    "testpress_id": 298,
+    "lms_id": "536e09c7-cfed-438b-848b-dd6590f6a69e",
+    "name": "Combo Pack (TNPSC-RI 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/298/",
+    "created": "2022-12-18T11:21:05.770886+05:30",
+    "modified": "2023-05-10T19:42:25.472179+05:30"
+  },
+  {
+    "testpress_id": 297,
+    "lms_id": "9e09c3ff-b3c5-4c90-b8e1-b87b62d10b2e",
+    "name": "Test Series (TNPSC-RI 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/297/",
+    "created": "2022-12-18T11:19:56.780444+05:30",
+    "modified": "2023-05-10T19:44:51.248138+05:30"
+  },
+  {
+    "testpress_id": 293,
+    "lms_id": "f0f77851-3653-438e-8bd6-3fb0c6eeb8a6",
+    "name": "AAI JE ATC",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/293/",
+    "created": "2022-12-13T21:41:10.118987+05:30",
+    "modified": "2022-12-13T21:41:10.118987+05:30"
+  },
+  {
+    "testpress_id": 286,
+    "lms_id": "d263d208-a5e9-4427-bbd0-6a1ef2987a50",
+    "name": "Video Batch (TNPSC-JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/286/",
+    "created": "2022-11-16T18:11:55.626548+05:30",
+    "modified": "2023-05-10T19:45:08.853730+05:30"
+  },
+  {
+    "testpress_id": 285,
+    "lms_id": "d8acf178-9566-4e2f-bb15-b96cfe9a9af2",
+    "name": "ENotes (TNPSC-JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/285/",
+    "created": "2022-11-16T12:20:13.300945+05:30",
+    "modified": "2023-05-10T19:45:26.768948+05:30"
+  },
+  {
+    "testpress_id": 284,
+    "lms_id": "7b942962-3bb0-4143-8fe0-49a6c5193e76",
+    "name": "Test Series (TNPSC-JDO 2023)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/284/",
+    "created": "2022-11-13T20:37:46.864687+05:30",
+    "modified": "2023-05-10T19:45:42.534649+05:30"
+  },
+  {
+    "testpress_id": 281,
+    "lms_id": "19205008-64a6-46b6-ac3b-afacecb94b41",
+    "name": "Reviewed App",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/281/",
+    "created": "2022-11-11T16:08:11.206178+05:30",
+    "modified": "2022-11-11T16:08:11.206178+05:30"
+  },
+  {
+    "testpress_id": 273,
+    "lms_id": "44cb4be2-329c-4b68-a732-adf447a3a949",
+    "name": "Admit Card (TNPSC-FS/DM 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/273/",
+    "created": "2022-10-30T09:10:19.717217+05:30",
+    "modified": "2023-05-10T19:56:52.079877+05:30"
+  },
+  {
+    "testpress_id": 271,
+    "lms_id": "3f21dfeb-7867-4d45-a8c3-d8bd0a45f7b4",
+    "name": "Mock Test (TNPSC-DM 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/271/",
+    "created": "2022-10-27T09:29:43.704872+05:30",
+    "modified": "2023-05-10T19:57:34.756459+05:30"
+  },
+  {
+    "testpress_id": 270,
+    "lms_id": "0fb30ce5-5dec-477b-960d-5f0d37942bcc",
+    "name": "Mock Tests (TNPSC-FS 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/270/",
+    "created": "2022-10-27T09:13:41.478973+05:30",
+    "modified": "2023-05-10T19:56:00.959351+05:30"
+  },
+  {
+    "testpress_id": 257,
+    "lms_id": "6426e2c8-e609-40d1-9107-7a496534cfed",
+    "name": "1 year subscription ",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/257/",
+    "created": "2022-08-22T10:40:09.221865+05:30",
+    "modified": "2022-08-22T10:40:09.229926+05:30"
+  },
+  {
+    "testpress_id": 255,
+    "lms_id": "71806ac8-97c8-426b-bd3d-b5febe4afd68",
+    "name": "Video Batch (TNPSC-DM 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/255/",
+    "created": "2022-08-08T08:49:52.069563+05:30",
+    "modified": "2023-05-10T19:57:44.270528+05:30"
+  },
+  {
+    "testpress_id": 250,
+    "lms_id": "29c18967-df69-436a-9cb6-efd77a6b807d",
+    "name": "ENotes (TNPSC-DM 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/250/",
+    "created": "2022-08-04T08:56:00.548481+05:30",
+    "modified": "2023-05-10T19:57:50.150580+05:30"
+  },
+  {
+    "testpress_id": 247,
+    "lms_id": "6916cdbc-20c7-4e34-b1eb-5c6b199d5679",
+    "name": "Free offline batch FS/DM 2022",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/247/",
+    "created": "2022-08-03T13:21:37.144933+05:30",
+    "modified": "2023-05-13T00:07:34.313094+05:30"
+  },
+  {
+    "testpress_id": 245,
+    "lms_id": "c6e87c10-8812-47e2-9ee7-21f88ce0a393",
+    "name": "Test Batch (TNPSC-DM 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/245/",
+    "created": "2022-08-02T08:59:48.266751+05:30",
+    "modified": "2023-05-10T19:57:56.676818+05:30"
+  },
+  {
+    "testpress_id": 244,
+    "lms_id": "e624d01f-c838-4da1-ad81-da5073d6c20a",
+    "name": "ENotes (TNPSC-FS 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/244/",
+    "created": "2022-08-01T09:26:35.374531+05:30",
+    "modified": "2023-05-10T19:55:51.985768+05:30"
+  },
+  {
+    "testpress_id": 241,
+    "lms_id": "39b88503-d2dd-46a9-8f92-640f6b582863",
+    "name": "Video Batch (TNPSC-FS 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/241/",
+    "created": "2022-07-31T15:03:43.354508+05:30",
+    "modified": "2023-05-10T19:54:51.763002+05:30"
+  },
+  {
+    "testpress_id": 238,
+    "lms_id": "e4c5bec5-0e85-4f85-b9c7-b45baedbe660",
+    "name": "Test Batch (TNPSC-FS 2022)",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/238/",
+    "created": "2022-07-29T10:44:21.660863+05:30",
+    "modified": "2023-05-10T19:55:19.087780+05:30"
+  },
+  {
+    "testpress_id": 229,
+    "lms_id": "a8b602f3-c0ff-48fd-9362-3286f92d355b",
+    "name": "CESE ADMIT CARD 2022",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/229/",
+    "created": "2022-07-14T03:43:23.909830+05:30",
+    "modified": "2023-05-13T00:21:33.278077+05:30"
+  },
+  {
+    "testpress_id": 222,
+    "lms_id": "d0ab7ca3-5ef4-4537-b944-c27add55ba28",
+    "name": "testpress",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/222/",
+    "created": "2022-07-05T10:15:19.996106+05:30",
+    "modified": "2022-07-05T10:15:20.004494+05:30"
+  },
+  {
+    "testpress_id": 201,
+    "lms_id": "efc385d9-212d-40c2-a3d6-e89ef3997954",
+    "name": "P. Jaya Rami Reddy",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/201/",
+    "created": "2022-05-04T09:31:24.887042+05:30",
+    "modified": "2022-05-04T09:31:24.890244+05:30"
+  },
+  {
+    "testpress_id": 181,
+    "lms_id": "951a4b78-f64a-4750-966a-e688610286d9",
+    "name": "Discussion Series-TNPSC-AE Subjectwise PYQs",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/181/",
+    "created": "2022-03-24T13:35:48.580354+05:30",
+    "modified": "2022-03-24T13:35:48.587458+05:30"
+  },
+  {
+    "testpress_id": 172,
+    "lms_id": "119b5c55-aa19-4e33-b06a-ded7d056e9f9",
+    "name": "Free offline batch AE 2022",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/172/",
+    "created": "2022-02-15T10:47:44.884856+05:30",
+    "modified": "2023-05-13T00:08:15.693045+05:30"
+  },
+  {
+    "testpress_id": 167,
+    "lms_id": "091f8f2b-5cdb-410a-b17b-e3f1cb169569",
+    "name": "ALL BOX",
+    "testpress_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/batches/167/",
+    "created": "2021-12-24T19:31:42.649762+05:30",
+    "modified": "2021-12-24T19:31:42.658191+05:30"
+  }
+]

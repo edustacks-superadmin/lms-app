@@ -1,0 +1,92 @@
+[
+    {
+        "name": "Current Affairs",
+        "testpress_id": 56,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Economy",
+        "testpress_id": 47,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "General Intelligence & Reasoning",
+        "testpress_id": 196,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "General Science",
+        "testpress_id": 43,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Geography",
+        "testpress_id": 45,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "GK",
+        "testpress_id": 195,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "History",
+        "testpress_id": 44,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Polity",
+        "testpress_id": 46,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-1",
+        "testpress_id": 66,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-10",
+        "testpress_id": 73,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-2",
+        "testpress_id": 200,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-3",
+        "testpress_id": 76,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-4",
+        "testpress_id": 202,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-5",
+        "testpress_id": 64,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-6",
+        "testpress_id": 77,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-7",
+        "testpress_id": 74,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "Unit-8&9",
+        "testpress_id": 203,
+        "parent_name": "General Studies"
+    },
+    {
+        "name": "#Unit-9",
+        "testpress_id": 72,
+        "parent_name": "General Studies"
+    }
+]

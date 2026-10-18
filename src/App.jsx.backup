@@ -1,0 +1,62 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { CourseProvider } from './context/CourseContext';
+import { BatchProvider } from './context/BatchContext';
+import { UserProvider } from './context/UserContext';
+import { PostProvider } from './context/PostContext';
+import { CategoryProvider } from './context/CategoryContext';
+import { ProductProvider } from './context/ProductContext';
+import { ProductCategoryProvider } from './context/ProductCategoryContext';
+import { SubjectProvider } from './context/SubjectContext';
+import { QuestionProvider } from './context/QuestionContext';
+import { QuestionFolderProvider } from './context/QuestionFolderContext';
+import { ExamProvider } from './context/ExamContext';
+import { ChapterProvider } from './context/ChapterContext';
+import { TransactionProvider } from './context/TransactionContext';
+import { InstituteProvider } from './context/InstituteContext';
+import { AuthProvider } from './context/AuthContext';
+
+function App() {
+  console.log('App rendering');
+  return (
+    <AuthProvider>
+      <UserProvider>
+        <BatchProvider>
+          <CourseProvider>
+            <PostProvider>
+              <CategoryProvider>
+                <ProductProvider>
+                  <ProductCategoryProvider>
+                    <SubjectProvider>
+                      <QuestionProvider>
+                        <QuestionFolderProvider>
+                          <ExamProvider>
+                            <ChapterProvider>
+                              <InstituteProvider>
+                                <TransactionProvider>
+                                  <div style={{ padding: '20px', background: 'white', minHeight: '100vh' }}>
+                                    <h1>LMS Application - All Providers</h1>
+                                    <p>If you see this, all providers are working!</p>
+                                    <Routes>
+                                      <Route path="/" element={<div>Home Page</div>} />
+                                    </Routes>
+                                  </div>
+                                </TransactionProvider>
+                              </InstituteProvider>
+                            </ChapterProvider>
+                          </ExamProvider>
+                        </QuestionFolderProvider>
+                      </QuestionProvider>
+                    </SubjectProvider>
+                  </ProductCategoryProvider>
+                </ProductProvider>
+              </CategoryProvider>
+            </PostProvider>
+          </CourseProvider>
+        </BatchProvider>
+      </UserProvider>
+    </AuthProvider>
+  );
+}
+
+export default App;

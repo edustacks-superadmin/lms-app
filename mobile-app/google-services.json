@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838438494203",
+    "project_id": "fir-test-ee6d7",
+    "storage_bucket": "fir-test-ee6d7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838438494203:android:7dc1a7246ec04b9393755e",
+        "android_client_info": {
+          "package_name": "com.maheshiesacademy.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1iFhxoBq-qqcEJNuWli6jUoFjifTVEjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

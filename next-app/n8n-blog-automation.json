@@ -1,0 +1,248 @@
+{
+    "name": "Blog Post Generation Workflow (with Image)",
+    "nodes": [
+        {
+            "parameters": {
+                "updates": [
+                    "message"
+                ],
+                "additionalFields": {}
+            },
+            "type": "n8n-nodes-base.telegramTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                220,
+                240
+            ],
+            "id": "e1f2b3a4-5678-9012-3456-7890abcdef12",
+            "name": "Telegram Trigger",
+            "webhookId": "48b7f8c9-d0e1-2345-6789-012345abcdef"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+                "authentication": "none",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "contents",
+                            "value": "={{ [ { parts: [ { text: 'Write a comprehensive blog post about: ' + $json.message.text + '. \\n\\nThe output must be a valid JSON object with the following structure:\\n{\\n  \"title\": \"Catchy Title (max 60 characters)\",\\n  \"summary\": \"Short summary of the post (max 160 characters)\",\\n  \"content\": \"<p>HTML formatted content of the blog post...</p>\"\\n}\\n\\nDo not include markdown formatting (like ```json). Just return the raw JSON string.' } ] } ] }}"
+                        }
+                    ]
+                },
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "key",
+                            "value": "YOUR_GEMINI_API_KEY_HERE"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                440,
+                240
+            ],
+            "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+            "name": "Gemini Chat Model (HTTP)"
+        },
+        {
+            "parameters": {
+                "jsCode": "const response = $input.first().json;\nlet text = '';\n\n// 1. Try to extract from standard Gemini API structure\nif (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {\n  text = response.candidates[0].content.parts[0].text;\n} \n// 2. Fallback: maybe the input IS the text string (e.g. manual testing)\nelse if (typeof response === 'string') {\n  text = response;\n}\n// 3. CHECK FOR 'text' PROPERTY (Fix for reported error)\nelse if (response.text) {\n  text = response.text;\n}\n// 4. Fallback: input is already the parsed object\nelse if (response.title && response.content) {\n    return response;\n}\n\nif (!text) {\n  throw new Error('Could not find text content in input. Received: ' + JSON.stringify(response));\n}\n\n// Clean up markdown code blocks (case insensitive)\ntext = text.replace(/```json/gi, '').replace(/```/g, '').trim();\n\ntry {\n  return JSON.parse(text);\n} catch (e) {\n  return { \n      error: 'Failed to parse JSON', \n      message: e.message,\n      cleanText: text,\n      rawInput: response \n  };\n}"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                660,
+                240
+            ],
+            "id": "b2c3d4e5-f678-9012-3456-7890abcdef12",
+            "name": "Parse JSON Response"
+        },
+        {
+            "parameters": {
+                "resource": "image",
+                "prompt": "={{ $json.title }}. Blog post cover image, modern, minimalist, high quality, 16:9 aspect ratio.",
+                "size": "1024x1024",
+                "style": "vivid",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.openAi",
+            "typeVersion": 1,
+            "position": [
+                880,
+                240
+            ],
+            "id": "d4e5f6g7-8901-2345-6789-012345abcdef",
+            "name": "Generate Image (DALL-E)",
+            "credentials": {
+                "openAiApi": {
+                    "id": "YOUR_OPENAI_CREDENTIAL_ID",
+                    "name": "OpenAI account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "resize",
+                "width": 800,
+                "height": 450,
+                "resizeOption": "force",
+                "format": "jpeg",
+                "quality": 80,
+                "options": {}
+            },
+            "type": "n8n-nodes-base.editImage",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                240
+            ],
+            "id": "e5f6g7h8-9012-3456-7890-123456abcdef",
+            "name": "Resize & Compress Image"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://maheshiesacademy.edustacks.co.in/api/admin/upload",
+                "sendBinaryData": true,
+                "binaryPropertyName": "data",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "folder",
+                            "value": "posts"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1320,
+                240
+            ],
+            "id": "f6g7h8i9-0123-4567-8901-234567abcdef",
+            "name": "Upload Image to API"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://maheshiesacademy.edustacks.co.in/api/admin/posts",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "title",
+                            "value": "={{ $('Parse JSON Response').item.json.title }}"
+                        },
+                        {
+                            "name": "content",
+                            "value": "={{ $('Parse JSON Response').item.json.content }}"
+                        },
+                        {
+                            "name": "summary",
+                            "value": "={{ $('Parse JSON Response').item.json.summary }}"
+                        },
+                        {
+                            "name": "status",
+                            "value": "draft"
+                        },
+                        {
+                            "name": "institute_id",
+                            "value": "10"
+                        },
+                        {
+                            "name": "cover_image",
+                            "value": "={{ $json.url }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1540,
+                240
+            ],
+            "id": "c3d4e5f6-7890-1234-5678-90abcdef1234",
+            "name": "Create Post in LMS"
+        }
+    ],
+    "connections": {
+        "Telegram Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini Chat Model (HTTP)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini Chat Model (HTTP)": {
+            "main": [
+                [
+                    {
+                        "node": "Parse JSON Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse JSON Response": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Image (DALL-E)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Image (DALL-E)": {
+            "main": [
+                [
+                    {
+                        "node": "Resize & Compress Image",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Resize & Compress Image": {
+            "main": [
+                [
+                    {
+                        "node": "Upload Image to API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload Image to API": {
+            "main": [
+                [
+                    {
+                        "node": "Create Post in LMS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

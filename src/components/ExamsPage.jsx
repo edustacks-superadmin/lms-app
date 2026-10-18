@@ -1,0 +1,201 @@
+import React, { useState, useMemo } from 'react';
+import { Lock, Clock, CheckCircle, List } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useExams } from '../context/ExamContext';
+import ExamList from './ExamList';
+
+const ExamsPage = () => {
+    const navigate = useNavigate();
+    const { status } = useParams(); // Get status from route params
+    const { exams } = useExams();
+    const activeTab = status || 'running'; // Default to 'running' if no status in route
+    const [selectedCourses, setSelectedCourses] = useState([]);
+    const [selectedTags, setSelectedTags] = useState([]);
+
+    // Get exam status based on dates
+    const getExamStatus = (exam) => {
+        const now = new Date();
+        const startDate = exam.start_date ? new Date(exam.start_date) : null;
+        const endDate = exam.end_date ? new Date(exam.end_date) : null;
+
+        if (!startDate) return 'running';
+
+        if (endDate && now > endDate) {
+            return 'completed';
+        } else if (now < startDate) {
+            return 'upcoming';
+        } else {
+            return 'running';
+        }
+    };
+
+    // Get counts for each category
+    const examCounts = useMemo(() => {
+        const counts = { running: 0, upcoming: 0, completed: 0 };
+        exams.forEach(exam => {
+            const status = getExamStatus(exam);
+            counts[status]++;
+        });
+        return counts;
+    }, [exams]);
+
+    // Get unique courses from all exams
+    const allCourses = useMemo(() => {
+        const coursesMap = new Map();
+        exams.forEach(exam => {
+            if (exam.course_exams && exam.course_exams.length > 0) {
+                exam.course_exams.forEach(ce => {
+                    if (ce.courses) {
+                        coursesMap.set(ce.courses.id, ce.courses.title);
+                    }
+                });
+            }
+        });
+        return Array.from(coursesMap, ([id, title]) => ({ id, title }));
+    }, [exams]);
+
+    // Get unique tags from all exams
+    const allTags = useMemo(() => {
+        const tagsSet = new Set();
+        exams.forEach(exam => {
+            if (exam.tags && Array.isArray(exam.tags)) {
+                exam.tags.forEach(tag => tagsSet.add(tag));
+            }
+        });
+        return Array.from(tagsSet);
+    }, [exams]);
+
+    const toggleCourse = (courseId) => {
+        setSelectedCourses(prev =>
+            prev.includes(courseId)
+                ? prev.filter(id => id !== courseId)
+                : [...prev, courseId]
+        );
+    };
+
+    const toggleTag = (tag) => {
+        setSelectedTags(prev =>
+            prev.includes(tag)
+                ? prev.filter(t => t !== tag)
+                : [...prev, tag]
+        );
+    };
+
+    return (
+        <>
+            {/* Sidebar */}
+            <aside style={{ width: '250px', padding: '0 20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <button
+                        className="btn btn-success"
+                        style={{ justifyContent: 'center', width: '100%', marginBottom: '16px' }}
+                        onClick={() => navigate('/exams/create')}
+                    >
+                        <List size={18} /> Create Exam
+                    </button>
+
+                    <button
+                        className={activeTab === 'running' ? 'btn btn-primary' : 'btn'}
+                        style={{
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                            color: activeTab === 'running' ? 'white' : 'var(--primary-color)',
+                            background: activeTab === 'running' ? 'var(--primary-color)' : 'transparent'
+                        }}
+                        onClick={() => navigate('/exams/running')}
+                    >
+                        <Lock size={16} /> Running ({examCounts.running})
+                    </button>
+                    <button
+                        className={activeTab === 'upcoming' ? 'btn btn-primary' : 'btn'}
+                        style={{
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                            color: activeTab === 'upcoming' ? 'white' : 'var(--primary-color)',
+                            background: activeTab === 'upcoming' ? 'var(--primary-color)' : 'transparent'
+                        }}
+                        onClick={() => navigate('/exams/upcoming')}
+                    >
+                        <Clock size={16} /> Upcoming ({examCounts.upcoming})
+                    </button>
+                    <button
+                        className={activeTab === 'completed' ? 'btn btn-primary' : 'btn'}
+                        style={{
+                            justifyContent: 'flex-start',
+                            width: '100%',
+                            color: activeTab === 'completed' ? 'white' : 'var(--primary-color)',
+                            background: activeTab === 'completed' ? 'var(--primary-color)' : 'transparent'
+                        }}
+                        onClick={() => navigate('/exams/completed')}
+                    >
+                        <CheckCircle size={16} /> Completed ({examCounts.completed})
+                    </button>
+                </div>
+
+                {/* Filter by Tags */}
+                {allTags.length > 0 && (
+                    <div style={{ marginTop: '32px' }}>
+                        <h3 style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '12px' }}>Filter by tags</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {allTags.map(tag => (
+                                <label key={tag} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedTags.includes(tag)}
+                                        onChange={() => toggleTag(tag)}
+                                        style={{ marginRight: '8px', accentColor: 'var(--primary-color)' }}
+                                    />
+                                    <span style={{ color: '#666' }}>{tag}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Filter by Courses */}
+                {allCourses.length > 0 && (
+                    <div style={{ marginTop: '16px' }}>
+                        <h3 style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '12px' }}>Filter by Courses</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {allCourses.map(course => (
+                                <label key={course.id} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedCourses.includes(course.id)}
+                                        onChange={() => toggleCourse(course.id)}
+                                        style={{ marginRight: '8px', accentColor: 'var(--primary-color)' }}
+                                    />
+                                    <span style={{ color: '#666' }}>{course.title}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {(selectedCourses.length > 0 || selectedTags.length > 0) && (
+                    <button
+                        className="btn btn-outline"
+                        style={{ marginTop: '20px', width: '100%' }}
+                        onClick={() => {
+                            setSelectedCourses([]);
+                            setSelectedTags([]);
+                        }}
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </aside>
+
+            {/* Main Content */}
+            <div className="content-area">
+                <ExamList
+                    activeTab={activeTab}
+                    selectedCourses={selectedCourses}
+                    selectedTags={selectedTags}
+                />
+            </div>
+        </>
+    );
+};
+
+export default ExamsPage;

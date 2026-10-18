@@ -1,0 +1,36 @@
+@keyframes enterFromRight {
+    0% {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes enterFromLeft {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-enter-from-right {
+    animation: enterFromRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    width: 100%;
+    /* Ensure it doesn't break layout flow */
+    flex: 1;
+}
+
+.animate-enter-from-left {
+    animation: enterFromLeft 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    width: 100%;
+    flex: 1;
+}

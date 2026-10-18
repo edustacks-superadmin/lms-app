@@ -1,0 +1,2051 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["auth", "public"]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model audit_log_entries {
+  instance_id String?   @db.Uuid
+  id          String    @id @db.Uuid
+  payload     Json?     @db.Json
+  created_at  DateTime? @db.Timestamptz(6)
+  ip_address  String    @default("") @db.VarChar(64)
+
+  @@index([instance_id], map: "audit_logs_instance_id_idx")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model flow_state {
+  id                     String                @id @db.Uuid
+  user_id                String?               @db.Uuid
+  auth_code              String
+  code_challenge_method  code_challenge_method
+  code_challenge         String
+  provider_type          String
+  provider_access_token  String?
+  provider_refresh_token String?
+  created_at             DateTime?             @db.Timestamptz(6)
+  updated_at             DateTime?             @db.Timestamptz(6)
+  authentication_method  String
+  auth_code_issued_at    DateTime?             @db.Timestamptz(6)
+  saml_relay_states      saml_relay_states[]
+
+  @@index([created_at(sort: Desc)])
+  @@index([auth_code], map: "idx_auth_code")
+  @@index([user_id, authentication_method], map: "idx_user_id_auth_method")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model identities {
+  provider_id     String
+  user_id         String    @db.Uuid
+  identity_data   Json
+  provider        String
+  last_sign_in_at DateTime? @db.Timestamptz(6)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  email           String?   @default(dbgenerated("lower((identity_data ->> 'email'::text))"))
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider_id, provider], map: "identities_provider_id_provider_unique")
+  @@index([email])
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model instances {
+  id              String    @id @db.Uuid
+  uuid            String?   @db.Uuid
+  raw_base_config String?
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_amr_claims {
+  session_id            String   @db.Uuid
+  created_at            DateTime @db.Timestamptz(6)
+  updated_at            DateTime @db.Timestamptz(6)
+  authentication_method String
+  id                    String   @id(map: "amr_id_pk") @db.Uuid
+  sessions              sessions @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([session_id, authentication_method], map: "mfa_amr_claims_session_id_authentication_method_pkey")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_challenges {
+  id                     String      @id @db.Uuid
+  factor_id              String      @db.Uuid
+  created_at             DateTime    @db.Timestamptz(6)
+  verified_at            DateTime?   @db.Timestamptz(6)
+  ip_address             String      @db.Inet
+  otp_code               String?
+  web_authn_session_data Json?
+  mfa_factors            mfa_factors @relation(fields: [factor_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "mfa_challenges_auth_factor_id_fkey")
+
+  @@index([created_at(sort: Desc)], map: "mfa_challenge_created_at_idx")
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model mfa_factors {
+  id                           String           @id @db.Uuid
+  user_id                      String           @db.Uuid
+  friendly_name                String?
+  factor_type                  factor_type
+  status                       factor_status
+  created_at                   DateTime         @db.Timestamptz(6)
+  updated_at                   DateTime         @db.Timestamptz(6)
+  secret                       String?
+  phone                        String?
+  last_challenged_at           DateTime?        @unique @db.Timestamptz(6)
+  web_authn_credential         Json?
+  web_authn_aaguid             String?          @db.Uuid
+  last_webauthn_challenge_data Json?
+  mfa_challenges               mfa_challenges[]
+  users                        users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, phone], map: "unique_phone_factor_per_user")
+  @@index([user_id, created_at], map: "factor_id_created_at_idx")
+  @@index([user_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_authorizations {
+  id                    String                     @id @db.Uuid
+  authorization_id      String                     @unique
+  client_id             String                     @db.Uuid
+  user_id               String?                    @db.Uuid
+  redirect_uri          String
+  scope                 String
+  state                 String?
+  resource              String?
+  code_challenge        String?
+  code_challenge_method code_challenge_method?
+  response_type         oauth_response_type        @default(code)
+  status                oauth_authorization_status @default(pending)
+  authorization_code    String?                    @unique
+  created_at            DateTime                   @default(now()) @db.Timestamptz(6)
+  expires_at            DateTime                   @default(dbgenerated("(now() + '00:03:00'::interval)")) @db.Timestamptz(6)
+  approved_at           DateTime?                  @db.Timestamptz(6)
+  nonce                 String?
+  oauth_clients         oauth_clients              @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                 users?                     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model oauth_client_states {
+  id            String   @id @db.Uuid
+  provider_type String
+  code_verifier String?
+  created_at    DateTime @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_oauth_client_states_created_at")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_clients {
+  id                   String                  @id @db.Uuid
+  client_secret_hash   String?
+  registration_type    oauth_registration_type
+  redirect_uris        String
+  grant_types          String
+  client_name          String?
+  client_uri           String?
+  logo_uri             String?
+  created_at           DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at           DateTime?               @db.Timestamptz(6)
+  client_type          oauth_client_type       @default(confidential)
+  oauth_authorizations oauth_authorizations[]
+  oauth_consents       oauth_consents[]
+  sessions             sessions[]
+
+  @@index([deleted_at])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model oauth_consents {
+  id            String        @id @db.Uuid
+  user_id       String        @db.Uuid
+  client_id     String        @db.Uuid
+  scopes        String
+  granted_at    DateTime      @default(now()) @db.Timestamptz(6)
+  revoked_at    DateTime?     @db.Timestamptz(6)
+  oauth_clients oauth_clients @relation(fields: [client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         users         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id], map: "oauth_consents_user_client_unique")
+  @@index([user_id, granted_at(sort: Desc)], map: "oauth_consents_user_order_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model one_time_tokens {
+  id         String              @id @db.Uuid
+  user_id    String              @db.Uuid
+  token_type one_time_token_type
+  token_hash String
+  relates_to String
+  created_at DateTime            @default(now()) @db.Timestamp(6)
+  updated_at DateTime            @default(now()) @db.Timestamp(6)
+  users      users               @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, token_type])
+  @@index([relates_to], map: "one_time_tokens_relates_to_hash_idx", type: Hash)
+  @@index([token_hash], map: "one_time_tokens_token_hash_hash_idx", type: Hash)
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model refresh_tokens {
+  instance_id String?   @db.Uuid
+  id          BigInt    @id @default(autoincrement())
+  token       String?   @unique(map: "refresh_tokens_token_unique") @db.VarChar(255)
+  user_id     String?   @db.VarChar(255)
+  revoked     Boolean?
+  created_at  DateTime? @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+  parent      String?   @db.VarChar(255)
+  session_id  String?   @db.Uuid
+  sessions    sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([instance_id])
+  @@index([instance_id, user_id])
+  @@index([parent])
+  @@index([session_id, revoked])
+  @@index([updated_at(sort: Desc)])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_providers {
+  id                String        @id @db.Uuid
+  sso_provider_id   String        @db.Uuid
+  entity_id         String        @unique
+  metadata_xml      String
+  metadata_url      String?
+  attribute_mapping Json?
+  created_at        DateTime?     @db.Timestamptz(6)
+  updated_at        DateTime?     @db.Timestamptz(6)
+  name_id_format    String?
+  sso_providers     sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model saml_relay_states {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  request_id      String
+  for_email       String?
+  redirect_to     String?
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  flow_state_id   String?       @db.Uuid
+  flow_state      flow_state?   @relation(fields: [flow_state_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([created_at(sort: Desc)])
+  @@index([for_email])
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model schema_migrations {
+  version String @id @db.VarChar(255)
+
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model sessions {
+  id                     String           @id @db.Uuid
+  user_id                String           @db.Uuid
+  created_at             DateTime?        @db.Timestamptz(6)
+  updated_at             DateTime?        @db.Timestamptz(6)
+  factor_id              String?          @db.Uuid
+  aal                    aal_level?
+  not_after              DateTime?        @db.Timestamptz(6)
+  refreshed_at           DateTime?        @db.Timestamp(6)
+  user_agent             String?
+  ip                     String?          @db.Inet
+  tag                    String?
+  oauth_client_id        String?          @db.Uuid
+  refresh_token_hmac_key String?
+  refresh_token_counter  BigInt?
+  scopes                 String?
+  mfa_amr_claims         mfa_amr_claims[]
+  refresh_tokens         refresh_tokens[]
+  oauth_clients          oauth_clients?   @relation(fields: [oauth_client_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                  users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([not_after(sort: Desc)])
+  @@index([oauth_client_id])
+  @@index([user_id])
+  @@index([user_id, created_at], map: "user_id_created_at_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_domains {
+  id              String        @id @db.Uuid
+  sso_provider_id String        @db.Uuid
+  domain          String
+  created_at      DateTime?     @db.Timestamptz(6)
+  updated_at      DateTime?     @db.Timestamptz(6)
+  sso_providers   sso_providers @relation(fields: [sso_provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([sso_provider_id])
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model sso_providers {
+  id                String              @id @db.Uuid
+  resource_id       String?
+  created_at        DateTime?           @db.Timestamptz(6)
+  updated_at        DateTime?           @db.Timestamptz(6)
+  disabled          Boolean?
+  saml_providers    saml_providers[]
+  saml_relay_states saml_relay_states[]
+  sso_domains       sso_domains[]
+
+  @@index([resource_id], map: "sso_providers_resource_id_pattern_idx")
+  @@schema("auth")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model users {
+  instance_id                 String?                @db.Uuid
+  id                          String                 @id @db.Uuid
+  aud                         String?                @db.VarChar(255)
+  role                        String?                @db.VarChar(255)
+  email                       String?                @db.VarChar(255)
+  encrypted_password          String?                @db.VarChar(255)
+  email_confirmed_at          DateTime?              @db.Timestamptz(6)
+  invited_at                  DateTime?              @db.Timestamptz(6)
+  confirmation_token          String?                @db.VarChar(255)
+  confirmation_sent_at        DateTime?              @db.Timestamptz(6)
+  recovery_token              String?                @db.VarChar(255)
+  recovery_sent_at            DateTime?              @db.Timestamptz(6)
+  email_change_token_new      String?                @db.VarChar(255)
+  email_change                String?                @db.VarChar(255)
+  email_change_sent_at        DateTime?              @db.Timestamptz(6)
+  last_sign_in_at             DateTime?              @db.Timestamptz(6)
+  raw_app_meta_data           Json?
+  raw_user_meta_data          Json?
+  is_super_admin              Boolean?
+  created_at                  DateTime?              @db.Timestamptz(6)
+  updated_at                  DateTime?              @db.Timestamptz(6)
+  phone                       String?                @unique
+  phone_confirmed_at          DateTime?              @db.Timestamptz(6)
+  phone_change                String?                @default("")
+  phone_change_token          String?                @default("") @db.VarChar(255)
+  phone_change_sent_at        DateTime?              @db.Timestamptz(6)
+  confirmed_at                DateTime?              @default(dbgenerated("LEAST(email_confirmed_at, phone_confirmed_at)")) @db.Timestamptz(6)
+  email_change_token_current  String?                @default("") @db.VarChar(255)
+  email_change_confirm_status Int?                   @default(0) @db.SmallInt
+  banned_until                DateTime?              @db.Timestamptz(6)
+  reauthentication_token      String?                @default("") @db.VarChar(255)
+  reauthentication_sent_at    DateTime?              @db.Timestamptz(6)
+  is_sso_user                 Boolean                @default(false)
+  deleted_at                  DateTime?              @db.Timestamptz(6)
+  is_anonymous                Boolean                @default(false)
+  identities                  identities[]
+  mfa_factors                 mfa_factors[]
+  oauth_authorizations        oauth_authorizations[]
+  oauth_consents              oauth_consents[]
+  one_time_tokens             one_time_tokens[]
+  sessions                    sessions[]
+  subscriptions               subscriptions[]
+  user_sessions               user_sessions[]
+
+  @@index([instance_id])
+  @@index([is_anonymous])
+  @@schema("auth")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model banner_ads {
+  id                 BigInt              @id @default(autoincrement())
+  title              String?
+  image_url          String?
+  link_url           String?
+  status             String?             @default("Active")
+  created_at         DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model batch_courses {
+  batch_id           Int
+  course_id          Int
+  institute_id       BigInt?             @default(10)
+  batches            batches             @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  courses            courses             @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([batch_id, course_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model batch_members {
+  id                 Int                 @id @default(autoincrement())
+  batch_id           Int
+  member_id          Int
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  batches            batches             @relation(fields: [batch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  members            members             @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([batch_id, member_id])
+  @@index([batch_id], map: "idx_batch_members_batch_id")
+  @@index([member_id], map: "idx_batch_members_member_id")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model batches {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  url                String?
+  modified           DateTime?           @db.Timestamptz(6)
+  is_local           Boolean?            @default(true)
+  institute_id       BigInt?             @default(10)
+  testpress_id       Int?                @unique
+  batch_courses      batch_courses[]
+  batch_members      batch_members[]
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  post_batches       post_batches[]
+  subscriptions      subscriptions[]
+
+  @@index([testpress_id], map: "idx_batches_testpress_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model bookmarks {
+  id                 Int                 @id @default(autoincrement())
+  member_id          Int?
+  question_id        Int?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  members            members?            @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  questions          questions?          @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([member_id, question_id])
+  @@index([member_id], map: "idx_bookmarks_member_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categories {
+  id           Int       @id(map: "categories_new_pkey") @default(autoincrement())
+  name         String
+  color        String?
+  is_starred   Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+  for_forum    Boolean?  @default(false)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chapter_contents {
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  order              Int?                @default(0)
+  type               String
+  url                String?
+  file_path          String?
+  chapter_id         Int?
+  exam_id            Int?
+  duration           Int?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  testpress_id       Int?                @unique(map: "idx_chapter_contents_testpress_id")
+  description        String?
+  is_locked          Boolean?            @default(false)
+  free_preview       Boolean?            @default(false)
+  available_from     DateTime?           @db.Timestamptz(6)
+  notification_sent  Boolean?            @default(false)
+  chapters           chapters?           @relation(fields: [chapter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exams              exams?              @relation(fields: [exam_id], references: [id], onUpdate: NoAction, map: "fk_chapter_contents_exam")
+  content_progress   content_progress[]
+  enrollments        enrollments[]
+  notification_logs  notification_logs[]
+
+  @@index([chapter_id], map: "idx_chapter_contents_chapter_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chapters {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  order              Int?                @default(0)
+  course_id          Int?
+  parent_id          Int?
+  icon               String?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  testpress_id       Int?                @unique(map: "chapters_testpress_id_unique")
+  chapter_contents   chapter_contents[]
+  courses            courses?            @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  chapters           chapters?           @relation("chaptersTochapters", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  other_chapters     chapters[]          @relation("chaptersTochapters")
+  content_progress   content_progress[]
+  enrollments        enrollments[]
+
+  @@index([course_id], map: "idx_chapters_course_id")
+  @@index([testpress_id])
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model content_progress {
+  id                    Int               @id(map: "content_progress_new_pkey") @default(autoincrement())
+  content_type          String
+  content_title         String?
+  completed             Boolean?          @default(false)
+  completion_percentage Int?              @default(0)
+  completed_at          DateTime?         @db.Timestamp(6)
+  created_at            DateTime?         @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?         @default(now()) @db.Timestamp(6)
+  course_id             Int?
+  chapter_id            Int?
+  content_id            Int?
+  institute_id          BigInt?           @default(10)
+  member_id             Int?
+  view_count            Int?              @default(0)
+  total_watch_seconds   Decimal?          @default(0) @db.Decimal(10, 2)
+  last_position_seconds Int?              @default(0)
+  chapters              chapters?         @relation(fields: [chapter_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_content_progress_chapter")
+  chapter_contents      chapter_contents? @relation(fields: [content_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_content_progress_content")
+  courses               courses?          @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_content_progress_course")
+  members               members?          @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_content_progress_member")
+
+  @@unique([member_id, content_id], map: "content_progress_member_content_unique")
+  @@index([member_id, content_id], map: "idx_content_progress_member_content")
+  @@index([member_id], map: "idx_content_progress_member_id")
+  @@index([view_count], map: "idx_content_progress_view_count")
+  @@index([total_watch_seconds], map: "idx_content_progress_watch_time")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model course_exams {
+  id           Int       @id(map: "course_exams_new_pkey") @default(autoincrement())
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  course_id    Int?
+  exam_id      Int?
+  institute_id BigInt?   @default(10)
+  courses      courses?  @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  exams        exams?    @relation(fields: [exam_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model course_tags {
+  id           Int       @id(map: "course_tags_new_pkey") @default(autoincrement())
+  course_id    Int
+  tag_id       Int
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+  courses      courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags         tags      @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model courses {
+  id                     Int                      @id @default(autoincrement())
+  title                  String
+  description            String?
+  image                  String?
+  category               String?                  @default("General")
+  level                  String?                  @default("Beginner")
+  duration               String?                  @default("0h")
+  order                  Int?                     @default(0)
+  allowed_batches        Int[]                    @default([])
+  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  institute_id           BigInt?                  @default(10)
+  allowed_products       Int[]                    @default([])
+  testpress_id           Int?                     @unique
+  is_public              Boolean?                 @default(false)
+  allowed_platforms      Json                     @default("[\"web\", \"mobile\", \"desktop\"]")
+  platform_availability  Json?                    @default("{\"web\": true, \"mobile\": true, \"desktop\": true}")
+  archived_at            DateTime?                @db.Timestamptz(6)
+  is_archived            Boolean?                 @default(false)
+  max_video_views        Int?
+  watch_time_multiplier  Decimal?                 @db.Decimal(3, 1)
+  batch_courses          batch_courses[]
+  chapters               chapters[]
+  content_progress       content_progress[]
+  course_exams           course_exams[]
+  course_tags            course_tags[]
+  institute_settings     institute_settings?      @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  enrollments            enrollments[]
+  exams                  exams[]
+  member_video_overrides member_video_overrides[]
+  notification_logs      notification_logs[]
+
+  @@index([allowed_platforms], map: "idx_courses_allowed_platforms", type: Gin)
+  @@index([is_public], map: "idx_courses_is_public")
+  @@index([platform_availability], map: "idx_courses_platform_availability", type: Gin)
+  @@index([testpress_id], map: "idx_courses_testpress_id")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model enrollments {
+  id                       Int               @id(map: "enrollments_new_pkey") @default(autoincrement())
+  enrolled_at              DateTime          @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  status                   String?           @default("active")
+  progress                 Int?              @default(0)
+  last_accessed_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  course_id                Int?
+  last_accessed_chapter_id Int?
+  last_accessed_content_id Int?
+  institute_id             BigInt?           @default(10)
+  member_id                Int?
+  chapters                 chapters?         @relation(fields: [last_accessed_chapter_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_enrollments_chapter")
+  chapter_contents         chapter_contents? @relation(fields: [last_accessed_content_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_enrollments_content")
+  courses                  courses?          @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_enrollments_course")
+  members                  members?          @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_enrollments_member")
+
+  @@index([member_id, course_id], map: "idx_enrollments_member_course")
+  @@index([member_id], map: "idx_enrollments_member_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_answers {
+  id                    Int       @id(map: "exam_answers_new_pkey") @default(autoincrement())
+  selected_option_index Int?
+  is_correct            Boolean?
+  marks_obtained        Decimal?  @default(0) @db.Decimal
+  created_at            DateTime? @default(now()) @db.Timestamptz(6)
+  attempt_id            Int?
+  question_id           Int?
+  institute_id          BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_attempts {
+  id                 Int                 @id @default(autoincrement())
+  exam_id            Int?
+  member_id          Int?
+  score              Decimal?            @db.Decimal(10, 2)
+  total_marks        Decimal?            @db.Decimal(10, 2)
+  started_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  submitted_at       DateTime?           @db.Timestamptz(6)
+  answers            Json?
+  status             String?             @default("in_progress")
+  institute_id       BigInt?             @default(10)
+  tab_switches       Int?                @default(0)
+  is_auto_submitted  Boolean?            @default(false)
+  attempt_number     Int?                @default(1)
+  is_quiz_mode       Boolean?            @default(false)
+  exams              exams?              @relation(fields: [exam_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  members            members?            @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([exam_id], map: "idx_exam_attempts_exam_id")
+  @@index([member_id], map: "idx_exam_attempts_member_id")
+  @@index([member_id, exam_id], map: "idx_exam_attempts_member_exam")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_questions {
+  id            Int       @id(map: "exam_questions_new_pkey") @default(autoincrement())
+  marks         Decimal?  @default(1) @db.Decimal
+  order         Int?      @default(0)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  section_id    Int?
+  is_mandatory  Boolean?  @default(true)
+  section_order Int?
+  exam_id       Int?
+  question_id   Int?
+  institute_id  BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_sections {
+  id            Int       @id(map: "exam_sections_new_pkey") @default(autoincrement())
+  exam_id       Int
+  section_name  String
+  section_order Int
+  instructions  String?
+  total_marks   Decimal?  @db.Decimal
+  passing_marks Decimal?  @db.Decimal
+  is_mandatory  Boolean?  @default(true)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id  BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_tags {
+  id           Int       @id(map: "exam_tags_new_pkey") @default(autoincrement())
+  exam_id      Int
+  tag_id       Int
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exams {
+  id                          Int                 @id @default(autoincrement())
+  title                       String
+  description                 String?
+  slug                        String?             @unique
+  start_date                  DateTime?           @db.Timestamptz(6)
+  end_date                    DateTime?           @db.Timestamptz(6)
+  duration_minutes            Int?
+  total_marks                 Decimal?            @db.Decimal(10, 2)
+  passing_marks               Decimal?            @db.Decimal(10, 2)
+  is_active                   Boolean?            @default(true)
+  created_at                  DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?           @default(now()) @db.Timestamptz(6)
+  course_id                   Int?
+  randomize_questions         Boolean?            @default(false)
+  randomize_options           Boolean?            @default(false)
+  auto_submit_on_timeout      Boolean?            @default(true)
+  negative_marking_enabled    Boolean?            @default(false)
+  negative_marks_per_question Decimal?            @default(0) @db.Decimal(5, 2)
+  detect_tab_switch           Boolean?            @default(false)
+  restrict_copy_paste         Boolean?            @default(false)
+  max_attempts                Int?                @default(1)
+  attempt_gap_minutes         Int?                @default(0)
+  marks_per_question          Decimal?            @db.Decimal(5, 2)
+  number_of_questions         Int?
+  variable_marks              Boolean?            @default(false)
+  show_answers                Boolean?            @default(true)
+  show_score                  Boolean?            @default(true)
+  show_percentile             Boolean?            @default(false)
+  show_pass_or_fail           Boolean?            @default(true)
+  enable_ranks                Boolean?            @default(false)
+  round_off_marks             Boolean?            @default(false)
+  institute_id                BigInt?             @default(10)
+  testpress_id                Int?                @unique
+  enable_instant_feedback     Boolean?            @default(false)
+  allow_mode_toggle           Boolean?            @default(false)
+  notification_sent           Boolean?            @default(false)
+  is_public_result            Boolean?            @default(false)
+  result_publish_date         DateTime?           @db.Timestamptz(6)
+  chapter_contents            chapter_contents[]
+  course_exams                course_exams[]
+  exam_attempts               exam_attempts[]
+  exam_sessions               exam_sessions[]
+  courses                     courses?            @relation(fields: [course_id], references: [id], onUpdate: NoAction)
+  institute_settings          institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([testpress_id], map: "idx_exams_testpress_id")
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model home_settings {
+  id                          Int       @id(map: "home_settings_new_pkey") @default(autoincrement())
+  signup_link_text            String?   @default("Sign Up")
+  hero_banner_image           String?
+  hero_title                  String?   @default("Welcome to Mahesh IES Academy")
+  hero_subtitle               String?   @default("Empowering Students, One Course at a Time")
+  hero_cta_text               String?   @default("Explore Courses")
+  hero_cta_link               String?   @default("#products")
+  copyright_text              String?   @default("© 2025 Mahesh IES Academy. All rights reserved.")
+  privacy_policy_link         String?
+  terms_link                  String?
+  show_products               Boolean?  @default(true)
+  products_to_display         Int?      @default(6)
+  created_at                  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime? @default(now()) @db.Timestamptz(6)
+  institute_logo_url          String?
+  tagline                     String?
+  institute_id                BigInt?   @default(10)
+  slug                        String?
+  show_live_stats             Boolean?  @default(false)
+  live_stats_config           Json?     @default("{\"stats\": []}")
+  announcement_bar_enabled    Boolean?  @default(false)
+  announcement_bar_text       String?
+  announcement_bar_link       String?
+  announcement_bar_bg_color   String?   @default("#3b82f6") @db.VarChar(20)
+  announcement_bar_text_color String?   @default("#ffffff") @db.VarChar(20)
+  show_newsletter             Boolean?  @default(false)
+  newsletter_title            String?   @default("Subscribe to Our Newsletter")
+  newsletter_subtitle         String?   @default("Stay updated with latest courses and offers")
+  show_partner_logos          Boolean?  @default(false)
+  partner_logos_title         String?   @default("Trusted By")
+  mobile_bottom_nav_enabled   Boolean?  @default(true)
+  show_cta_section            Boolean?  @default(false)
+  cta_title                   String?
+  cta_subtitle                String?
+  cta_button_text             String?   @default("Get Started Now")
+  cta_button_link             String?   @default("/store")
+
+  @@schema("public")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model home_settings_backup {
+  id                  Int       @id(map: "home_settings_backup_new_pkey") @default(autoincrement())
+  institute_name      String?
+  institute_logo_url  String?
+  tagline             String?
+  signup_link_text    String?
+  hero_banner_image   String?
+  hero_title          String?
+  hero_subtitle       String?
+  hero_cta_text       String?
+  hero_cta_link       String?
+  about_text          String?
+  mission_text        String?
+  contact_address     String?
+  contact_phone       String?
+  contact_email       String?
+  facebook_url        String?
+  instagram_url       String?
+  linkedin_url        String?
+  youtube_url         String?
+  copyright_text      String?
+  privacy_policy_link String?
+  terms_link          String?
+  show_products       Boolean?
+  products_to_display Int?
+  created_at          DateTime? @db.Timestamptz(6)
+  updated_at          DateTime? @db.Timestamptz(6)
+
+  @@ignore
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model institute_settings {
+  id                           BigInt                   @id @default(autoincrement())
+  name                         String?
+  slogan                       String?
+  description                  String?
+  address                      String?
+  phone                        String?
+  email                        String?
+  website                      String?
+  theme_color                  String?
+  logo_url                     String?
+  favicon_url                  String?
+  facebook_url                 String?
+  twitter_url                  String?
+  instagram_url                String?
+  linkedin_url                 String?
+  youtube_url                  String?
+  created_at                   DateTime                 @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  mission_text                 String?
+  telegram_url                 String?
+  blogger_url                  String?
+  whatsapp_url                 String?
+  arattai_url                  String?
+  upi_id                       String?                  @default("example@upi")
+  upi_qr_url                   String?
+  seo_title                    String?
+  meta_description             String?
+  keywords                     String?
+  meta_robots_follow           String?                  @default("Follow")
+  meta_robots_index            String?                  @default("Index")
+  razorpay_key_id              String?
+  razorpay_key_secret          String?
+  slug                         String                   @unique
+  institute_id                 BigInt?
+  gmail_app_credentials        Json?
+  smtp_host                    String?                  @default("smtp.gmail.com")
+  smtp_port                    Int?                     @default(465)
+  smtp_user                    String?
+  smtp_password                String?
+  smtp_from_email              String?
+  privacy_policy               String?
+  terms_of_service             String?
+  shipping_policy              String?
+  refund_policy                String?
+  delete_account_policy        String?
+  internal_api_key             String?                  @unique
+  android_app_config           Json?                    @default("{}")
+  desktop_app_config           Json?                    @default("{}")
+  feature_flags                Json?                    @default("{}")
+  ios_app_config               Json?                    @default("{}")
+  enable_single_device_login   Boolean?                 @default(true)
+  allowed_ips                  String?
+  max_login_attempts           Int?                     @default(5)
+  login_cooldown_minutes       Int?                     @default(30)
+  session_timeout_minutes      Int?                     @default(60)
+  logout_at_browser_close      Boolean?                 @default(false)
+  allow_pdf_download           Boolean?                 @default(true)
+  allow_video_download         Boolean?                 @default(true)
+  max_video_downloads          Int?                     @default(10)
+  enable_pdf_watermark         Boolean?                 @default(false)
+  pdf_watermark_image_url      String?
+  enable_video_watermark       Boolean?                 @default(false)
+  video_watermark_position     String?                  @default("center") @db.VarChar(50)
+  allow_student_registration   Boolean?                 @default(true)
+  verification_method          String?                  @default("email") @db.VarChar(50)
+  allow_google_login           Boolean?                 @default(false)
+  allow_facebook_login         Boolean?                 @default(false)
+  login_access_code            String?                  @db.VarChar(50)
+  label_dashboard              String?                  @default("Dashboard") @db.VarChar(50)
+  label_leaderboard            String?                  @default("Leaderboard") @db.VarChar(50)
+  label_helpdesk               String?                  @default("Support") @db.VarChar(50)
+  label_bookmarks              String?                  @default("Bookmarks") @db.VarChar(50)
+  label_username               String?                  @default("Email / Phone") @db.VarChar(50)
+  label_password               String?                  @default("Password") @db.VarChar(50)
+  msg_empty_course             String?
+  custom_header_html           String?
+  webhook_order_success        String?
+  webhook_exam_result          String?
+  android_app_hash_key         String?                  @db.VarChar(100)
+  disable_student_analytics    Boolean?                 @default(false)
+  hide_leaderboard_names       Boolean?                 @default(false)
+  enable_comments              Boolean?                 @default(true)
+  comment_moderation           Boolean?                 @default(false)
+  notify_admin_on_comment      Boolean?                 @default(true)
+  blocked_comment_words        String?
+  enforce_user_photo           Boolean?                 @default(false)
+  allow_user_profile_edit      Boolean?                 @default(true)
+  disable_forgot_password      Boolean?                 @default(false)
+  label_resource_notifications String?                  @default("Notifications")
+  label_resource_page_title    String?                  @default("Free Resources")
+  label_resource_pyq           String?                  @default("Previous Year Papers")
+  label_resource_syllabus      String?                  @default("Syllabus")
+  about_us_config              Json?                    @default("{}")
+  admin_dashboard_config       Json?                    @default("{}")
+  banner_ads                   banner_ads[]
+  batch_courses                batch_courses[]
+  batch_members                batch_members[]
+  batches                      batches[]
+  bookmarks                    bookmarks[]
+  careers                      careers[]
+  chapter_contents             chapter_contents[]
+  chapters                     chapters[]
+  courses                      courses[]
+  discussion_threads           discussion_threads[]
+  email_templates              email_templates[]
+  exam_attempts                exam_attempts[]
+  exams                        exams[]
+  faqs                         faqs[]
+  gallery_items                gallery_items[]
+  newsletter_subscribers       newsletter_subscribers[]
+  pages                        pages[]
+  partner_logos                partner_logos[]
+  post_batches                 post_batches[]
+  posts                        posts[]
+  product_categories           product_categories[]
+  products                     products[]
+  questions                    questions[]
+  resources                    resources[]
+  subjects                     subjects[]
+  team_members                 team_members[]
+  transactions                 transactions[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model lesson_progress {
+  id            Int       @id(map: "lesson_progress_new_pkey") @default(autoincrement())
+  enrollment_id Int
+  status        String?   @default("not_started")
+  completed_at  DateTime? @db.Timestamptz(6)
+  lesson_id     Int?
+  institute_id  BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model members {
+  id                     Int                      @id @default(autoincrement())
+  email                  String                   @unique
+  phone_number           String?
+  password               String?
+  status                 String?                  @default("active")
+  created_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  username               String?                  @unique
+  first_name             String?
+  last_name              String?
+  display_name           String?
+  photo_url              String?
+  birth_date             DateTime?                @db.Date
+  address1               String?
+  address2               String?
+  city                   String?
+  zip                    String?
+  state                  String?
+  state_code             String?
+  custom_data            Json?                    @default("{}")
+  role                   String?                  @default("student")
+  auth_user_id           String?                  @unique @db.Uuid
+  gender                 String?
+  expires                DateTime?                @db.Timestamptz(6)
+  joining_date           DateTime?                @default(now()) @db.Timestamptz(6)
+  expiry_date            DateTime?                @db.Timestamptz(6)
+  is_active              Boolean?                 @default(true)
+  is_blocked             Boolean?                 @default(false)
+  report_card_url        String?
+  orders                 Json?                    @default("[]")
+  institute_id           BigInt?                  @default(10)
+  photo_id_proof         String?
+  testpress_id           Int?                     @unique
+  is_achiever            Boolean?                 @default(false)
+  community              String?
+  verification_status    Json?                    @default("{}")
+  pstm                   Boolean?                 @default(false)
+  batch_members          batch_members[]
+  bookmarks              bookmarks[]
+  cart_items             cart_items[]
+  content_progress       content_progress[]
+  discussion_replies     discussion_replies[]
+  discussion_threads     discussion_threads[]
+  enrollments            enrollments[]
+  exam_applications      exam_applications[]
+  exam_attempts          exam_attempts[]
+  exam_sessions          exam_sessions[]
+  external_exam_results  external_exam_results[]
+  member_video_overrides member_video_overrides[]
+  notification_logs      notification_logs[]
+  member_orders          orders[]
+  push_tokens            push_tokens[]
+  subscriptions          subscriptions[]
+
+  @@index([auth_user_id], map: "idx_members_auth_user_id")
+  @@index([custom_data], map: "idx_members_custom_data", type: Gin)
+  @@index([role], map: "idx_members_role")
+  @@index([username], map: "idx_members_username")
+  @@index([testpress_id], map: "idx_members_testpress_id")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model offers {
+  id                  Int       @id(map: "offers_new_pkey") @default(autoincrement())
+  type                String
+  code                String?
+  name                String?
+  description         String?
+  discount_type       String
+  discount_value      Decimal   @db.Decimal
+  start_date          DateTime? @db.Timestamptz(6)
+  end_date            DateTime? @db.Timestamptz(6)
+  applicable_products Json?     @default("[]")
+  required_products   Json?     @default("[]")
+  status              String?   @default("active")
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id        BigInt?   @default(10)
+  max_uses            Int?
+  per_user_limit      Int?      @default(1)
+  min_order_value     Decimal?  @db.Decimal(10, 2)
+  influencer_name     String?
+  usage_count         Int?      @default(0)
+  is_renewal_offer    Boolean?  @default(false)
+  commission_percent  Decimal?  @default(0) @db.Decimal(5, 2)
+  commission_fixed    Decimal?  @default(0) @db.Decimal(10, 2)
+  influencer_id       Int?
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model orders {
+  id                  Int       @id @default(autoincrement())
+  member_id           Int?
+  product_id          Int?
+  amount              Decimal?  @db.Decimal(10, 2)
+  status              String?   @default("pending")
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  payment_method      String?   @default("upi")
+  razorpay_order_id   String?
+  razorpay_payment_id String?
+  razorpay_signature  String?
+  payment_verified_at DateTime? @db.Timestamptz(6)
+  coupon_code         String?
+  offer_id            Int?
+  original_price      Decimal?  @db.Decimal(10, 2)
+  discount_amount     Decimal?  @default(0) @db.Decimal(10, 2)
+  user_id             Int?
+  user_email          String?
+  institute_id        BigInt?   @default(10)
+  payment_notes       String?
+  members             members?  @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products            products? @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+
+  @@index([coupon_code], map: "idx_orders_coupon_code")
+  @@index([member_id], map: "idx_orders_member_id")
+  @@index([payment_method], map: "idx_orders_payment_method")
+  @@index([razorpay_order_id], map: "idx_orders_razorpay_order_id")
+  @@index([user_email], map: "idx_orders_user_email")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model post_batches {
+  post_id            Int
+  batch_id           Int
+  institute_id       BigInt?             @default(10)
+  batches            batches             @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  posts              posts               @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([post_id, batch_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model post_comments {
+  id           Int       @id(map: "post_comments_new_pkey") @default(autoincrement())
+  post_id      Int?
+  user_id      Int?
+  content      String
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model posts {
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  description        String?
+  icon               String?
+  category_id        Int?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  cover_image        String?
+  summary            String?
+  content            String?
+  product_name       String?
+  access_control     String?
+  allow_comments     Boolean?            @default(false)
+  publication_date   DateTime?           @db.Timestamptz(6)
+  allowed_products   Int[]
+  is_deleted         Boolean?            @default(false)
+  institute_id       BigInt?             @default(10)
+  slug               String?             @unique
+  notification_sent  Boolean?            @default(false)
+  is_featured        Boolean?            @default(false)
+  view_count         Int?                @default(0)
+  like_count         Int?                @default(0)
+  status             String?             @default("published")
+  post_batches       post_batches[]
+  post_tags          post_tags[]
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([slug], map: "idx_posts_slug")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product_categories {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products           products[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model products {
+  id                        Int                 @id @default(autoincrement())
+  title                     String
+  slug                      String?             @unique
+  price                     Decimal?            @default(0) @db.Decimal(10, 2)
+  description               String?
+  image                     String?
+  start_date                DateTime?           @db.Timestamptz(6)
+  end_date                  DateTime?           @db.Timestamptz(6)
+  category_id               Int?
+  display_order             Int?                @default(0)
+  is_active                 Boolean?            @default(true)
+  created_at                DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id              BigInt?             @default(10)
+  enable_email_notification Boolean?            @default(false)
+  offer_name                String?
+  validity_type             String?
+  validity                  String?
+  pricing_start_date        DateTime?           @db.Date
+  pricing_end_date          DateTime?           @db.Date
+  strikethrough_price       Decimal?            @db.Decimal(10, 2)
+  parent_product_id         Int?
+  short_description         String?
+  tags                      String[]
+  email_template_id         Int?
+  meta_description          String?
+  meta_keywords             String?
+  meta_title                String?
+  cart_items                cart_items[]
+  orders                    orders[]
+  product_tags              product_tags[]
+  product_categories        product_categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  email_templates           email_templates?    @relation(fields: [email_template_id], references: [id], onUpdate: NoAction)
+  institute_settings        institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([category_id], map: "idx_products_category_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product_tags {
+  id           Int       @id @default(autoincrement())
+  product_id   Int
+  tag_id       Int
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+  products     products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags         tags      @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([product_id, tag_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model post_tags {
+  id           Int       @id @default(autoincrement())
+  post_id      Int
+  tag_id       Int
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+  posts        posts     @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags         tags      @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([post_id, tag_id])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_bookmarks {
+  id           Int      @id(map: "question_bookmarks_new_pkey") @default(autoincrement())
+  user_id      Int
+  question_id  Int
+  created_at   DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id BigInt?  @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_folder_items {
+  id               Int               @id(map: "question_folder_items_new_pkey") @default(autoincrement())
+  question_id      Int?
+  folder_id        Int?
+  added_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  position         Int?              @default(0)
+  institute_id     BigInt?           @default(10)
+  question_folders question_folders? @relation(fields: [folder_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  questions        questions?        @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_folders {
+  id                    Int                     @id(map: "question_folders_new_pkey") @default(autoincrement())
+  name                  String
+  description           String?
+  created_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  institute_id          BigInt?                 @default(10)
+  testpress_id          Int?                    @unique
+  question_folder_items question_folder_items[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_options {
+  id           Int        @id(map: "question_options_new_pkey") @default(autoincrement())
+  question_id  Int?
+  option_label String
+  option_text  String
+  is_correct   Boolean?   @default(false)
+  created_at   DateTime?  @default(now()) @db.Timestamptz(6)
+  option_order Int?       @default(1)
+  institute_id BigInt?    @default(10)
+  questions    questions? @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_question_options_question")
+
+  @@index([question_id], map: "idx_question_options_question")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_reports {
+  id           Int      @id(map: "question_reports_new_pkey") @default(autoincrement())
+  user_id      Int
+  question_id  Int
+  report_type  String
+  comment      String?
+  status       String   @default("open")
+  created_at   DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id BigInt?  @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model question_tags {
+  id           Int        @id(map: "question_tags_new_pkey") @default(autoincrement())
+  question_id  Int?
+  tag_name     String
+  created_at   DateTime?  @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?    @default(10)
+  questions    questions? @relation(fields: [question_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_question_tags_question")
+
+  @@index([question_id], map: "idx_question_tags_question")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model questions {
+  id                    Int                     @id @default(autoincrement())
+  question_text         String
+  options               Json?
+  answer                String?
+  explanation           String?
+  subject_id            Int?
+  difficulty_level      String?
+  percentage_correct    Decimal?                @db.Decimal(5, 2)
+  created_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  institute_id          BigInt?                 @default(10)
+  testpress_id          Int?                    @unique
+  hint2                 String?
+  question_type         String?                 @db.VarChar(50)
+  bookmarks             bookmarks[]
+  question_folder_items question_folder_items[]
+  question_options      question_options[]
+  question_tags         question_tags[]
+  institute_settings    institute_settings?     @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subjects              subjects?               @relation(fields: [subject_id], references: [id], onUpdate: NoAction)
+
+  @@index([subject_id], map: "idx_questions_subject_id")
+  @@index([question_type], map: "idx_questions_type")
+  @@index([testpress_id], map: "idx_questions_testpress_id")
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model quotes {
+  id           Int       @id(map: "quotes_new_pkey") @default(autoincrement())
+  text         String
+  author       String?
+  status       String?   @default("Active")
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model registration_fields {
+  id               Int      @id(map: "registration_fields_new_pkey") @default(autoincrement())
+  created_at       DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at       DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  field_key        String
+  field_label      String
+  field_type       String
+  is_enabled       Boolean? @default(true)
+  is_required      Boolean? @default(false)
+  is_preset        Boolean? @default(false)
+  display_order    Int?     @default(0)
+  field_options    Json?    @default("[]")
+  placeholder      String?
+  help_text        String?
+  validation_rules Json?    @default("{}")
+  institute_id     BigInt?  @default(10)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model subjects {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  parent_id          Int?
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  testpress_id       Int?                @unique
+  questions          questions[]
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subjects           subjects?           @relation("subjectsTosubjects", fields: [parent_id], references: [id], onUpdate: NoAction)
+  other_subjects     subjects[]          @relation("subjectsTosubjects")
+
+  @@index([testpress_id], map: "idx_subjects_testpress_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model subscriptions {
+  id           BigInt    @id @default(autoincrement())
+  user_id      String?   @db.Uuid
+  expires_on   DateTime? @db.Date
+  status       String?   @default("Active")
+  created_at   DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  member_id    Int?
+  batch_id     Int?
+  institute_id BigInt?   @default(10)
+  batches      batches?  @relation(fields: [batch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members      members?  @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([batch_id], map: "idx_subscriptions_batch_id_int")
+  @@index([member_id], map: "idx_subscriptions_member_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tags {
+  id           Int            @id(map: "tags_new_pkey") @default(autoincrement())
+  name         String         @db.VarChar
+  color        String?        @default("#2196f3") @db.VarChar
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?        @default(10)
+  type         String?        @default("all") @db.VarChar
+  course_tags  course_tags[]
+  post_tags    post_tags[]
+  product_tags product_tags[]
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model testimonials {
+  id           Int      @id(map: "testimonials_new_pkey") @default(autoincrement())
+  name         String
+  role         String?
+  message      String
+  image_url    String?
+  rating       Int?     @default(5)
+  status       String?  @default("Active")
+  created_at   DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id BigInt?  @default(10)
+  video_url    String?
+  is_featured  Boolean? @default(false)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model transactions {
+  id                 String              @id
+  created_at         DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  product_name       String?
+  user_email         String?
+  type               String?
+  amount             Decimal?            @db.Decimal
+  status             String?
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model email_templates {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  subject            String?
+  body               String?
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products           products[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_sessions {
+  id                     Int       @id @default(autoincrement())
+  exam_id                Int
+  member_id              Int
+  answers                Json?     @default("{}")
+  marked_questions       Int[]     @default([])
+  current_question_index Int?      @default(0)
+  time_left              Int
+  is_paused              Boolean?  @default(false)
+  started_at             DateTime? @default(now()) @db.Timestamp(6)
+  last_saved_at          DateTime? @default(now()) @db.Timestamp(6)
+  expires_at             DateTime? @db.Timestamp(6)
+  created_at             DateTime? @default(now()) @db.Timestamp(6)
+  updated_at             DateTime? @default(now()) @db.Timestamp(6)
+  is_quiz_mode           Boolean?  @default(false)
+  exams                  exams     @relation(fields: [exam_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members                members   @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([exam_id, member_id])
+  @@index([exam_id, member_id], map: "idx_exam_sessions_lookup")
+  @@index([member_id], map: "idx_exam_sessions_member")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model notification_logs {
+  id                Int               @id @default(autoincrement())
+  content_id        Int?
+  course_id         Int?
+  sent_by           Int?
+  notification_type String?           @db.VarChar(50)
+  subject           String?           @db.VarChar(500)
+  body              String?
+  recipients_count  Int?              @default(0)
+  email_sent_count  Int?              @default(0)
+  push_sent_count   Int?              @default(0)
+  created_at        DateTime?         @default(now()) @db.Timestamptz(6)
+  chapter_contents  chapter_contents? @relation(fields: [content_id], references: [id], onUpdate: NoAction)
+  courses           courses?          @relation(fields: [course_id], references: [id], onUpdate: NoAction)
+  members           members?          @relation(fields: [sent_by], references: [id], onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model push_tokens {
+  id              Int       @id @default(autoincrement())
+  member_id       Int?
+  expo_push_token String    @db.VarChar(255)
+  device_type     String?   @db.VarChar(50)
+  device_name     String?   @db.VarChar(255)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  is_active       Boolean?  @default(true)
+  members         members?  @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([member_id, expo_push_token])
+  @@index([member_id], map: "idx_push_tokens_member")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_sessions {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id      String?   @db.Uuid
+  device_info  Json?
+  ip_address   String?
+  user_agent   String?
+  device_name  String?
+  os_name      String?
+  os_version   String?
+  browser_name String?
+  location     Json?
+  login_time   DateTime? @default(now()) @db.Timestamptz(6)
+  last_active  DateTime? @default(now()) @db.Timestamptz(6)
+  is_current   Boolean?  @default(false)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  users        users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([last_active], map: "idx_user_sessions_last_active")
+  @@index([user_id], map: "idx_user_sessions_user_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model resources {
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  description        String?
+  category           String?             @default("Other")
+  file_url           String?
+  resource_type      String?             @default("file")
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  exam_name          String?             @db.VarChar(255)
+  metadata           Json?               @db.Json
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+model roles {
+  id           BigInt   @id @default(autoincrement())
+  name         String   @unique
+  permissions  Json     @default("{}")
+  description  String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?  @default(10)
+
+  @@schema("public")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model member_video_overrides {
+  id                 Int       @id @default(autoincrement())
+  member_id          Int
+  course_id          Int
+  unlimited_views    Boolean?  @default(true)
+  notes              String?
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  created_by_auth_id String?   @db.Uuid
+  updated_at         DateTime? @default(now()) @db.Timestamp(6)
+  courses            courses   @relation(fields: [course_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members            members   @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([member_id, course_id])
+  @@index([course_id], map: "idx_video_overrides_course")
+  @@index([member_id], map: "idx_video_overrides_member")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model member_achievements {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  member_id  BigInt?
+  exam_name  String
+  rank       String?
+  year       String?
+  quote      String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model gallery_items {
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  description        String?
+  type               String              @default("image")
+  url                String
+  thumbnail_url      String?
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pages {
+  id                 Int                 @id @default(autoincrement())
+  slug               String              @unique
+  title              String
+  content            String?
+  is_published       Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model faqs {
+  id                 Int                 @id @default(autoincrement())
+  question           String
+  answer             String
+  category           String?
+  display_order      Int?                @default(0)
+  is_published       Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model team_members {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  role               String
+  bio                String?
+  photo_url          String?
+  display_order      Int?                @default(0)
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model careers {
+  id                 Int                 @id @default(autoincrement())
+  title              String
+  description        String?
+  type               String
+  location           String?
+  posted_date        DateTime?           @default(now()) @db.Timestamptz(6)
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_id       BigInt?             @default(10)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model newsletter_subscribers {
+  id                 Int                 @id @default(autoincrement())
+  institute_id       BigInt?
+  email              String              @db.VarChar(255)
+  subscribed_at      DateTime?           @default(now()) @db.Timestamptz(6)
+  is_active          Boolean?            @default(true)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([institute_id, email])
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model partner_logos {
+  id                 Int                 @id @default(autoincrement())
+  institute_id       BigInt?
+  name               String              @db.VarChar(255)
+  logo_url           String
+  website_url        String?
+  display_order      Int?                @default(0)
+  is_active          Boolean?            @default(true)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  institute_settings institute_settings? @relation(fields: [institute_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@schema("public")
+}
+
+model cart_items {
+  id           Int       @id @default(autoincrement())
+  member_id    Int
+  product_id   Int
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  institute_id BigInt?   @default(10)
+  members      members   @relation(fields: [member_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products     products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([member_id, product_id])
+  @@index([member_id], map: "idx_cart_items_member_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model discussion_replies {
+  id                 Int                 @id @default(autoincrement())
+  thread_id          Int?
+  content            String
+  member_id          Int?
+  is_deleted         Boolean?            @default(false)
+  created_at         DateTime?           @default(now()) @db.Timestamptz(6)
+  members            members?            @relation(fields: [member_id], references: [id], onUpdate: NoAction)
+  discussion_threads discussion_threads? @relation(fields: [thread_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([member_id], map: "idx_discussion_replies_member")
+  @@index([thread_id], map: "idx_discussion_replies_thread")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model discussion_threads {
+  id                 Int                  @id @default(autoincrement())
+  title              String               @db.VarChar(255)
+  content            String
+  member_id          Int?
+  institute_id       BigInt?
+  is_pinned          Boolean?             @default(false)
+  is_locked          Boolean?             @default(false)
+  is_deleted         Boolean?             @default(false)
+  reply_count        Int?                 @default(0)
+  last_activity_at   DateTime?            @default(now()) @db.Timestamptz(6)
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  discussion_replies discussion_replies[]
+  institute_settings institute_settings?  @relation(fields: [institute_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  members            members?             @relation(fields: [member_id], references: [id], onUpdate: NoAction)
+
+  @@index([last_activity_at(sort: Desc)], map: "idx_discussion_threads_activity")
+  @@index([institute_id], map: "idx_discussion_threads_institute")
+  @@index([member_id], map: "idx_discussion_threads_member")
+  @@schema("public")
+}
+
+model exam_configurations {
+  exam_tag              String                  @id
+  exam_name             String
+  year                  Int
+  vacancies             Json
+  is_active             Boolean?                @default(true)
+  created_at            DateTime                @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id          Int?
+  id                    Int                     @unique(map: "exam_configurations_id_idx") @default(autoincrement())
+  portal_category       String?
+  total_candidates      Int?                    @default(0)
+  result_link           String?
+  exam_posts            exam_posts[]
+  external_exam_results external_exam_results[]
+
+  @@unique([exam_tag, institute_id], map: "unique_exam_tag_per_institute")
+  @@schema("public")
+}
+
+model external_exam_results {
+  id                    String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  member_id             Int?
+  exam_tag              String?
+  email                 String
+  full_name             String
+  whatsapp_number       String
+  registration_number   String
+  dob                   DateTime             @db.Date
+  photo_url             String?
+  admit_card_url        String?
+  overall_rank          Int
+  communal_rank         Int
+  community             String
+  department            String
+  pstm_status           Boolean?             @default(false)
+  gender                String
+  paper1_part_a         Decimal?             @db.Decimal
+  paper1_part_b         Decimal?             @db.Decimal
+  paper2_marks          Decimal?             @db.Decimal
+  total_marks           Decimal?             @db.Decimal
+  post_selected         String?
+  created_at            DateTime             @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  institute_id          Int?
+  is_active             Boolean?             @default(true)
+  is_verified           Boolean?             @default(false)
+  status_probability    String?
+  is_manual_entry       Boolean?             @default(false)
+  special_category      String?
+  special_category_rank String?
+  exam_configurations   exam_configurations? @relation(fields: [exam_tag], references: [exam_tag], onDelete: Cascade, onUpdate: NoAction)
+  members               members?             @relation(fields: [member_id], references: [id], onUpdate: NoAction)
+
+  @@index([exam_tag], map: "idx_ext_results_exam_tag")
+  @@index([registration_number], map: "idx_ext_results_reg_no")
+  @@schema("public")
+}
+
+/// This model tracks student applications for exams
+model exam_applications {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  member_id               Int
+  exam_tag                String
+  registration_number     String?
+  admit_card_url          String?
+  status                  String   @default("applied")
+  verification_note       String?
+  created_at              DateTime @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime @default(now()) @db.Timestamptz(6)
+  verified_rank           Int?
+  verified_marks          Decimal? @db.Decimal(10, 2)
+  verified_community_rank Int?
+  verified_post_selected  String?
+  members                 members  @relation(fields: [member_id], references: [id], onDelete: Cascade)
+
+  @@unique([member_id, exam_tag])
+  @@index([member_id])
+  @@index([exam_tag])
+  @@index([exam_tag, member_id], map: "idx_exam_apps_exam_member")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model exam_posts {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  config_id           Int?
+  post_code           String
+  post_name           String
+  dept                String
+  created_at          DateTime?            @default(now()) @db.Timestamptz(6)
+  exam_configurations exam_configurations? @relation(fields: [config_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  post_vacancies      post_vacancies[]
+
+  @@unique([config_id, post_code])
+  @@index([config_id], map: "idx_exam_posts_config_id")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model post_vacancies {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  post_id          String?     @db.Uuid
+  community        String
+  gender           String
+  is_pstm          Boolean?    @default(false)
+  special_category String?
+  vacancy_type     String?     @default("Regular")
+  seat_count       Int         @default(0)
+  created_at       DateTime?   @default(now()) @db.Timestamptz(6)
+  exam_posts       exam_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([community], map: "idx_post_vacancies_community")
+  @@index([post_id], map: "idx_post_vacancies_post_id")
+  @@schema("public")
+}
+
+enum aal_level {
+  aal1
+  aal2
+  aal3
+
+  @@schema("auth")
+}
+
+enum code_challenge_method {
+  s256
+  plain
+
+  @@schema("auth")
+}
+
+enum factor_status {
+  unverified
+  verified
+
+  @@schema("auth")
+}
+
+enum factor_type {
+  totp
+  webauthn
+  phone
+
+  @@schema("auth")
+}
+
+enum oauth_authorization_status {
+  pending
+  approved
+  denied
+  expired
+
+  @@schema("auth")
+}
+
+enum oauth_client_type {
+  public
+  confidential
+
+  @@schema("auth")
+}
+
+enum oauth_registration_type {
+  dynamic
+  manual
+
+  @@schema("auth")
+}
+
+enum oauth_response_type {
+  code
+
+  @@schema("auth")
+}
+
+enum one_time_token_type {
+  confirmation_token
+  reauthentication_token
+  recovery_token
+  email_change_token_new
+  email_change_token_current
+  phone_change_token
+
+  @@schema("auth")
+}

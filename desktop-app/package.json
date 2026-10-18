@@ -1,0 +1,39 @@
+{
+    "name": "mahesh-ies-academy-desktop",
+    "productName": "Mahesh IES Academy",
+    "version": "1.0.0",
+    "description": "Official Desktop App for Mahesh IES Academy",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dist": "electron-builder"
+    },
+    "author": {
+        "name": "Mahesh IES Academy",
+        "email": "support@maheshiesacademy.com"
+    },
+    "build": {
+        "appId": "com.maheshiesacademy.desktop",
+        "productName": "Mahesh IES Academy",
+        "copyright": "Copyright © 2025 Mahesh IES Academy",
+        "directories": {
+            "output": "dist"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "icon.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Mahesh IES Academy",
+            "runAfterFinish": true
+        }
+    },
+    "devDependencies": {
+        "electron": "^28.0.0",
+        "electron-builder": "^24.9.0"
+    }
+}

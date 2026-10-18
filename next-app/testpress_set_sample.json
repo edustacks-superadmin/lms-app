@@ -1,0 +1,20 @@
+{
+  "id": 2491,
+  "title": "590 GT (2000 Qns)",
+  "description": "",
+  "created_by": {
+    "id": 1,
+    "display_name": "Mahesh Sir",
+    "photo": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/5a11a8bbbd424632851b3a4f9fd30ca1.jpg",
+    "large_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/a371ab6a46f64e81a087ff5511bc1757.jpg",
+    "medium_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/0557a8031f124fbeab550fa07fa55100.jpg",
+    "medium_small_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/6df268c53ea84ba4a7d4eb09d0b832ba.jpg",
+    "small_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/12b43e277c3a4034bc4b2f6fa5df274d.jpg",
+    "x_small_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/6a3c05a608934947bec84e50ed602559.jpg",
+    "mini_image": "https://d102ewyqwv3qiv.cloudfront.net/institute/thapovaninstitute/user_profiles/1/b6ed037592094b609fdf5949e14b1e10.jpg"
+  },
+  "created": "2025-10-24T18:27:35.306958+05:30",
+  "questions_count": 2000,
+  "questions_url": "https://thapovaninstitute.testpress.in/api/v2.5/admin/question_sets/2491/questions/",
+  "tree_path": "590 GT (2000 Qns)"
+}
