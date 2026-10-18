@@ -352,11 +352,11 @@ const QuestionList = () => {
 
                         {/* Explanation */}
                         {question.explanation && (
-                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#f5f9ff', borderLeft: '3px solid #2196f3', borderRadius: '4px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1976d2', marginBottom: '4px' }}>
+                            <div className="explanation-container" style={{ marginTop: '12px', padding: '14px 20px', backgroundColor: '#f5f9ff', borderLeft: '4px solid #2196f3', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1976d2', marginBottom: '6px' }}>
                                     Explanation:
                                 </div>
-                                <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.5' }}>
+                                <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }} className="explanation-content">
                                     <MathText>{question.explanation}</MathText>
                                 </div>
                             </div>

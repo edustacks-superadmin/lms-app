@@ -52,8 +52,55 @@ a {
   color: inherit;
 }
 
+/* Typography & Lists */
+ol {
+  list-style-type: decimal;
+  padding-left: 28px;
+  margin: 8px 0;
+}
+
 ul {
   list-style: none;
+}
+
+ul:not([class]) {
+  list-style-type: disc;
+  padding-left: 28px;
+  margin: 8px 0;
+}
+
+li {
+  margin-bottom: 6px;
+  line-height: 1.6;
+}
+
+/* Explanation Box Styling */
+.explanation-container {
+  padding: 14px 20px !important;
+}
+
+.explanation-container ol,
+.explanation-box ol,
+.explanation-content ol {
+  padding-left: 28px !important;
+  margin: 8px 0 !important;
+  list-style-type: decimal !important;
+}
+
+.explanation-container ul,
+.explanation-box ul,
+.explanation-content ul {
+  padding-left: 28px !important;
+  margin: 8px 0 !important;
+  list-style-type: disc !important;
+}
+
+.explanation-container li,
+.explanation-box li,
+.explanation-content li {
+  padding-left: 4px;
+  margin-bottom: 6px;
+  line-height: 1.6;
 }
 
 .container {

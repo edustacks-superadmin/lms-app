@@ -415,17 +415,17 @@ const StudentBookmarks = () => {
 
                             {/* Explanation */}
                             {item.explanation && (
-                                <div style={{
+                                <div className="explanation-container" style={{
                                     marginTop: '12px',
-                                    padding: '12px',
+                                    padding: '14px 20px',
                                     backgroundColor: '#f8f9fa',
                                     borderLeft: '4px solid #2563eb',
                                     borderRadius: '4px'
                                 }}>
-                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2563eb', marginBottom: '6px' }}>
                                         Explanation:
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.5' }}>
+                                    <div style={{ fontSize: '13px', color: '#374151', lineHeight: '1.6' }} className="explanation-content">
                                         <MathText>{item.explanation}</MathText>
                                     </div>
                                 </div>

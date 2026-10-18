@@ -18,7 +18,7 @@ const MathText = ({ children }) => {
     if (hasHTML) {
         // Process HTML with LaTeX synchronously
         const processedHTML = useMemo(() => processHTMLWithLatex(text), [text]);
-        return <div dangerouslySetInnerHTML={{ __html: processedHTML }} style={{ display: 'inline' }} />;
+        return <div dangerouslySetInnerHTML={{ __html: processedHTML }} className="math-text-content" style={{ display: 'inline-block', maxWidth: '100%', verticalAlign: 'middle' }} />;
     }
 
     return <PlainMathContent text={text} />;
