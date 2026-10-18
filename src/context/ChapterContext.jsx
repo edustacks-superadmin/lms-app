@@ -240,8 +240,8 @@ export const ChapterProvider = ({ children }) => {
                 chapter_id: contentData.chapter_id,
                 type: contentData.type,
                 title: contentData.title,
-                description: contentData.description,
-                content_url: contentUrl,
+                description: contentData.description || null,
+                url: contentUrl || null,
                 order: nextOrder
             };
 
