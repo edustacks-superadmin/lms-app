@@ -1064,15 +1064,6 @@ const TakeExam = () => {
                                         }}
                                         style={getStatusStyle(status)}
                                     >
-                                        {q.is_mandatory && (
-                                            <span style={{
-                                                position: 'absolute',
-                                                top: '-4px',
-                                                left: '-4px',
-                                                fontSize: '10px',
-                                                color: '#dc3545'
-                                            }}>●</span>
-                                        )}
                                         {idx + 1}
                                         {status === 'answered-marked' && (
                                             <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '10px', height: '10px', backgroundColor: '#4caf50', borderRadius: '50%', border: '1px solid white' }}></div>
