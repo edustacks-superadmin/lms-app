@@ -475,38 +475,62 @@ const TakeExam = () => {
             // Don't allow negative total score
             score = Math.max(0, score);
 
-            // Create Attempt Record with enhanced tracking
+            // Get student member ID and institute ID
+            let memberId = null;
+            let instituteId = exam.institute_id || 10;
+            if (user?.email) {
+                const { data: member } = await supabase
+                    .from('members')
+                    .select('id, institute_id')
+                    .eq('email', user.email)
+                    .maybeSingle();
+                if (member) {
+                    memberId = member.id;
+                    if (member.institute_id) instituteId = member.institute_id;
+                }
+            }
+
+            // Create Attempt Record with correct schema columns
+            const attemptPayload = {
+                exam_id: id,
+                member_id: memberId,
+                institute_id: instituteId,
+                score: score,
+                total_marks: questions.reduce((sum, q) => sum + (q.marks || 1), 0),
+                status: 'completed',
+                started_at: new Date(Date.now() - (exam.duration_minutes * 60 - timeLeft) * 1000).toISOString(),
+                submitted_at: new Date().toISOString(),
+                answers: answers,
+                tab_switches: tabSwitchCount,
+                is_auto_submitted: isAutoSubmitted
+            };
+
             const { data: attempt, error: attemptError } = await supabase
                 .from('exam_attempts')
-                .insert([{
-                    exam_id: id,
-                    user_id: user.id,
-                    score: score,
-                    total_marks: questions.reduce((sum, q) => sum + (q.marks || 1), 0),
-                    status: 'completed',
-                    completed_at: new Date().toISOString(),
-                    questions_answered: answers,
-                    tab_switches: tabSwitchCount,
-                    is_auto_submitted: isAutoSubmitted
-                }])
+                .insert([attemptPayload])
                 .select()
                 .single();
 
             if (attemptError) throw attemptError;
 
             // Insert Answers
-            const answersToInsert = answerRecords.map(a => ({
-                attempt_id: attempt.id,
-                question_id: a.question_id,
-                selected_option_index: a.selected_option_index,
-                is_correct: a.is_correct
-            }));
+            if (attempt && answerRecords.length > 0) {
+                const answersToInsert = answerRecords.map(a => ({
+                    attempt_id: attempt.id,
+                    question_id: a.question_id,
+                    selected_option_index: a.selected_option_index,
+                    is_correct: a.is_correct,
+                    institute_id: instituteId
+                }));
 
-            const { error: answersError } = await supabase
-                .from('exam_answers')
-                .insert(answersToInsert);
+                const { error: answersError } = await supabase
+                    .from('exam_answers')
+                    .insert(answersToInsert);
 
-            if (answersError) throw answersError;
+                if (answersError) {
+                    console.warn('Error inserting exam answers:', answersError);
+                }
+            }
 
             // Track exam completion in content_progress
             if (location.state?.courseId) {
@@ -549,7 +573,7 @@ const TakeExam = () => {
             }
 
             // Redirect to Results
-            navigate(`/student/exam/${id}/results`, { state: { courseId: location.state?.courseId } });
+            navigate(`/student/exam/${id}/results`, { state: { courseId: location.state?.courseId, attemptId: attempt?.id } });
 
         } catch (error) {
             console.error("Error submitting exam:", error);

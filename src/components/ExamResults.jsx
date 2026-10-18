@@ -76,25 +76,61 @@ const ExamResults = () => {
 
                 } else {
                     // Student Mode: Fetch Exam & Latest Attempt
-                    const { data: exam } = await supabase
+                    const { data: exam, error: examErr } = await supabase
                         .from('exams')
                         .select('title, duration_minutes')
                         .eq('id', id)
                         .single();
 
-                    if (!exam) throw new Error("Exam not found");
+                    if (examErr || !exam) throw new Error("Exam not found");
 
-                    const { data: attempt, error: attemptError } = await supabase
-                        .from('exam_attempts')
-                        .select('*')
-                        .eq('exam_id', id)
-                        .eq('user_id', user.id)
-                        .order('created_at', { ascending: false })
-                        .limit(1)
-                        .single();
+                    // 1. Check if attemptId passed in location.state
+                    const passedAttemptId = location.state?.attemptId;
+                    if (passedAttemptId) {
+                        const { data: attempt } = await supabase
+                            .from('exam_attempts')
+                            .select('*')
+                            .eq('id', passedAttemptId)
+                            .maybeSingle();
+                        if (attempt) {
+                            currentAttempt = attempt;
+                        }
+                    }
 
-                    if (attemptError) throw attemptError;
-                    currentAttempt = attempt;
+                    // 2. Fallback to latest attempt for this student
+                    if (!currentAttempt) {
+                        let memberId = null;
+                        if (user?.email) {
+                            const { data: member } = await supabase
+                                .from('members')
+                                .select('id')
+                                .eq('email', user.email)
+                                .maybeSingle();
+                            if (member) memberId = member.id;
+                        }
+
+                        let query = supabase
+                            .from('exam_attempts')
+                            .select('*')
+                            .eq('exam_id', id);
+
+                        if (memberId) {
+                            query = query.eq('member_id', memberId);
+                        }
+
+                        const { data: attempt, error: attemptError } = await query
+                            .order('submitted_at', { ascending: false, nullsFirst: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (attemptError) throw attemptError;
+                        currentAttempt = attempt;
+                    }
+
+                    if (!currentAttempt) {
+                        throw new Error("No exam attempt found.");
+                    }
+
                     currentAttempt.exams = exam;
                 }
 
@@ -103,31 +139,35 @@ const ExamResults = () => {
 
                 // Fetch Student Details (for Admin Mode or correct display)
                 let studentName = 'Student';
-                if (currentAttempt.user_id) {
+                if (currentAttempt.member_id) {
                     const { data: memberData } = await supabase
                         .from('members')
-                        .select('name, email')
-                        .eq('user_id', currentAttempt.user_id)
-                        .single();
+                        .select('display_name, first_name, last_name, email')
+                        .eq('id', currentAttempt.member_id)
+                        .maybeSingle();
 
                     if (memberData) {
-                        studentName = memberData.name || memberData.email;
-                    } else if (user.id === currentAttempt.user_id) {
-                        // Fallback to logged-in user if it's their own attempt
+                        studentName = memberData.display_name || 
+                            ([memberData.first_name, memberData.last_name].filter(Boolean).join(' ')) || 
+                            memberData.email;
+                    } else if (user) {
                         studentName = user.user_metadata?.full_name || user.email;
                     }
+                } else if (user) {
+                    studentName = user.user_metadata?.full_name || user.email;
                 }
 
                 // 3. Fetch Answers
-                const { data: answersData, error: answersError } = await supabase
+                const { data: answersData } = await supabase
                     .from('exam_answers')
                     .select('*')
                     .eq('attempt_id', currentAttempt.id);
 
                 const answers = answersData || [];
 
-                // 4. Fetch Questions with Options
-                const { data: qData, error: qError } = await supabase
+                // 4. Fetch Questions with Options (with schema cache fallback)
+                let qData = null;
+                const { data: directQData, error: qError } = await supabase
                     .from('exam_questions')
                     .select(`
                         *,
@@ -147,20 +187,62 @@ const ExamResults = () => {
                     .eq('exam_id', currentExamId)
                     .order('order', { ascending: true });
 
-                if (qError) throw qError;
+                if (!qError && directQData) {
+                    qData = directQData;
+                } else {
+                    // Fallback: fetch exam_questions and questions separately
+                    const { data: eqList, error: eqError } = await supabase
+                        .from('exam_questions')
+                        .select('*')
+                        .eq('exam_id', currentExamId)
+                        .order('order', { ascending: true });
+
+                    if (eqError) throw eqError;
+
+                    if (eqList && eqList.length > 0) {
+                        const questionIds = eqList.map(eq => eq.question_id).filter(Boolean);
+                        const { data: questionsData, error: qFetchError } = await supabase
+                            .from('questions')
+                            .select(`
+                                id,
+                                question_text,
+                                explanation,
+                                subjects (name),
+                                question_options (
+                                    id,
+                                    option_label,
+                                    option_text,
+                                    is_correct
+                                )
+                            `)
+                            .in('id', questionIds);
+
+                        if (qFetchError) throw qFetchError;
+
+                        const questionsMap = new Map((questionsData || []).map(q => [q.id, q]));
+                        qData = eqList.map(eq => ({
+                            ...eq,
+                            questions: questionsMap.get(eq.question_id) || null
+                        }));
+                    } else {
+                        qData = [];
+                    }
+                }
 
                 // Fetch Question Stats
                 let questionStats = {};
                 if (qData && qData.length > 0) {
                     try {
-                        const questionIds = qData.map(q => q.questions.id);
-                        const { data: statsData, error: statsError } = await supabase
-                            .rpc('get_questions_stats', { question_ids: questionIds });
+                        const questionIds = qData.map(q => q.questions?.id).filter(Boolean);
+                        if (questionIds.length > 0) {
+                            const { data: statsData, error: statsError } = await supabase
+                                .rpc('get_questions_stats', { question_ids: questionIds });
 
-                        if (!statsError && statsData) {
-                            statsData.forEach(stat => {
-                                questionStats[stat.question_id] = stat.percentage_correct;
-                            });
+                            if (!statsError && statsData) {
+                                statsData.forEach(stat => {
+                                    questionStats[stat.question_id] = stat.percentage_correct;
+                                });
+                            }
                         }
                     } catch (err) {
                         console.warn("Failed to fetch question stats:", err);
@@ -175,8 +257,9 @@ const ExamResults = () => {
                     const answer = answers.find(a => a.question_id === q.id);
 
                     // Sort options by label
-                    const sortedOptions = (q.question_options || []).sort((a, b) =>
-                        a.option_label.localeCompare(b.option_label)
+                    const rawOptions = q.question_options || q.options || [];
+                    const sortedOptions = [...rawOptions].sort((a, b) =>
+                        (a.option_label || '').localeCompare(b.option_label || '')
                     );
 
                     const optionTexts = sortedOptions.map(opt => opt.option_text);
@@ -204,7 +287,7 @@ const ExamResults = () => {
 
                 setResultData({
                     name: studentName,
-                    takenOn: new Date(currentAttempt.created_at).toLocaleString(),
+                    takenOn: new Date(currentAttempt.submitted_at || currentAttempt.started_at || Date.now()).toLocaleString(),
                     duration: `${exam.duration_minutes} mins`,
                     totalQuestions: processedQuestions.length,
                     marksPerQuestion: processedQuestions.length > 0 ? processedQuestions[0].marks : 0,

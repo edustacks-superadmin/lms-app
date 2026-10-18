@@ -161,8 +161,8 @@ const StudentProgressReport = () => {
                         )
                     )
                 `)
-                .eq('user_id', studentId)
-                .order('created_at', { ascending: false });
+                .eq('member_id', studentId)
+                .order('submitted_at', { ascending: false, nullsFirst: false });
 
             if (attemptsError) throw attemptsError;
 

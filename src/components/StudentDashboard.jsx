@@ -147,7 +147,7 @@ const StudentDashboard = () => {
                             total_marks
                         )
                     `)
-                    .eq('user_id', user.id)
+                    .eq('member_id', member.id)
                     .in('status', ['completed', 'submitted']);
 
                 let examCount = 0;

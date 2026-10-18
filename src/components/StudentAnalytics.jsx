@@ -24,8 +24,22 @@ const StudentAnalytics = () => {
         try {
             setLoading(true);
 
-            // Fetch exam attempts using user_id (Auth ID)
-            // exam_attempts table uses user_id, not student_id
+            // Fetch student member ID
+            let memberId = null;
+            if (user?.email) {
+                const { data: member } = await supabase
+                    .from('members')
+                    .select('id')
+                    .eq('email', user.email)
+                    .maybeSingle();
+                if (member) memberId = member.id;
+            }
+
+            if (!memberId) {
+                setLoading(false);
+                return;
+            }
+
             const { data, error } = await supabase
                 .from('exam_attempts')
                 .select(`
@@ -35,9 +49,9 @@ const StudentAnalytics = () => {
                         total_marks
                     )
                 `)
-                .eq('user_id', user.id)
-                .in('status', ['completed', 'submitted']) // Include both statuses
-                .order('created_at', { ascending: true });
+                .eq('member_id', memberId)
+                .in('status', ['completed', 'submitted'])
+                .order('submitted_at', { ascending: true });
 
             if (error) throw error;
 

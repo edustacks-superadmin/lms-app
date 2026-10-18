@@ -264,14 +264,38 @@ export const ExamProvider = ({ children }) => {
     };
 
     // Attempt tracking functions
+    const resolveMemberId = async (userOrMemberId) => {
+        if (!userOrMemberId) return null;
+        if (typeof userOrMemberId === 'number' || /^\d+$/.test(userOrMemberId)) {
+            return parseInt(userOrMemberId, 10);
+        }
+        try {
+            let query = supabase.from('members').select('id');
+            if (typeof userOrMemberId === 'string' && userOrMemberId.includes('@')) {
+                query = query.eq('email', userOrMemberId);
+            } else {
+                query = query.eq('auth_user_id', userOrMemberId);
+            }
+            const { data } = await query.maybeSingle();
+            return data?.id || null;
+        } catch {
+            return null;
+        }
+    };
+
     const getStudentAttempts = async (examId, userId) => {
         try {
-            const { data, error } = await supabase
+            const memberId = await resolveMemberId(userId);
+            let query = supabase
                 .from('exam_attempts')
                 .select('*')
-                .eq('exam_id', examId)
-                .eq('user_id', userId)
-                .order('attempt_number', { ascending: true });
+                .eq('exam_id', examId);
+
+            if (memberId) {
+                query = query.eq('member_id', memberId);
+            }
+
+            const { data, error } = await query.order('attempt_number', { ascending: true });
 
             if (error) throw error;
             return data || [];
@@ -281,17 +305,19 @@ export const ExamProvider = ({ children }) => {
         }
     };
 
-    const createAttempt = async (examId, userId) => {
+    const createAttempt = async (examId, userId, instituteId = 10) => {
         try {
+            const memberId = await resolveMemberId(userId);
             // Get existing attempts count
-            const attempts = await getStudentAttempts(examId, userId);
+            const attempts = await getStudentAttempts(examId, memberId || userId);
             const attemptNumber = attempts.length + 1;
 
             const { data, error } = await supabase
                 .from('exam_attempts')
                 .insert([{
                     exam_id: examId,
-                    user_id: userId,
+                    member_id: memberId,
+                    institute_id: instituteId,
                     attempt_number: attemptNumber,
                     started_at: new Date().toISOString(),
                     status: 'in_progress'
@@ -313,10 +339,9 @@ export const ExamProvider = ({ children }) => {
                 .from('exam_attempts')
                 .update({
                     submitted_at: new Date().toISOString(),
-                    completed_at: new Date().toISOString(),
                     score: score,
                     total_marks: totalMarks,
-                    questions_answered: answers,
+                    answers: answers,
                     tab_switches: tabSwitches,
                     is_auto_submitted: isAutoSubmitted,
                     status: 'completed'

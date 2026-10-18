@@ -40,7 +40,7 @@ const ExamStatistics = () => {
                 .from('exam_attempts')
                 .select('*')
                 .eq('exam_id', id)
-                .order('created_at', { ascending: false });
+                .order('submitted_at', { ascending: false, nullsFirst: false });
 
             if (attemptsError) {
                 console.error('Error fetching attempts:', attemptsError);
@@ -51,25 +51,31 @@ const ExamStatistics = () => {
             // Fetch member details for these attempts
             let attemptsWithMembers = [];
             if (attemptsData && attemptsData.length > 0) {
-                const userIds = [...new Set(attemptsData.map(a => a.user_id))];
+                const memberIds = [...new Set(attemptsData.map(a => a.member_id).filter(Boolean))];
 
-                const { data: membersData, error: membersError } = await supabase
-                    .from('members')
-                    .select('user_id, name, email')
-                    .in('user_id', userIds);
+                let membersData = [];
+                if (memberIds.length > 0) {
+                    const { data: mData, error: membersError } = await supabase
+                        .from('members')
+                        .select('id, display_name, first_name, last_name, email')
+                        .in('id', memberIds);
 
-                if (membersError) {
-                    console.error('Error fetching members:', membersError);
+                    if (membersError) {
+                        console.error('Error fetching members:', membersError);
+                    } else if (mData) {
+                        membersData = mData;
+                    }
                 }
 
                 attemptsWithMembers = attemptsData.map(attempt => {
-                    const member = membersData?.find(m => m.user_id === attempt.user_id);
+                    const member = membersData?.find(m => m.id === attempt.member_id);
+                    const name = member?.display_name || [member?.first_name, member?.last_name].filter(Boolean).join(' ') || member?.email;
                     return {
                         ...attempt,
                         members: member ? {
                             ...member,
-                            full_name: member.display_name, // Map display_name to full_name for UI compatibility
-                            username: member.email // Use email as fallback for username
+                            full_name: name,
+                            username: member.email || 'N/A'
                         } : { full_name: 'Unknown', email: 'N/A', username: 'N/A' }
                     };
                 });
