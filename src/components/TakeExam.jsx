@@ -105,7 +105,7 @@ const TakeExam = () => {
                         marks: item.marks,
                         correctAnswerIndex: correctIndex,
                         section_id: item.section_id,
-                        is_mandatory: item.is_mandatory !== false,
+                        is_mandatory: item.is_mandatory === true,
                         exam_sections: item.exam_sections
                     };
                 }).filter(q => q !== null);
