@@ -51,6 +51,20 @@ function processHTMLWithLatex(html) {
         const rawContent = el.textContent.trim();
         if (!rawContent) return;
 
+        // If .math-tex contains internal delimiters or mixed text with delimiters,
+        // unwrap it so that step 2 parses each math formula and text separately!
+        const delimMatches = rawContent.match(/\\\(|\\\[|\$\$|\$/g);
+        if (delimMatches && (delimMatches.length > 2 || (delimMatches.length > 0 && !rawContent.startsWith('\\(') && !rawContent.startsWith('\\[')))) {
+            const parent = el.parentNode;
+            if (parent) {
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+                return;
+            }
+        }
+
         let cleanLatex = rawContent
             .replace(/^\\\(/, '')
             .replace(/\\\)$/, '')
