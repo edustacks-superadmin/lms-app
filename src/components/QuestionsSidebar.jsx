@@ -15,7 +15,7 @@ const QuestionsSidebar = () => {
     ];
 
     return (
-        <div style={{ width: '200px', padding: '20px', borderRight: '1px solid #eee' }}>
+        <aside style={{ width: '240px', flexShrink: 0, padding: '20px 16px 20px 24px', borderRight: '1px solid #eee' }}>
             {menuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -26,8 +26,9 @@ const QuestionsSidebar = () => {
                         onClick={() => navigate(item.path)}
                         style={{
                             width: '100%',
-                            padding: '12px 20px',
+                            padding: '10px 14px',
                             border: 'none',
+                            borderRadius: '6px',
                             background: isActive ? '#e7f7ff' : 'transparent',
                             color: isActive ? '#0088cc' : '#666',
                             textAlign: 'left',
@@ -37,7 +38,8 @@ const QuestionsSidebar = () => {
                             gap: '12px',
                             fontSize: '14px',
                             fontWeight: isActive ? '500' : '400',
-                            transition: 'background 0.2s'
+                            transition: 'background 0.2s',
+                            marginBottom: '4px'
                         }}
                         onMouseOver={(e) => {
                             if (!isActive) e.currentTarget.style.background = '#f5f5f5';
@@ -61,7 +63,7 @@ const QuestionsSidebar = () => {
                     </button>
                 );
             })}
-        </div>
+        </aside>
     );
 };
 

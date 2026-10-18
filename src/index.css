@@ -453,16 +453,24 @@ textarea.form-input {
   position: relative;
   /* Ensure relative positioning for children */
   width: 100%;
+  min-width: 0;
+}
+
+.main-content > aside,
+.main-content > div:first-child:not(.content-area) {
+  flex-shrink: 0;
 }
 
 .content-area {
   flex: 1;
+  min-width: 0;
+  width: auto;
   overflow-y: auto;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   /* Smooth scrolling on iOS */
-  padding: 20px;
+  padding: 20px 32px;
   background-color: var(--bg-color);
-  width: 100%;
 }
 
 /* Animations for Toast and Skeleton */
@@ -945,7 +953,7 @@ textarea.form-input {
 
 .posts-sidebar {
   width: 250px;
-  padding: 0 20px;
+  padding: 20px 16px 20px 28px;
   flex-shrink: 0;
 }
 

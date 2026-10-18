@@ -6,7 +6,7 @@ const ExamsSidebar = () => {
     const navigate = useNavigate();
 
     return (
-        <aside style={{ width: '250px', padding: '0 20px' }}>
+        <aside style={{ width: '250px', flexShrink: 0, padding: '20px 16px 20px 28px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button
                     className="btn btn-success"

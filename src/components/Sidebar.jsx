@@ -21,7 +21,7 @@ const Sidebar = ({ selectedTags = [], onTagsChange, sortBy = '', onSortChange, o
     ];
 
     return (
-        <aside style={{ width: '250px', padding: '0 20px' }}>
+        <aside style={{ width: '250px', flexShrink: 0, padding: '20px 16px 20px 28px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <button className="btn btn-primary" style={{ justifyContent: 'flex-start', width: '100%' }}>
                     <CheckCircle size={16} /> Published
