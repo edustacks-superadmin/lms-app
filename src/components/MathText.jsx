@@ -37,48 +37,111 @@ function preprocessLatex(latex) {
     });
 }
 
-// Process HTML content and render LaTeX in math-tex spans
+// Process HTML content and render LaTeX in math-tex spans AND raw LaTeX delimiters
 function processHTMLWithLatex(html) {
+    if (!html) return '';
+
     // Create a temporary div to parse HTML
     const temp = document.createElement('div');
     temp.innerHTML = html;
 
-    // Find all math-tex spans
+    // 1. Process explicit .math-tex spans
     const mathElements = temp.querySelectorAll('.math-tex');
-
     mathElements.forEach((el) => {
-        const latex = el.textContent.trim();
-        if (!latex) return;
+        const rawContent = el.textContent.trim();
+        if (!rawContent) return;
+
+        let cleanLatex = rawContent
+            .replace(/^\\\(/, '')
+            .replace(/\\\)$/, '')
+            .replace(/^\\\[/, '')
+            .replace(/\\\]$/, '')
+            .trim();
+
+        cleanLatex = preprocessLatex(cleanLatex);
+
+        const container = document.createElement('span');
+        container.className = 'katex-container';
 
         try {
-            // Remove LaTeX delimiters
-            let cleanLatex = latex
-                .replace(/^\\\(/, '')
-                .replace(/\\\)$/, '')
-                .replace(/^\\\[/, '')
-                .replace(/\\\]$/, '')
-                .trim();
-
-            // Preprocess to add \text{} around multi-word text
-            cleanLatex = preprocessLatex(cleanLatex);
-
-            // Create a container for the rendered LaTeX
-            const container = document.createElement('span');
-            container.className = 'katex-container';
-
-            // Render using katex
             katex.render(cleanLatex, container, {
                 throwOnError: false,
                 displayMode: false,
                 output: 'html'
             });
-
-            // Replace the math-tex element with the rendered content
             el.parentNode.replaceChild(container, el);
         } catch (error) {
-            console.error('LaTeX render error for:', latex, error);
-            el.style.color = 'red';
-            el.textContent = '[LaTeX Error]';
+            console.warn('LaTeX render error for math-tex:', rawContent, error);
+        }
+    });
+
+    // 2. Walk all remaining text nodes in temp to render any \(...\), \[...\], $$...$$, or $...$
+    const walker = document.createTreeWalker(temp, NodeFilter.SHOW_TEXT, null, false);
+    const textNodes = [];
+    let currentNode;
+    while ((currentNode = walker.nextNode())) {
+        if (currentNode.parentElement && !currentNode.parentElement.closest('.katex, .katex-container, script, style')) {
+            if (/(\\\[|\\\(|\$\$|\$[^$<>\n]+\$)/.test(currentNode.nodeValue)) {
+                textNodes.push(currentNode);
+            }
+        }
+    }
+
+    textNodes.forEach((node) => {
+        const text = node.nodeValue;
+        const regex = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$<>\n]+?\$)/g;
+        if (!regex.test(text)) return;
+
+        const fragment = document.createDocumentFragment();
+        let lastIdx = 0;
+        let match;
+        const re = new RegExp(regex);
+
+        while ((match = re.exec(text)) !== null) {
+            if (match.index > lastIdx) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIdx, match.index)));
+            }
+
+            const rawMatch = match[0];
+            let math = '';
+            let displayMode = false;
+
+            if (rawMatch.startsWith('$$') && rawMatch.endsWith('$$')) {
+                math = rawMatch.slice(2, -2);
+                displayMode = true;
+            } else if (rawMatch.startsWith('\\[') && rawMatch.endsWith('\\]')) {
+                math = rawMatch.slice(2, -2);
+                displayMode = true;
+            } else if (rawMatch.startsWith('\\(') && rawMatch.endsWith('\\)')) {
+                math = rawMatch.slice(2, -2);
+                displayMode = false;
+            } else if (rawMatch.startsWith('$') && rawMatch.endsWith('$') && rawMatch.length > 2) {
+                math = rawMatch.slice(1, -1);
+                displayMode = false;
+            }
+
+            const span = document.createElement('span');
+            span.className = 'katex-container';
+            try {
+                katex.render(preprocessLatex(math.trim()), span, {
+                    throwOnError: false,
+                    displayMode: displayMode,
+                    output: 'html'
+                });
+                fragment.appendChild(span);
+            } catch (err) {
+                fragment.appendChild(document.createTextNode(rawMatch));
+            }
+
+            lastIdx = re.lastIndex;
+        }
+
+        if (lastIdx < text.length) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIdx)));
+        }
+
+        if (node.parentNode) {
+            node.parentNode.replaceChild(fragment, node);
         }
     });
 
