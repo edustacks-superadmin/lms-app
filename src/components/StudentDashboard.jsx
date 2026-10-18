@@ -134,7 +134,7 @@ const StudentDashboard = () => {
                 const { count: activeCount } = await supabase
                     .from('enrollments')
                     .select('*', { count: 'exact', head: true })
-                    .eq('student_id', member.id)
+                    .eq('member_id', member.id)
                     .eq('status', 'active');
 
                 // Get completed exams and score from exam_attempts for consistency with Analytics
@@ -181,15 +181,13 @@ const StudentDashboard = () => {
                     .from('enrollments')
                     .select(`
                         *,
-                        course:courses(id, title, image_url),
-                        chapter:chapters(id, title),
-                        content:chapter_contents(id, title, type)
+                        course:courses(id, title, image)
                     `)
-                    .eq('student_id', member.id)
+                    .eq('member_id', member.id)
                     .not('last_accessed_at', 'is', null)
                     .order('last_accessed_at', { ascending: false })
                     .limit(1)
-                    .single();
+                    .maybeSingle();
 
                 if (lastEnrollment) {
                     setResumeCourse(lastEnrollment);

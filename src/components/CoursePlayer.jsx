@@ -97,7 +97,7 @@ const CoursePlayer = () => {
     useEffect(() => {
         if (user?.email) {
             const fetchMemberId = async () => {
-                const { data } = await supabase.from('members').select('id').eq('email', user.email).single();
+                const { data } = await supabase.from('members').select('id').eq('email', user.email).maybeSingle();
                 if (data) setMemberId(data.id);
             };
             fetchMemberId();

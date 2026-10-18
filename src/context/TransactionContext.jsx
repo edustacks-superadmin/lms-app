@@ -150,15 +150,15 @@ export const TransactionProvider = ({ children }) => {
                         const { data: existing } = await supabase
                             .from('enrollments')
                             .select('id')
-                            .eq('student_id', member.id)
+                            .eq('member_id', member.id)
                             .eq('course_id', courseId)
-                            .single();
+                            .maybeSingle();
 
                         if (!existing) {
                             const { error: insertError } = await supabase
                                 .from('enrollments')
                                 .insert({
-                                    student_id: member.id,
+                                    member_id: member.id,
                                     course_id: courseId,
                                     status: 'active',
                                     progress: 0,

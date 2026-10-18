@@ -49,15 +49,15 @@ const MyCourses = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        fetchEnrolledCourses();
         if (user?.email) {
-            fetchEnrolledCourses();
             fetchDebugInfo();
         }
     }, [user]);
 
     const fetchDebugInfo = async () => {
-        // Fetch student batches again for debug
-        const { data: member } = await supabase.from('members').select('id').eq('email', user.email).single();
+        if (!user?.email) return;
+        const { data: member } = await supabase.from('members').select('id').eq('email', user.email).maybeSingle();
         if (member) {
             const { data: batches } = await supabase.from('batch_members').select('batch_id').eq('member_id', member.id);
             const batchIds = batches?.map(b => b.batch_id) || [];
@@ -74,49 +74,61 @@ const MyCourses = () => {
 
     const fetchEnrolledCourses = async () => {
         try {
-            console.log('Fetching courses for student:', user.email);
+            console.log('Fetching courses for student:', user?.email);
 
-            // Get student member data (id, email)
-            const { data: member, error: memberError } = await supabase
-                .from('members')
-                .select('id, email')
-                .eq('email', user.email)
-                .single();
+            let member = null;
+            if (user?.email) {
+                // Get student member data (id, email) safely
+                const { data: memberData, error: memberError } = await supabase
+                    .from('members')
+                    .select('id, email')
+                    .eq('email', user.email)
+                    .maybeSingle();
 
-            if (memberError) throw memberError;
-            if (!member) {
-                console.log('No member found for email:', user.email);
-                setLoading(false);
-                return;
+                if (memberError) {
+                    console.warn('Member lookup notice:', memberError);
+                } else {
+                    member = memberData;
+                }
             }
 
             console.log('Member data:', member);
 
             // Get student's batch memberships
-            const { data: batchMemberships, error: batchMemberError } = await supabase
-                .from('batch_members')
-                .select('batch_id')
-                .eq('member_id', member.id);
+            let studentBatches = [];
+            if (member?.id) {
+                const { data: batchMemberships, error: batchMemberError } = await supabase
+                    .from('batch_members')
+                    .select('batch_id')
+                    .eq('member_id', member.id);
 
-            if (batchMemberError) {
-                console.error('Error fetching batch memberships:', batchMemberError);
+                if (batchMemberError) {
+                    console.error('Error fetching batch memberships:', batchMemberError);
+                } else {
+                    studentBatches = (batchMemberships || []).map(bm => bm.batch_id);
+                }
             }
-
-            const studentBatches = (batchMemberships || []).map(bm => bm.batch_id);
             console.log('Student batches:', studentBatches);
 
-            // 1. Fetch manually enrolled courses
-            const { data: manualEnrollments, error: enrollError } = await supabase
-                .from('enrollments')
-                .select(`
-                    *,
-                    courses:course_id (*)
-                `)
-                .eq('student_id', member.id)
-                .in('status', ['active', 'completed']);
+            // 1. Fetch manually enrolled courses (uses member_id column)
+            let manualEnrollments = [];
+            if (member?.id) {
+                const { data: enrollmentsData, error: enrollError } = await supabase
+                    .from('enrollments')
+                    .select(`
+                        *,
+                        courses:course_id (*)
+                    `)
+                    .eq('member_id', member.id)
+                    .in('status', ['active', 'completed']);
 
-            if (enrollError) throw enrollError;
-            console.log('Manual enrollments:', manualEnrollments?.length || 0);
+                if (enrollError) {
+                    console.error('Error fetching manual enrollments:', enrollError);
+                } else {
+                    manualEnrollments = enrollmentsData || [];
+                }
+            }
+            console.log('Manual enrollments:', manualEnrollments.length);
 
             // 2. Fetch courses assigned to student's batches
             let batchCourses = [];
@@ -246,30 +258,39 @@ const MyCourses = () => {
             const uniqueCourses = Array.from(courseMap.values());
             console.log('Unique courses after deduplication:', uniqueCourses.length);
 
-            // 5. Fetch chapter counts and content counts for each course
+            // 5. Fetch chapter counts and content counts safely for each course
             const coursesWithChapters = await Promise.all(
                 uniqueCourses.map(async (enrollment) => {
-                    // Get chapters to count them and get their IDs
-                    const { data: chapters, count: chapterCount } = await supabase
-                        .from('chapters')
-                        .select('id', { count: 'exact' })
-                        .eq('course_id', enrollment.course_id);
+                    try {
+                        // Get chapters to count them and get their IDs
+                        const { data: chapters, count: chapterCount } = await supabase
+                            .from('chapters')
+                            .select('id', { count: 'exact' })
+                            .eq('course_id', enrollment.course_id);
 
-                    let contentCount = 0;
-                    if (chapters && chapters.length > 0) {
-                        const chapterIds = chapters.map(c => c.id);
-                        const { count } = await supabase
-                            .from('chapter_contents')
-                            .select('*', { count: 'exact', head: true })
-                            .in('chapter_id', chapterIds);
-                        contentCount = count || 0;
+                        let contentCount = 0;
+                        if (chapters && chapters.length > 0) {
+                            const chapterIds = chapters.map(c => c.id);
+                            const { count } = await supabase
+                                .from('chapter_contents')
+                                .select('*', { count: 'exact', head: true })
+                                .in('chapter_id', chapterIds);
+                            contentCount = count || 0;
+                        }
+
+                        return {
+                            ...enrollment,
+                            totalChapters: chapterCount || 0,
+                            totalContents: contentCount
+                        };
+                    } catch (chapErr) {
+                        console.warn('Error fetching chapters/contents for course:', enrollment.course_id, chapErr);
+                        return {
+                            ...enrollment,
+                            totalChapters: 0,
+                            totalContents: 0
+                        };
                     }
-
-                    return {
-                        ...enrollment,
-                        totalChapters: chapterCount || 0,
-                        totalContents: contentCount
-                    };
                 })
             );
 

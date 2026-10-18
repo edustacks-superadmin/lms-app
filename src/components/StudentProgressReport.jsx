@@ -57,9 +57,11 @@ const StudentProgressReport = () => {
                         title
                     )
                 `)
-                .eq('student_id', studentId);
+                .eq('member_id', studentId);
 
-            if (enrollmentsError) throw enrollmentsError;
+            if (enrollmentsError) {
+                console.warn('Manual enrollments notice:', enrollmentsError);
+            }
 
             // 2. Fetch courses from student's batches
             let batchCourses = [];
