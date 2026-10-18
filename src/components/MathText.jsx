@@ -26,10 +26,13 @@ const MathText = ({ children }) => {
 
 // Preprocess LaTeX to preserve spaces in text
 function preprocessLatex(latex) {
-    // Pattern to find text with spaces (not single variables)
-    // Matches words with spaces like "Lateral strain", "longitudinal strain", etc.
-    return latex.replace(/([a-zA-Z]+\s+[a-zA-Z]+(?:\s+[a-zA-Z]+)*)/g, (match) => {
-        // Don't wrap if already in a text command
+    // Only wrap sequences of actual words separated by spaces,
+    // avoiding backslash commands (like \sum, \implies, \sin, \cos) and already wrapped \text{}
+    return latex.replace(/(?<!\\[a-zA-Z]*)\b([a-zA-Z]{2,}\s+[a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})*)\b/g, (match, words, offset, fullStr) => {
+        const preceding = fullStr.slice(0, offset);
+        if (/\\text\s*\{[^}]*$/.test(preceding)) {
+            return match;
+        }
         return `\\text{${match}}`;
     });
 }
