@@ -1,4 +1,4 @@
-const CACHE_NAME = 'edustacks-pwa-v2';
+const CACHE_NAME = 'edustacks-pwa-v3';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
