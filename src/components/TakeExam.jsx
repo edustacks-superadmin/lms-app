@@ -105,7 +105,7 @@ const TakeExam = () => {
                         marks: item.marks,
                         correctAnswerIndex: correctIndex,
                         section_id: item.section_id,
-                        is_mandatory: item.is_mandatory === true,
+                        is_mandatory: false,
                         exam_sections: item.exam_sections
                     };
                 }).filter(q => q !== null);
@@ -1109,20 +1109,6 @@ const TakeExam = () => {
                                 <span>Not Visited:</span> <span style={{ fontWeight: 'bold', color: '#757575' }}>{stats.notVisited}</span>
                             </div>
                         </div>
-
-                        {getUnansweredMandatory().length > 0 && (
-                            <div style={{
-                                backgroundColor: '#fff3cd',
-                                border: '1px solid #ffc107',
-                                color: '#856404',
-                                padding: '12px',
-                                borderRadius: '4px',
-                                marginBottom: '20px',
-                                fontSize: '14px'
-                            }}>
-                                ⚠️ <strong>Warning:</strong> You have {getUnansweredMandatory().length} unanswered mandatory question(s).
-                            </div>
-                        )}
 
                         <p style={{ fontSize: '13px', color: '#666', marginBottom: '24px' }}>
                             Are you sure you want to submit? You cannot change your answers after submission.
