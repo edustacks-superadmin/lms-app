@@ -29,7 +29,39 @@ const CourseAccessControl = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            const data = getCourse(id);
+            let data = getCourse ? getCourse(id) : null;
+
+            // If not found in context (e.g. direct load or refresh), fetch directly from Supabase
+            if (!data && id) {
+                try {
+                    const { data: dbCourse, error: cError } = await supabase
+                        .from('courses')
+                        .select(`
+                            *,
+                            course_tags(tag_id),
+                            batch_courses(batch_id)
+                        `)
+                        .eq('id', id)
+                        .single();
+
+                    if (!cError && dbCourse) {
+                        data = {
+                            ...dbCourse,
+                            tags: dbCourse.course_tags?.map(ct => ct.tag_id) || [],
+                            accessControl: dbCourse.access_control,
+                            allowedBatches: dbCourse.batch_courses?.map(bc => bc.batch_id) || [],
+                            allowedProducts: dbCourse.allowed_products,
+                            allowedNetwork: dbCourse.allowed_network,
+                            allowedDevices: dbCourse.allowed_devices,
+                            videoWatchCount: dbCourse.video_watch_count,
+                            videoWatchTimeLimit: dbCourse.video_watch_time_limit
+                        };
+                    }
+                } catch (e) {
+                    console.error('Error fetching course directly:', e);
+                }
+            }
+
             if (data) {
                 setCourseData(data);
                 setAccessControl(data.accessControl || 'Private');
@@ -52,26 +84,19 @@ const CourseAccessControl = () => {
                         const latestAllowedBatches = batchCourses.map(bc => bc.batch_id);
                         setSelectedBatches(latestAllowedBatches);
                     } else {
-                        // Fallback to context data
                         setSelectedBatches(data.allowedBatches || []);
                     }
                 } catch (err) {
                     console.error('Error fetching batch courses:', err);
                     setSelectedBatches(data.allowedBatches || []);
                 }
-            } else {
-                // If course not found in context (e.g. direct load), might need to wait or redirect
-                // For now, assuming context is loaded or we redirect
-                if (!data && id) {
-                    // Potential retry or redirect logic here
-                }
             }
         };
 
         loadData();
         fetchProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [id]);
+        if (fetchBatches) fetchBatches();
+    }, [id, getCourse]);
 
     const handleUpdate = async () => {
         const updatedData = {

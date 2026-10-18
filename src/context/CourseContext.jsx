@@ -208,7 +208,7 @@ export const CourseProvider = ({ children }) => {
     };
 
     const getCourse = useCallback((id) => {
-        return courses.find(course => course.id === id);
+        return courses.find(course => course.id == id);
     }, [courses]);
 
     return (
