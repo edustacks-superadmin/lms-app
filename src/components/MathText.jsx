@@ -165,7 +165,7 @@ function processHTMLWithLatex(html) {
 // Component to render plain text with LaTeX delimiters
 const PlainMathContent = ({ text }) => {
     // Split by multiple LaTeX delimiters
-    const parts = text.split(/(\\$\\$[\\s\\S]+?\\$\\$|\\\\\\[[\\s\\S]+?\\\\\\]|\\$[^$]+?\\$|\\\\\\([\\s\\S]+?\\\\\\))/);
+    const parts = text.split(/(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$<>\n]+?\$)/);
 
     return (
         <>

@@ -188,22 +188,19 @@ const PlainMathContent = ({ text }) => {
         <>
             {parts.map((part, index) => {
                 if (part.startsWith('$$') && part.endsWith('$$')) {
-                    return <BlockMath key={index} math={cleanLatexString(part.slice(2, -2))} errorColor={'#cc0000'} />;
+                    return <BlockMath key={index} math={preprocessLatex(cleanLatexString(part.slice(2, -2)))} errorColor={'#cc0000'} />;
                 }
                 if (part.startsWith('\\[') && part.endsWith('\\]')) {
-                    return <BlockMath key={index} math={cleanLatexString(part.slice(2, -2))} errorColor={'#cc0000'} />;
+                    return <BlockMath key={index} math={preprocessLatex(cleanLatexString(part.slice(2, -2)))} errorColor={'#cc0000'} />;
                 }
                 if (part.startsWith('\\(') && part.endsWith('\\)')) {
-                    return <InlineMath key={index} math={cleanLatexString(part.slice(2, -2))} errorColor={'#cc0000'} />;
+                    return <InlineMath key={index} math={preprocessLatex(cleanLatexString(part.slice(2, -2)))} errorColor={'#cc0000'} />;
                 }
                 if (part.startsWith('$') && part.endsWith('$') && part.length > 1) {
-                    return <InlineMath key={index} math={cleanLatexString(part.slice(1, -1))} errorColor={'#cc0000'} />;
+                    return <InlineMath key={index} math={preprocessLatex(cleanLatexString(part.slice(1, -1)))} errorColor={'#cc0000'} />;
                 }
                 if (part.startsWith('\\text{')) {
-                    // Determine if it should be block or inline? Default inline for text.
-                    // But react-katex InlineMath expects just the content? No, it expects valid LaTeX.
-                    // \text{...} is valid LaTeX.
-                    return <InlineMath key={index} math={part} errorColor={'#cc0000'} />;
+                    return <InlineMath key={index} math={preprocessLatex(cleanLatexString(part))} errorColor={'#cc0000'} />;
                 }
 
                 return <span key={index}>{part}</span>;
