@@ -95,7 +95,14 @@ const ChapterContents = () => {
             .single();
 
         if (!error && chapterData) {
-            setChapter(chapterData);
+            const normalizedChapter = {
+                ...chapterData,
+                title: chapterData.name || chapterData.title || '',
+                name: chapterData.name || chapterData.title || '',
+                image: chapterData.icon || chapterData.image || null,
+                icon: chapterData.icon || chapterData.image || null,
+            };
+            setChapter(normalizedChapter);
             // Sort contents by order
             const sortedContents = (chapterData.chapter_contents || []).sort((a, b) => a.order - b.order);
             setContents(sortedContents);
@@ -109,7 +116,14 @@ const ChapterContents = () => {
             .order('order', { ascending: true });
 
         if (!subError && subChaptersData) {
-            setSubChapters(subChaptersData);
+            const normalizedSubs = subChaptersData.map(ch => ({
+                ...ch,
+                title: ch.name || ch.title || '',
+                name: ch.name || ch.title || '',
+                image: ch.icon || ch.image || null,
+                icon: ch.icon || ch.image || null,
+            }));
+            setSubChapters(normalizedSubs);
         }
 
         setLoading(false);
@@ -373,13 +387,13 @@ const ChapterContents = () => {
                     <span className="text-gray-300">/</span>
                     <span className="text-gray-600 cursor-pointer hover:underline" onClick={() => navigate(`/courses/${courseId}/chapters`)}>Chapters</span>
                     <span className="text-gray-300">/</span>
-                    <span className="text-gray-900 font-semibold">{chapter.name}</span>
+                    <span className="text-gray-900 font-semibold">{chapter.name || chapter.title}</span>
                 </div>
 
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900 m-0">{chapter.name}</h2>
+                        <h2 className="text-3xl font-bold text-gray-900 m-0">{chapter.name || chapter.title}</h2>
                         {chapter.description && <p className="text-gray-600 mt-1 text-sm">{chapter.description}</p>}
                     </div>
 
@@ -449,14 +463,14 @@ const ChapterContents = () => {
                                                         </div>
 
                                                         <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center overflow-hidden relative">
-                                                            {subChapter.image ? (
-                                                                <img src={subChapter.image} alt={subChapter.name} className="w-full h-full object-cover" />
+                                                            {subChapter.image || subChapter.icon ? (
+                                                                <img src={subChapter.image || subChapter.icon} alt={subChapter.name || subChapter.title} className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Folder size={20} />
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <h4 className="text-base font-semibold text-gray-800 m-0">{subChapter.name}</h4>
+                                                            <h4 className="text-base font-semibold text-gray-800 m-0">{subChapter.name || subChapter.title}</h4>
                                                             <span className="text-xs text-gray-500">
                                                                 {subChapter.description || ''}
                                                             </span>

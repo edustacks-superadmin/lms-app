@@ -22,7 +22,8 @@ export const CourseProvider = ({ children }) => {
                     course_tags(tag_id),
                     batch_courses(batch_id)
                 `)
-                .order('order', { ascending: true });
+                .order('order', { ascending: true })
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
 
@@ -91,6 +92,28 @@ export const CourseProvider = ({ children }) => {
     };
 
     const uploadCourseImage = async (file) => {
+        // Try uploading to R2 via /api/upload first
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'icons/Custom');
+
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.url) {
+                    return { success: true, url: data.url };
+                }
+            }
+        } catch (r2Err) {
+            console.warn('R2 API upload failed, falling back to Supabase:', r2Err);
+        }
+
+        // Supabase storage fallback
         try {
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
@@ -231,12 +254,53 @@ export const CourseProvider = ({ children }) => {
         }
     };
 
-    // Reordering is complex with a DB, we'll keep it local for now or implement a 'order' column later
-    const reorderCourses = (startIndex, endIndex) => {
+    const reorderCourses = async (startIndex, endIndex) => {
         const result = Array.from(courses);
         const [removed] = result.splice(startIndex, 1);
         result.splice(endIndex, 0, removed);
-        setCourses(result);
+
+        // Optimistically update local state with sequential orders
+        const updatedCourses = result.map((course, index) => ({
+            ...course,
+            order: index
+        }));
+        setCourses(updatedCourses);
+
+        try {
+            const updates = updatedCourses.map(course => ({
+                id: course.id,
+                order: course.order
+            }));
+
+            // 1. Call atomic reorder RPC
+            const { error: rpcError } = await supabase.rpc('reorder_courses', { course_orders: updates });
+            if (!rpcError) return;
+
+            console.warn('RPC reorder failed, trying API route:', rpcError);
+
+            // 2. Try backend API endpoint fallback
+            try {
+                const res = await fetch('/api/admin/courses/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ updates })
+                });
+                if (res.ok) return;
+            } catch (apiErr) {
+                console.warn('API reorder unavailable:', apiErr);
+            }
+
+            // 3. Direct updates fallback
+            const updatePromises = updates.map(({ id, order }) =>
+                supabase
+                    .from('courses')
+                    .update({ order })
+                    .eq('id', id)
+            );
+            await Promise.all(updatePromises);
+        } catch (error) {
+            console.error('Error persisting course order:', error);
+        }
     };
 
     const getCourse = useCallback((id) => {

@@ -139,26 +139,49 @@ export const CourseProvider = ({ children }) => {
         }
     };
 
-    const uploadCourseImage = async (file) => {
+    const uploadCourseImage = async (file, oldUrl = null) => {
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
+            // Upload to Cloudflare R2 via Server Action
+            const { uploadImage, replaceImage } = await import('../app/actions/images');
 
-            const { data, error } = await supabase.storage
-                .from('course-images')
-                .upload(filePath, file);
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'icons/Custom');
 
-            if (error) throw error;
+            let result;
+            if (oldUrl) {
+                formData.append('oldUrl', oldUrl);
+                result = await replaceImage(formData);
+            } else {
+                result = await uploadImage(formData);
+            }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('course-images')
-                .getPublicUrl(filePath);
+            if (result && result.success) {
+                return { success: true, url: result.url };
+            }
+            throw new Error(result?.error || 'R2 upload failed');
+        } catch (r2Err) {
+            console.warn('R2 upload failed, falling back to Supabase Storage:', r2Err);
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+                const filePath = `${fileName}`;
 
-            return { success: true, url: publicUrl };
-        } catch (err) {
-            console.error('Error uploading image:', err);
-            return { success: false, error: err.message };
+                const { data, error } = await supabase.storage
+                    .from('course-images')
+                    .upload(filePath, file);
+
+                if (error) throw error;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('course-images')
+                    .getPublicUrl(filePath);
+
+                return { success: true, url: publicUrl };
+            } catch (err) {
+                console.error('Error uploading image to Supabase:', err);
+                return { success: false, error: err.message };
+            }
         }
     };
 
@@ -167,7 +190,7 @@ export const CourseProvider = ({ children }) => {
             let imageUrl = updatedData.image;
 
             if (imageFile) {
-                const uploadResult = await uploadCourseImage(imageFile);
+                const uploadResult = await uploadCourseImage(imageFile, updatedData.image);
                 if (!uploadResult.success) {
                     throw new Error('Image upload failed: ' + uploadResult.error);
                 }
@@ -306,7 +329,31 @@ export const CourseProvider = ({ children }) => {
                 order: baseOrder + index
             }));
 
-            // Update each course's order in the database
+            // 1. Try atomic RPC first
+            const { error: rpcError } = await supabase.rpc('reorder_courses', { course_orders: updates });
+            if (!rpcError) {
+                console.log('Course order updated successfully via RPC');
+                return;
+            }
+
+            console.warn('RPC reorder failed, falling back to API route:', rpcError);
+
+            // 2. Try API route fallback
+            try {
+                const res = await fetch('/api/admin/courses/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ updates })
+                });
+                if (res.ok) {
+                    console.log('Course order updated successfully via API');
+                    return;
+                }
+            } catch (apiErr) {
+                console.warn('API reorder failed, falling back to direct update:', apiErr);
+            }
+
+            // 3. Update each course's order in the database fallback
             const updatePromises = updates.map(({ id, order }) =>
                 supabase
                     .from('courses')
@@ -315,7 +362,6 @@ export const CourseProvider = ({ children }) => {
             );
 
             await Promise.all(updatePromises);
-
             console.log('Course order updated successfully');
         } catch (error) {
             console.error('Error updating course order:', error);

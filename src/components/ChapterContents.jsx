@@ -64,7 +64,14 @@ const ChapterContents = () => {
             .single();
 
         if (!error && chapterData) {
-            setChapter(chapterData);
+            const normalizedChapter = {
+                ...chapterData,
+                title: chapterData.name || chapterData.title || '',
+                name: chapterData.name || chapterData.title || '',
+                image: chapterData.icon || chapterData.image || null,
+                icon: chapterData.icon || chapterData.image || null,
+            };
+            setChapter(normalizedChapter);
             // Sort contents by order
             const sortedContents = (chapterData.chapter_contents || []).sort((a, b) => a.order - b.order);
             setContents(sortedContents);
@@ -78,7 +85,14 @@ const ChapterContents = () => {
             .order('order', { ascending: true });
 
         if (!subError && subChaptersData) {
-            setSubChapters(subChaptersData);
+            const normalizedSubs = subChaptersData.map(ch => ({
+                ...ch,
+                title: ch.name || ch.title || '',
+                name: ch.name || ch.title || '',
+                image: ch.icon || ch.image || null,
+                icon: ch.icon || ch.image || null,
+            }));
+            setSubChapters(normalizedSubs);
         }
 
         setLoading(false);
@@ -255,13 +269,13 @@ const ChapterContents = () => {
                 <span style={{ color: '#ccc' }}>/</span>
                 <span style={{ color: '#666', cursor: 'pointer' }} onClick={() => navigate(`/courses/${courseId}/chapters`)}>Chapters</span>
                 <span style={{ color: '#ccc' }}>/</span>
-                <span style={{ color: '#111', fontWeight: '600' }}>{chapter.title}</span>
+                <span style={{ color: '#111', fontWeight: '600' }}>{chapter.name || chapter.title}</span>
             </div>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
-                    <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#111', margin: 0 }}>{chapter.title}</h2>
+                    <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#111', margin: 0 }}>{chapter.name || chapter.title}</h2>
                     {chapter.description && <p style={{ color: '#666', marginTop: '4px', fontSize: '14px' }}>{chapter.description}</p>}
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -369,16 +383,16 @@ const ChapterContents = () => {
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                             overflow: 'hidden', position: 'relative'
                                                         }}>
-                                                            {subChapter.image ? (
-                                                                <img src={subChapter.image} alt={subChapter.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                            {subChapter.image || subChapter.icon ? (
+                                                                <img src={subChapter.image || subChapter.icon} alt={subChapter.name || subChapter.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                             ) : (
                                                                 <Folder size={20} />
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>{subChapter.title}</h4>
+                                                            <h4 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>{subChapter.name || subChapter.title}</h4>
                                                             <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                                                                {subChapter.description || 'No description'}
+                                                                {subChapter.description || ''}
                                                             </span>
                                                         </div>
                                                     </div>
