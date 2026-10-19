@@ -93,6 +93,7 @@ const CoursePlayer = () => {
     const [memberId, setMemberId] = useState(null);
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
     const [contentProgress, setContentProgress] = useState({});
+    const [examAttempts, setExamAttempts] = useState({});
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [videoAccess, setVideoAccess] = useState(null);
     const [videoBlocked, setVideoBlocked] = useState(false);
@@ -167,6 +168,54 @@ const CoursePlayer = () => {
             fetchMemberId();
         }
     }, [user]);
+
+    // Fetch student's exam attempts and content progress
+    useEffect(() => {
+        if (!memberId) return;
+
+        const fetchStudentProgressAndAttempts = async () => {
+            try {
+                // 1. Fetch exam attempts
+                const { data: attempts, error: attError } = await supabase
+                    .from('exam_attempts')
+                    .select('id, exam_id, score, total_marks, submitted_at, status, attempt_number')
+                    .eq('member_id', memberId)
+                    .not('submitted_at', 'is', null)
+                    .order('submitted_at', { ascending: false });
+
+                if (!attError && attempts) {
+                    const attemptsMap = {};
+                    attempts.forEach(att => {
+                        const eid = Number(att.exam_id);
+                        if (!attemptsMap[eid]) attemptsMap[eid] = [];
+                        attemptsMap[eid].push(att);
+                    });
+                    setExamAttempts(attemptsMap);
+                }
+
+                // 2. Fetch content progress for this course
+                if (id) {
+                    const { data: progList, error: progError } = await supabase
+                        .from('content_progress')
+                        .select('content_id, completed')
+                        .eq('member_id', memberId)
+                        .eq('course_id', id);
+
+                    if (!progError && progList) {
+                        const progMap = {};
+                        progList.forEach(p => {
+                            if (p.completed) progMap[p.content_id] = true;
+                        });
+                        setContentProgress(progMap);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching student attempts/progress:', err);
+            }
+        };
+
+        fetchStudentProgressAndAttempts();
+    }, [memberId, id]);
 
     useEffect(() => {
         fetchChapters(id);
@@ -411,7 +460,11 @@ const CoursePlayer = () => {
     const isContentComplete = (content) => {
         let contentId = content.id;
         if (content.type === 'exam') {
-            contentId = content.exam_id || content.content_url;
+            const eid = Number(content.exam_id || (content.exams && content.exams.id) || content.content_url || content.url);
+            if (eid && examAttempts[eid] && examAttempts[eid].length > 0) {
+                return true;
+            }
+            contentId = content.exam_id || content.content_url || content.url;
         }
         return contentProgress[contentId] === true;
     };
@@ -487,33 +540,83 @@ const CoursePlayer = () => {
                         })}
 
                         {/* Render Contents */}
-                        {visibleContents.map((content, index) => (
-                            <div
-                                key={content.id}
-                                onClick={() => handleContentClick(activeChapter, content)}
-                                className="p-4 flex items-center gap-4 cursor-pointer hover:bg-slate-50 transition-colors group"
-                            >
-                                <ContentIcon content={content} isActive={false} />
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="text-base font-semibold text-slate-800 mb-1 truncate group-hover:text-blue-600 transition-colors">
-                                        {content.type === 'exam' && content.exams ? content.exams.title : content.title}
-                                    </h4>
-                                    <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
-                                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 uppercase tracking-wide text-[10px]">
-                                            {content.type === 'video' ? 'Video' : content.type === 'exam' ? 'Quiz' : 'PDF'}
-                                        </span>
-                                        {isContentComplete(content) && (
-                                            <span className="flex items-center gap-1 text-emerald-600">
-                                                <CheckCircle size={12} /> Completed
+                        {visibleContents.map((content, index) => {
+                            const isExam = content.type === 'exam';
+                            const examId = isExam ? Number(content.exam_id || (content.exams && content.exams.id) || content.content_url || content.url) : null;
+                            const attempts = (isExam && examId && examAttempts[examId]) ? examAttempts[examId] : [];
+                            const isAttempted = attempts.length > 0;
+                            const latestAttempt = isAttempted ? attempts[0] : null;
+                            const bestScore = isAttempted ? Math.max(...attempts.map(a => a.score ?? 0)) : null;
+                            const totalMarks = isAttempted ? (latestAttempt?.total_marks || content.exams?.total_marks) : null;
+                            const percentage = (isAttempted && totalMarks) ? Math.round((bestScore / totalMarks) * 100) : null;
+                            const isComplete = isAttempted || isContentComplete(content);
+
+                            return (
+                                <div
+                                    key={content.id}
+                                    onClick={() => handleContentClick(activeChapter, content)}
+                                    className={`p-4 flex items-center gap-4 cursor-pointer transition-colors group ${
+                                        isAttempted ? 'bg-[#fcfdfd] hover:bg-emerald-50/40' : 'hover:bg-slate-50'
+                                    }`}
+                                >
+                                    {isAttempted ? (
+                                        <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0" title="Attempted">
+                                            <CheckCircle size={16} />
+                                        </div>
+                                    ) : (
+                                        <ContentIcon content={content} isActive={false} />
+                                    )}
+
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-base font-semibold text-slate-800 mb-1 truncate group-hover:text-blue-600 transition-colors">
+                                            {content.type === 'exam' && content.exams ? content.exams.title : content.title}
+                                        </h4>
+                                        <div className="flex items-center flex-wrap gap-2 text-xs font-medium">
+                                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 uppercase tracking-wide text-[10px]">
+                                                {content.type === 'video' ? 'Video' : content.type === 'exam' ? 'Quiz / Exam' : 'PDF'}
                                             </span>
+
+                                            {isExam && isAttempted && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                                                    <CheckCircle size={12} />
+                                                    Attempted {attempts.length > 1 ? `(${attempts.length}x)` : ''} • Score: {bestScore}{totalMarks ? `/${totalMarks}` : ''} {percentage !== null ? `(${percentage}%)` : ''}
+                                                </span>
+                                            )}
+
+                                            {isExam && !isAttempted && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[11px]">
+                                                    Not Attempted
+                                                </span>
+                                            )}
+
+                                            {!isExam && isComplete && (
+                                                <span className="flex items-center gap-1 text-emerald-600">
+                                                    <CheckCircle size={12} /> Completed
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {isAttempted ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/student/exam/${examId}/results?courseId=${id}`);
+                                                }}
+                                                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                                            >
+                                                <Eye size={13} /> View Result
+                                            </button>
+                                        ) : (
+                                            <div className="text-slate-300 group-hover:text-blue-500 transition-colors">
+                                                <PlayCircle size={20} />
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                                <div className="text-slate-300 group-hover:text-blue-500 transition-colors">
-                                    <PlayCircle size={20} />
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {visibleChapters.length === 0 && visibleContents.length === 0 && (
                             <div className="p-10 text-center text-slate-400">
@@ -608,18 +711,69 @@ const CoursePlayer = () => {
                                 const durationMins = currentExam.duration_minutes || activeContent.duration || 0;
                                 const marksPerQ = currentExam.marks_per_question ? parseFloat(currentExam.marks_per_question) : (currentExam.total_marks && numQuestions ? parseFloat((currentExam.total_marks / numQuestions).toFixed(2)) : 1);
                                 const isNegEnabled = Boolean(currentExam.negative_marking_enabled);
-                                const negMarks = isNegEnabled ? (currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
+                                const negMarks = isNegEnabled ? (currentExam.negative_marking_enabled && currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
                                 const totalMarks = currentExam.total_marks ? parseFloat(currentExam.total_marks) : (numQuestions ? numQuestions * marksPerQ : null);
                                 const passMarks = currentExam.passing_marks ? parseFloat(currentExam.passing_marks) : null;
 
+                                const activeExamId = Number(activeContent.exam_id || activeContent.content_url || activeContent.url || currentExam.id);
+                                const activeAttempts = (activeExamId && examAttempts[activeExamId]) ? examAttempts[activeExamId] : [];
+                                const hasAttempted = activeAttempts.length > 0;
+                                const latestAttempt = hasAttempted ? activeAttempts[0] : null;
+                                const bestScore = hasAttempted ? Math.max(...activeAttempts.map(a => a.score ?? 0)) : null;
+                                const examTotalMarks = latestAttempt?.total_marks || totalMarks;
+                                const scorePercentage = (hasAttempted && examTotalMarks) ? Math.round((bestScore / examTotalMarks) * 100) : null;
+
                                 return (
                                     <div className="text-center py-8 px-4 max-w-2xl mx-auto">
-                                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm">
-                                            <FileText size={32} />
+                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm ${
+                                            hasAttempted ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                                        }`}>
+                                            {hasAttempted ? <CheckCircle size={32} /> : <FileText size={32} />}
                                         </div>
                                         <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-3">{examTitle}</h2>
                                         {examDesc && (
                                             <p className="text-slate-500 mb-6 leading-relaxed text-sm sm:text-base">{examDesc}</p>
+                                        )}
+
+                                        {/* Attempt Summary Banner (if attempted) */}
+                                        {hasAttempted && (
+                                            <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 sm:p-5 mb-6 flex items-center justify-between flex-wrap gap-4 text-left">
+                                                <div className="flex items-center gap-3.5">
+                                                    <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                                        <CheckCircle size={22} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                                                                Already Attempted
+                                                            </span>
+                                                            <span className="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
+                                                                {activeAttempts.length} {activeAttempts.length === 1 ? 'Attempt' : 'Attempts'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-lg sm:text-xl font-bold text-emerald-950 mt-0.5">
+                                                            Best Score: {bestScore} {examTotalMarks ? `/ ${examTotalMarks}` : ''}
+                                                            {scorePercentage !== null && (
+                                                                <span className="text-sm font-semibold ml-1.5 text-emerald-700">
+                                                                    ({scorePercentage}%)
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {latestAttempt?.submitted_at && (
+                                                            <div className="text-xs text-emerald-700 mt-0.5">
+                                                                Last attempt: {new Date(latestAttempt.submitted_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => router.push(`/student/exam/${activeExamId}/results?courseId=${id}`)}
+                                                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+                                                >
+                                                    <Eye size={15} /> View Results & Solutions
+                                                </button>
+                                            </div>
                                         )}
 
                                         {/* Exam Glimpse Grid */}
@@ -681,19 +835,30 @@ const CoursePlayer = () => {
                                             <span><strong>Attempts:</strong> {currentExam.max_attempts ? `${currentExam.max_attempts} Attempt(s)` : 'Unlimited'}</span>
                                         </div>
 
-                                        <div className="flex gap-4 justify-center">
-                                            <button
-                                                onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/take?courseId=${id}`)}
-                                                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                                            >
-                                                Start Exam <ArrowRight size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/results?courseId=${id}`)}
-                                                className="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-                                            >
-                                                View Results
-                                            </button>
+                                        <div className="flex gap-4 justify-center flex-wrap">
+                                            {hasAttempted ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => router.push(`/student/exam/${activeExamId}/results?courseId=${id}`)}
+                                                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                                                    >
+                                                        <Eye size={18} /> View Results & Solutions
+                                                    </button>
+                                                    <button
+                                                        onClick={() => router.push(`/student/exam/${activeExamId}/take?courseId=${id}`)}
+                                                        className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                                                    >
+                                                        Re-take Exam <ArrowRight size={18} />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    onClick={() => router.push(`/student/exam/${activeExamId}/take?courseId=${id}`)}
+                                                    className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                                                >
+                                                    Start Exam <ArrowRight size={18} />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 );

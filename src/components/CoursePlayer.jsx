@@ -93,6 +93,7 @@ const CoursePlayer = () => {
     const [memberId, setMemberId] = useState(null);
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
     const [contentProgress, setContentProgress] = useState({});
+    const [examAttempts, setExamAttempts] = useState({});
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [examDetails, setExamDetails] = useState(null);
 
@@ -143,6 +144,54 @@ const CoursePlayer = () => {
             fetchMemberId();
         }
     }, [user]);
+
+    // Fetch student's exam attempts and content progress
+    useEffect(() => {
+        if (!memberId) return;
+
+        const fetchStudentProgressAndAttempts = async () => {
+            try {
+                // 1. Fetch exam attempts
+                const { data: attempts, error: attError } = await supabase
+                    .from('exam_attempts')
+                    .select('id, exam_id, score, total_marks, submitted_at, status, attempt_number')
+                    .eq('member_id', memberId)
+                    .not('submitted_at', 'is', null)
+                    .order('submitted_at', { ascending: false });
+
+                if (!attError && attempts) {
+                    const attemptsMap = {};
+                    attempts.forEach(att => {
+                        const eid = Number(att.exam_id);
+                        if (!attemptsMap[eid]) attemptsMap[eid] = [];
+                        attemptsMap[eid].push(att);
+                    });
+                    setExamAttempts(attemptsMap);
+                }
+
+                // 2. Fetch content progress for this course
+                if (id) {
+                    const { data: progList, error: progError } = await supabase
+                        .from('content_progress')
+                        .select('content_id, completed')
+                        .eq('member_id', memberId)
+                        .eq('course_id', id);
+
+                    if (!progError && progList) {
+                        const progMap = {};
+                        progList.forEach(p => {
+                            if (p.completed) progMap[p.content_id] = true;
+                        });
+                        setContentProgress(progMap);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching student attempts/progress:', err);
+            }
+        };
+
+        fetchStudentProgressAndAttempts();
+    }, [memberId, id]);
 
     useEffect(() => {
         fetchChapters(id);
@@ -349,6 +398,10 @@ const CoursePlayer = () => {
     const isContentComplete = (content) => {
         let contentId = content.id;
         if (content.type === 'exam') {
+            const eid = Number(content.exam_id || (content.exams && content.exams.id) || content.content_url);
+            if (eid && examAttempts[eid] && examAttempts[eid].length > 0) {
+                return true;
+            }
             contentId = content.exam_id || content.content_url;
         }
         return contentProgress[contentId] === true;
@@ -460,41 +513,141 @@ const CoursePlayer = () => {
                         })}
 
                         {/* Render Contents */}
-                        {visibleContents.map((content, index) => (
-                            <div
-                                key={content.id}
-                                onClick={() => handleContentClick(activeChapter, content)}
-                                style={{
-                                    padding: '16px 20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '16px',
-                                    cursor: 'pointer',
-                                    borderBottom: index === visibleContents.length - 1 && index === visibleContents.length - 1 ? 'none' : '1px solid #e5e7eb',
-                                    transition: 'background-color 0.2s'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                            >
-                                <ContentIcon content={content} isActive={false} />
-                                <div style={{ flex: 1 }}>
-                                    <h4 style={{ fontSize: '16px', fontWeight: '500', color: '#1f2937', margin: '0 0 4px 0' }}>
-                                        {content.type === 'exam' && content.exams ? content.exams.title : content.title}
-                                    </h4>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#6b7280' }}>
-                                        <span>{content.type === 'video' ? 'Video Content' : content.type === 'exam' ? 'Quiz / Exam' : 'Document'}</span>
-                                        {isContentComplete(content) && (
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981' }}>
-                                                <CheckCircle size={12} /> Completed
-                                            </span>
+                        {visibleContents.map((content, index) => {
+                            const isExam = content.type === 'exam';
+                            const examId = isExam ? Number(content.exam_id || (content.exams && content.exams.id) || content.content_url) : null;
+                            const attempts = (isExam && examId && examAttempts[examId]) ? examAttempts[examId] : [];
+                            const isAttempted = attempts.length > 0;
+                            const latestAttempt = isAttempted ? attempts[0] : null;
+                            const bestScore = isAttempted ? Math.max(...attempts.map(a => a.score ?? 0)) : null;
+                            const totalMarks = isAttempted ? (latestAttempt?.total_marks || content.exams?.total_marks) : null;
+                            const percentage = (isAttempted && totalMarks) ? Math.round((bestScore / totalMarks) * 100) : null;
+                            const isComplete = isAttempted || isContentComplete(content);
+
+                            return (
+                                <div
+                                    key={content.id}
+                                    onClick={() => handleContentClick(activeChapter, content)}
+                                    style={{
+                                        padding: '16px 20px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '16px',
+                                        cursor: 'pointer',
+                                        borderBottom: index === visibleContents.length - 1 ? 'none' : '1px solid #e5e7eb',
+                                        transition: 'background-color 0.2s',
+                                        backgroundColor: isAttempted ? '#fcfdfd' : 'white'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = isAttempted ? '#f0fdf4' : '#f9fafb'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = isAttempted ? '#fcfdfd' : 'white'}
+                                >
+                                    {isAttempted ? (
+                                        <div style={{
+                                            width: '28px',
+                                            height: '28px',
+                                            borderRadius: '50%',
+                                            backgroundColor: '#dcfce7',
+                                            color: '#16a34a',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            flexShrink: 0
+                                        }} title="Attempted">
+                                            <CheckCircle size={16} />
+                                        </div>
+                                    ) : (
+                                        <ContentIcon content={content} isActive={false} />
+                                    )}
+
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <h4 style={{ fontSize: '15px', fontWeight: '500', color: '#1f2937', margin: '0 0 6px 0', lineHeight: '1.4' }}>
+                                            {content.type === 'exam' && content.exams ? content.exams.title : content.title}
+                                        </h4>
+                                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '12px', color: '#6b7280' }}>
+                                            <span>{content.type === 'video' ? 'Video Content' : content.type === 'exam' ? 'Quiz / Exam' : 'Document'}</span>
+
+                                            {isExam && isAttempted && (
+                                                <span style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    padding: '2px 9px',
+                                                    backgroundColor: '#ecfdf5',
+                                                    color: '#059669',
+                                                    border: '1px solid #a7f3d0',
+                                                    borderRadius: '12px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    <CheckCircle size={12} />
+                                                    Attempted {attempts.length > 1 ? `(${attempts.length}x)` : ''} • Score: {bestScore}{totalMarks ? `/${totalMarks}` : ''} {percentage !== null ? `(${percentage}%)` : ''}
+                                                </span>
+                                            )}
+
+                                            {isExam && !isAttempted && (
+                                                <span style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    padding: '2px 8px',
+                                                    backgroundColor: '#f1f5f9',
+                                                    color: '#64748b',
+                                                    borderRadius: '12px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '500'
+                                                }}>
+                                                    Not Attempted
+                                                </span>
+                                            )}
+
+                                            {!isExam && isComplete && (
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981', fontWeight: '500' }}>
+                                                    <CheckCircle size={12} /> Completed
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                                        {isAttempted ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/student/exam/${examId}/results`, { state: { courseId: id } });
+                                                }}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: '#f0fdf4',
+                                                    color: '#15803d',
+                                                    border: '1px solid #bbf7d0',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    transition: 'all 0.15s'
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#16a34a';
+                                                    e.currentTarget.style.color = '#ffffff';
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#f0fdf4';
+                                                    e.currentTarget.style.color = '#15803d';
+                                                }}
+                                            >
+                                                <Eye size={13} /> View Result
+                                            </button>
+                                        ) : (
+                                            <div style={{ color: '#d1d5db' }}>
+                                                <PlayCircle size={20} />
+                                            </div>
                                         )}
                                     </div>
                                 </div>
-                                <div style={{ color: '#d1d5db' }}>
-                                    <PlayCircle size={20} />
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {visibleChapters.length === 0 && visibleContents.length === 0 && (
                             <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
@@ -563,18 +716,102 @@ const CoursePlayer = () => {
                                     const durationMins = currentExam.duration_minutes || activeContent.duration || 0;
                                     const marksPerQ = currentExam.marks_per_question ? parseFloat(currentExam.marks_per_question) : (currentExam.total_marks && numQuestions ? parseFloat((currentExam.total_marks / numQuestions).toFixed(2)) : 1);
                                     const isNegEnabled = Boolean(currentExam.negative_marking_enabled);
-                                    const negMarks = isNegEnabled ? (currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
+                                    const negMarks = isNegEnabled ? (currentExam.negative_marking_enabled && currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
                                     const totalMarks = currentExam.total_marks ? parseFloat(currentExam.total_marks) : (numQuestions ? numQuestions * marksPerQ : null);
                                     const passMarks = currentExam.passing_marks ? parseFloat(currentExam.passing_marks) : null;
 
+                                    const activeExamId = Number(activeContent.exam_id || activeContent.content_url || currentExam.id);
+                                    const activeAttempts = (activeExamId && examAttempts[activeExamId]) ? examAttempts[activeExamId] : [];
+                                    const hasAttempted = activeAttempts.length > 0;
+                                    const latestAttempt = hasAttempted ? activeAttempts[0] : null;
+                                    const bestScore = hasAttempted ? Math.max(...activeAttempts.map(a => a.score ?? 0)) : null;
+                                    const examTotalMarks = latestAttempt?.total_marks || totalMarks;
+                                    const scorePercentage = (hasAttempted && examTotalMarks) ? Math.round((bestScore / examTotalMarks) * 100) : null;
+
                                     return (
                                         <div style={{ textAlign: 'center', padding: '36px 24px', maxWidth: '820px', margin: '0 auto' }}>
-                                            <div style={{ width: '72px', height: '72px', backgroundColor: '#e0f2fe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#0284c7' }}>
-                                                <FileText size={38} />
+                                            <div style={{ width: '72px', height: '72px', backgroundColor: hasAttempted ? '#dcfce7' : '#e0f2fe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: hasAttempted ? '#16a34a' : '#0284c7' }}>
+                                                {hasAttempted ? <CheckCircle size={38} /> : <FileText size={38} />}
                                             </div>
                                             <h2 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '12px', color: '#0f172a' }}>{examTitle}</h2>
                                             {examDesc && (
-                                                <p style={{ color: '#64748b', marginBottom: '28px', lineHeight: '1.6', fontSize: '15px' }}>{examDesc}</p>
+                                                <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: '1.6', fontSize: '15px' }}>{examDesc}</p>
+                                            )}
+
+                                            {/* Attempt Summary Banner (if attempted) */}
+                                            {hasAttempted && (
+                                                <div style={{
+                                                    backgroundColor: '#f0fdf4',
+                                                    border: '1px solid #86efac',
+                                                    borderRadius: '12px',
+                                                    padding: '16px 20px',
+                                                    marginBottom: '24px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    flexWrap: 'wrap',
+                                                    gap: '16px',
+                                                    textAlign: 'left'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                                        <div style={{
+                                                            width: '42px',
+                                                            height: '42px',
+                                                            borderRadius: '50%',
+                                                            backgroundColor: '#dcfce7',
+                                                            color: '#16a34a',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0
+                                                        }}>
+                                                            <CheckCircle size={22} />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span style={{ fontSize: '12px', fontWeight: '700', color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                                    Already Attempted
+                                                                </span>
+                                                                <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '9999px', fontWeight: '600' }}>
+                                                                    {activeAttempts.length} {activeAttempts.length === 1 ? 'Attempt' : 'Attempts'}
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ fontSize: '18px', fontWeight: '700', color: '#14532d', marginTop: '2px' }}>
+                                                                Best Score: {bestScore} {examTotalMarks ? `/ ${examTotalMarks}` : ''}
+                                                                {scorePercentage !== null && (
+                                                                    <span style={{ fontSize: '14px', fontWeight: '600', marginLeft: '6px', color: '#15803d' }}>
+                                                                        ({scorePercentage}%)
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {latestAttempt?.submitted_at && (
+                                                                <div style={{ fontSize: '12px', color: '#15803d', marginTop: '2px' }}>
+                                                                    Last attempt: {new Date(latestAttempt.submitted_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => navigate(`/student/exam/${activeExamId}/results`, { state: { courseId: id } })}
+                                                        style={{
+                                                            padding: '9px 16px',
+                                                            backgroundColor: '#16a34a',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            borderRadius: '8px',
+                                                            fontWeight: '600',
+                                                            fontSize: '13px',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            boxShadow: '0 2px 4px rgba(22, 163, 74, 0.2)'
+                                                        }}
+                                                    >
+                                                        <Eye size={15} /> View Results & Solutions
+                                                    </button>
+                                                </div>
                                             )}
 
                                             {/* Exam Glimpse Grid */}
@@ -659,19 +896,30 @@ const CoursePlayer = () => {
                                                 <span><strong>Attempts:</strong> {currentExam.max_attempts ? `${currentExam.max_attempts} Attempt(s)` : 'Unlimited'}</span>
                                             </div>
 
-                                            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                                                <button
-                                                    onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/take`, { state: { courseId: id } })}
-                                                    style={{ padding: '12px 28px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
-                                                >
-                                                    Start Exam <ArrowRight size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/results`, { state: { courseId: id } })}
-                                                    style={{ padding: '12px 24px', backgroundColor: '#64748b', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}
-                                                >
-                                                    View Results
-                                                </button>
+                                            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                                {hasAttempted ? (
+                                                    <>
+                                                        <button
+                                                            onClick={() => navigate(`/student/exam/${activeExamId}/results`, { state: { courseId: id } })}
+                                                            style={{ padding: '12px 24px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(22, 163, 74, 0.2)' }}
+                                                        >
+                                                            <Eye size={18} /> View Results & Solutions
+                                                        </button>
+                                                        <button
+                                                            onClick={() => navigate(`/student/exam/${activeExamId}/take`, { state: { courseId: id } })}
+                                                            style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
+                                                        >
+                                                            Re-take Exam <ArrowRight size={18} />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => navigate(`/student/exam/${activeExamId}/take`, { state: { courseId: id } })}
+                                                        style={{ padding: '12px 28px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
+                                                    >
+                                                        Start Exam <ArrowRight size={18} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     );

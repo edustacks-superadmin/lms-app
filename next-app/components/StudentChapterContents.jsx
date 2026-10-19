@@ -3,15 +3,18 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../supabaseClient';
-import { FileText, Video, File, ArrowLeft, PlayCircle, Eye, ExternalLink, X, Plus, Minus, RotateCw, Maximize, Minimize } from 'lucide-react';
+import { FileText, Video, File, ArrowLeft, PlayCircle, Eye, ExternalLink, X, Plus, Minus, RotateCw, Maximize, Minimize, CheckCircle } from 'lucide-react';
 import { pdfjs, Document, Page } from 'react-pdf';
+import { useAuth } from '../context/AuthContext';
 
 // Configure PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs`;
 
 const StudentChapterContents = ({ courseId, chapterId }) => {
     const router = useRouter();
+    const { user } = useAuth();
     const [contents, setContents] = useState([]);
+    const [examAttempts, setExamAttempts] = useState({});
     const [loading, setLoading] = useState(true);
     const [chapter, setChapter] = useState(null);
     const [videoViewerUrl, setVideoViewerUrl] = useState(null);
@@ -64,6 +67,39 @@ const StudentChapterContents = ({ courseId, chapterId }) => {
 
         fetchContents();
     }, [chapterId]);
+
+    // Fetch student's exam attempts
+    useEffect(() => {
+        if (!user?.email) return;
+
+        const fetchAttempts = async () => {
+            try {
+                const { data: member } = await supabase.from('members').select('id').eq('email', user.email).maybeSingle();
+                if (!member) return;
+
+                const { data: attempts, error: attError } = await supabase
+                    .from('exam_attempts')
+                    .select('id, exam_id, score, total_marks, submitted_at, status')
+                    .eq('member_id', member.id)
+                    .not('submitted_at', 'is', null)
+                    .order('submitted_at', { ascending: false });
+
+                if (!attError && attempts) {
+                    const map = {};
+                    attempts.forEach(att => {
+                        const eid = Number(att.exam_id);
+                        if (!map[eid]) map[eid] = [];
+                        map[eid].push(att);
+                    });
+                    setExamAttempts(map);
+                }
+            } catch (err) {
+                console.error('Error fetching attempts in StudentChapterContents:', err);
+            }
+        };
+
+        fetchAttempts();
+    }, [user]);
 
     // Helper to determine secure default scale
     const getDefaultScale = () => {
@@ -183,21 +219,29 @@ const StudentChapterContents = ({ courseId, chapterId }) => {
                             const isLegacyUrl = content.url && content.url.includes('testpress.in');
                             const isDisabled = isExam && !hasExamId;
 
+                            const examId = isExam ? Number(content.exam_id) : null;
+                            const attempts = (isExam && examId && examAttempts[examId]) ? examAttempts[examId] : [];
+                            const isAttempted = attempts.length > 0;
+                            const latestAttempt = isAttempted ? attempts[0] : null;
+                            const bestScore = isAttempted ? Math.max(...attempts.map(a => a.score ?? 0)) : null;
+                            const totalMarks = isAttempted ? latestAttempt?.total_marks : null;
+                            const percentage = (isAttempted && totalMarks) ? Math.round((bestScore / totalMarks) * 100) : null;
+
                             return (
                                 <div
                                     key={content.id}
                                     onClick={() => !isDisabled && handleContentClick(content)}
                                     className={`
                                         group p-5 flex items-center gap-4 transition-all duration-200
-                                        ${isDisabled ? 'bg-slate-50 opacity-60 cursor-not-allowed' : 'hover:bg-slate-50 cursor-pointer'}
+                                        ${isDisabled ? 'bg-slate-50 opacity-60 cursor-not-allowed' : isAttempted ? 'bg-[#fcfdfd] hover:bg-emerald-50/40 cursor-pointer' : 'hover:bg-slate-50 cursor-pointer'}
                                     `}
                                 >
                                     {/* Icon */}
                                     <div className={`
                                         w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border
-                                        ${isDisabled ? 'bg-gray-100 border-gray-200' : 'bg-gray-50 border-gray-100 group-hover:bg-white group-hover:shadow-sm'}
+                                        ${isAttempted ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : isDisabled ? 'bg-gray-100 border-gray-200' : 'bg-gray-50 border-gray-100 group-hover:bg-white group-hover:shadow-sm'}
                                     `}>
-                                        {getIcon(content.type)}
+                                        {isAttempted ? <CheckCircle size={22} className="text-emerald-600" /> : getIcon(content.type)}
                                     </div>
 
                                     {/* Content Info */}
@@ -215,16 +259,43 @@ const StudentChapterContents = ({ courseId, chapterId }) => {
                                                 </span>
                                             )}
                                         </h3>
-                                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                                            <span>{getTypeLabel(content.type)}</span>
+                                        <div className="flex items-center flex-wrap gap-2 text-xs font-medium">
+                                            <span className="text-slate-500">{getTypeLabel(content.type)}</span>
+
+                                            {isExam && isAttempted && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                                                    <CheckCircle size={12} />
+                                                    Attempted {attempts.length > 1 ? `(${attempts.length}x)` : ''} • Score: {bestScore}{totalMarks ? `/${totalMarks}` : ''} {percentage !== null ? `(${percentage}%)` : ''}
+                                                </span>
+                                            )}
+
+                                            {isExam && !isAttempted && !isDisabled && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[11px]">
+                                                    Not Attempted
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Action Icon */}
-                                    <div className={`
-                                        ${isDisabled ? 'text-slate-300' : 'text-slate-300 group-hover:text-blue-500 scale-90 group-hover:scale-100 transition-all'}
-                                    `}>
-                                        {content.type === 'video' ? <PlayCircle size={24} /> : <ExternalLink size={20} />}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {isAttempted ? (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    router.push(`/student/exam/${examId}/results?courseId=${courseId}`);
+                                                }}
+                                                className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                                            >
+                                                <Eye size={13} /> View Result
+                                            </button>
+                                        ) : (
+                                            <div className={`
+                                                ${isDisabled ? 'text-slate-300' : 'text-slate-300 group-hover:text-blue-500 scale-90 group-hover:scale-100 transition-all'}
+                                            `}>
+                                                {content.type === 'video' ? <PlayCircle size={24} /> : <ExternalLink size={20} />}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
