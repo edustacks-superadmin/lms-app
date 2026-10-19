@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useChapters } from '../context/ChapterContext';
-import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder } from 'lucide-react';
+import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder, Award, AlertCircle, HelpCircle } from 'lucide-react';
 import PDFViewer from './PDFViewer';
 
 import { useAuth } from '../context/AuthContext';
@@ -101,6 +101,45 @@ const CoursePlayer = () => {
     // Feedback State
     const [feedbackForm, setFeedbackForm] = useState(null);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [examDetails, setExamDetails] = useState(null);
+
+    // Fetch full exam details when activeContent is an exam
+    useEffect(() => {
+        if (activeContent?.type === 'exam' && (activeContent.exam_id || activeContent.content_url || activeContent.url)) {
+            const examId = activeContent.exam_id || activeContent.content_url || activeContent.url;
+            if (activeContent.exams?.number_of_questions && activeContent.exams?.marks_per_question !== undefined) {
+                setExamDetails(activeContent.exams);
+                return;
+            }
+
+            const fetchExam = async () => {
+                try {
+                    const { data: ex, error: exErr } = await supabase
+                        .from('exams')
+                        .select('*')
+                        .eq('id', examId)
+                        .maybeSingle();
+
+                    if (!exErr && ex) {
+                        let qCount = ex.number_of_questions;
+                        if (!qCount || qCount === 0) {
+                            const { count } = await supabase
+                                .from('exam_questions')
+                                .select('*', { count: 'exact', head: true })
+                                .eq('exam_id', examId);
+                            if (count) qCount = count;
+                        }
+                        setExamDetails({ ...ex, number_of_questions: qCount });
+                    }
+                } catch (err) {
+                    console.error('Error fetching exam details:', err);
+                }
+            };
+            fetchExam();
+        } else {
+            setExamDetails(null);
+        }
+    }, [activeContent]);
 
     // Function to check for feedback triggers
     const checkFeedback = async () => {
@@ -561,28 +600,104 @@ const CoursePlayer = () => {
                                         )}
                                     </div>
                                 </div>
-                            ) : activeContent.type === 'exam' ? (
-                                <div className="text-center py-12">
-                                    <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <FileText size={40} />
+                            ) : activeContent.type === 'exam' ? (() => {
+                                const currentExam = examDetails || activeContent.exams || {};
+                                const examTitle = currentExam.title || activeContent.title;
+                                const examDesc = currentExam.description || 'Ready to take this exam?';
+                                const numQuestions = currentExam.number_of_questions || (currentExam.total_marks && currentExam.marks_per_question ? Math.round(currentExam.total_marks / currentExam.marks_per_question) : null);
+                                const durationMins = currentExam.duration_minutes || activeContent.duration || 0;
+                                const marksPerQ = currentExam.marks_per_question ? parseFloat(currentExam.marks_per_question) : (currentExam.total_marks && numQuestions ? parseFloat((currentExam.total_marks / numQuestions).toFixed(2)) : 1);
+                                const isNegEnabled = Boolean(currentExam.negative_marking_enabled);
+                                const negMarks = isNegEnabled ? (currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
+                                const totalMarks = currentExam.total_marks ? parseFloat(currentExam.total_marks) : (numQuestions ? numQuestions * marksPerQ : null);
+                                const passMarks = currentExam.passing_marks ? parseFloat(currentExam.passing_marks) : null;
+
+                                return (
+                                    <div className="text-center py-8 px-4 max-w-2xl mx-auto">
+                                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm">
+                                            <FileText size={32} />
+                                        </div>
+                                        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-3">{examTitle}</h2>
+                                        {examDesc && (
+                                            <p className="text-slate-500 mb-6 leading-relaxed text-sm sm:text-base">{examDesc}</p>
+                                        )}
+
+                                        {/* Exam Glimpse Grid */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 text-left">
+                                            {/* Questions */}
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                                <div className="flex items-center gap-1.5 text-blue-600 mb-1.5">
+                                                    <FileQuestion size={16} />
+                                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Questions</span>
+                                                </div>
+                                                <div className="text-xl font-bold text-slate-900">
+                                                    {numQuestions ? `${numQuestions} MCQs` : '50 MCQs'}
+                                                </div>
+                                            </div>
+
+                                            {/* Duration */}
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                                <div className="flex items-center gap-1.5 text-emerald-600 mb-1.5">
+                                                    <Clock size={16} />
+                                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Duration</span>
+                                                </div>
+                                                <div className="text-xl font-bold text-slate-900">
+                                                    {durationMins} <span className="text-xs font-medium text-slate-500">Mins</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Marks / Q */}
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                                <div className="flex items-center gap-1.5 text-purple-600 mb-1.5">
+                                                    <Award size={16} />
+                                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Marks / Q</span>
+                                                </div>
+                                                <div className="text-xl font-bold text-slate-900">
+                                                    +{marksPerQ}
+                                                    {totalMarks && (
+                                                        <span className="text-[11px] font-medium text-slate-500 ml-1">({totalMarks} M)</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Negative Mark */}
+                                            <div className={`border rounded-xl p-3.5 ${isNegEnabled ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'}`}>
+                                                <div className={`flex items-center gap-1.5 mb-1.5 ${isNegEnabled ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                    <AlertCircle size={16} />
+                                                    <span className={`text-[11px] font-bold uppercase tracking-wider ${isNegEnabled ? 'text-rose-700' : 'text-slate-500'}`}>Negative Mark</span>
+                                                </div>
+                                                <div className={`text-xl font-bold ${isNegEnabled ? 'text-rose-900' : 'text-slate-900'}`}>
+                                                    {isNegEnabled ? `-${negMarks}` : 'None'}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Extra Details Banner */}
+                                        <div className="bg-slate-100 rounded-lg py-2 px-4 mb-8 flex items-center justify-center flex-wrap gap-4 text-xs font-medium text-slate-600">
+                                            {passMarks && (
+                                                <span><strong>Passing Marks:</strong> {passMarks}</span>
+                                            )}
+                                            <span><strong>Auto-submit:</strong> On Timeout</span>
+                                            <span><strong>Attempts:</strong> {currentExam.max_attempts ? `${currentExam.max_attempts} Attempt(s)` : 'Unlimited'}</span>
+                                        </div>
+
+                                        <div className="flex gap-4 justify-center">
+                                            <button
+                                                onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/take?courseId=${id}`)}
+                                                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                                            >
+                                                Start Exam <ArrowRight size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/results?courseId=${id}`)}
+                                                className="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                                            >
+                                                View Results
+                                            </button>
+                                        </div>
                                     </div>
-                                    <h2 className="text-3xl font-bold text-slate-800 mb-3">{activeContent.exams?.title || activeContent.title}</h2>
-                                    <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">{activeContent.exams?.description || 'Ready to take this exam? Click below to start.'}</p>
-                                    <div className="flex gap-4 justify-center">
-                                        <button
-                                            onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/take?courseId=${id}`)}
-                                            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-600/20 hover:-translate-y-0.5 transition-all"
-                                        >
-                                            Start Exam
-                                        </button>
-                                        <button
-                                            onClick={() => router.push(`/student/exam/${activeContent.exam_id || activeContent.content_url || activeContent.url}/results?courseId=${id}`)}
-                                            className="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-                                        >
-                                            View Results
-                                        </button>
-                                    </div>
-                                </div>
+                                );
+                            })()
                             ) : activeContent.type === 'pdf' ? (
                                 <div className="text-center py-12">
                                     <div className="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">

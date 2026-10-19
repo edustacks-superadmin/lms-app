@@ -28,7 +28,13 @@ export const ChapterProvider = ({ children }) => {
                             title,
                             description,
                             duration_minutes,
-                            total_marks
+                            total_marks,
+                            number_of_questions,
+                            marks_per_question,
+                            negative_marking_enabled,
+                            negative_marks_per_question,
+                            passing_marks,
+                            max_attempts
                         )
                     )
                 `)

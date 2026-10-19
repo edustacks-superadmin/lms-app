@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useChapters } from '../context/ChapterContext';
-import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder } from 'lucide-react';
+import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder, Award, AlertCircle, HelpCircle } from 'lucide-react';
 import PDFViewer from './PDFViewer';
 
 import { useAuth } from '../context/AuthContext';
@@ -94,6 +94,45 @@ const CoursePlayer = () => {
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
     const [contentProgress, setContentProgress] = useState({});
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+    const [examDetails, setExamDetails] = useState(null);
+
+    // Fetch full exam details when activeContent is an exam
+    useEffect(() => {
+        if (activeContent?.type === 'exam' && (activeContent.exam_id || activeContent.content_url)) {
+            const examId = activeContent.exam_id || activeContent.content_url;
+            if (activeContent.exams?.number_of_questions && activeContent.exams?.marks_per_question !== undefined) {
+                setExamDetails(activeContent.exams);
+                return;
+            }
+
+            const fetchExam = async () => {
+                try {
+                    const { data: ex, error: exErr } = await supabase
+                        .from('exams')
+                        .select('*')
+                        .eq('id', examId)
+                        .maybeSingle();
+
+                    if (!exErr && ex) {
+                        let qCount = ex.number_of_questions;
+                        if (!qCount || qCount === 0) {
+                            const { count } = await supabase
+                                .from('exam_questions')
+                                .select('*', { count: 'exact', head: true })
+                                .eq('exam_id', examId);
+                            if (count) qCount = count;
+                        }
+                        setExamDetails({ ...ex, number_of_questions: qCount });
+                    }
+                } catch (err) {
+                    console.error('Error fetching exam details:', err);
+                }
+            };
+            fetchExam();
+        } else {
+            setExamDetails(null);
+        }
+    }, [activeContent]);
 
     useEffect(() => {
         if (user?.email) {
@@ -516,27 +555,127 @@ const CoursePlayer = () => {
                                     </video>
                                 </div>
                             ) : activeContent.type === 'exam' ? (
-                                <div style={{ textAlign: 'center', padding: '40px' }}>
-                                    <div style={{ width: '80px', height: '80px', backgroundColor: '#e3f2fd', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#1976d2' }}>
-                                        <FileText size={40} />
-                                    </div>
-                                    <h2 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>{activeContent.exams?.title || activeContent.title}</h2>
-                                    <p style={{ color: '#6b7280', marginBottom: '32px' }}>{activeContent.exams?.description || 'Ready to take this exam?'}</p>
-                                    <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                                        <button
-                                            onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/take`, { state: { courseId: id } })}
-                                            style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
-                                        >
-                                            Start Exam
-                                        </button>
-                                        <button
-                                            onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/results`, { state: { courseId: id } })}
-                                            style={{ padding: '12px 24px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
-                                        >
-                                            View Results
-                                        </button>
-                                    </div>
-                                </div>
+                                (() => {
+                                    const currentExam = examDetails || activeContent.exams || {};
+                                    const examTitle = currentExam.title || activeContent.title;
+                                    const examDesc = currentExam.description || 'Ready to take this exam?';
+                                    const numQuestions = currentExam.number_of_questions || (currentExam.total_marks && currentExam.marks_per_question ? Math.round(currentExam.total_marks / currentExam.marks_per_question) : null);
+                                    const durationMins = currentExam.duration_minutes || activeContent.duration || 0;
+                                    const marksPerQ = currentExam.marks_per_question ? parseFloat(currentExam.marks_per_question) : (currentExam.total_marks && numQuestions ? parseFloat((currentExam.total_marks / numQuestions).toFixed(2)) : 1);
+                                    const isNegEnabled = Boolean(currentExam.negative_marking_enabled);
+                                    const negMarks = isNegEnabled ? (currentExam.negative_marks_per_question ? parseFloat(currentExam.negative_marks_per_question) : 0.33) : 0;
+                                    const totalMarks = currentExam.total_marks ? parseFloat(currentExam.total_marks) : (numQuestions ? numQuestions * marksPerQ : null);
+                                    const passMarks = currentExam.passing_marks ? parseFloat(currentExam.passing_marks) : null;
+
+                                    return (
+                                        <div style={{ textAlign: 'center', padding: '36px 24px', maxWidth: '820px', margin: '0 auto' }}>
+                                            <div style={{ width: '72px', height: '72px', backgroundColor: '#e0f2fe', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#0284c7' }}>
+                                                <FileText size={38} />
+                                            </div>
+                                            <h2 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '12px', color: '#0f172a' }}>{examTitle}</h2>
+                                            {examDesc && (
+                                                <p style={{ color: '#64748b', marginBottom: '28px', lineHeight: '1.6', fontSize: '15px' }}>{examDesc}</p>
+                                            )}
+
+                                            {/* Exam Glimpse Grid */}
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                                                gap: '14px',
+                                                marginBottom: '24px',
+                                                textAlign: 'left'
+                                            }}>
+                                                {/* MCQs / Questions */}
+                                                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#2563eb', marginBottom: '8px' }}>
+                                                        <FileQuestion size={18} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Questions</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#0f172a' }}>
+                                                        {numQuestions ? `${numQuestions} MCQs` : '50 MCQs'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Duration */}
+                                                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', marginBottom: '8px' }}>
+                                                        <Clock size={18} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duration</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#0f172a' }}>
+                                                        {durationMins} <span style={{ fontSize: '14px', fontWeight: '500', color: '#64748b' }}>Mins</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Marks per Question */}
+                                                <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#9333ea', marginBottom: '8px' }}>
+                                                        <Award size={18} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Marks / Q</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#0f172a' }}>
+                                                        +{marksPerQ}
+                                                        {totalMarks && (
+                                                            <span style={{ fontSize: '12px', fontWeight: '500', color: '#64748b', marginLeft: '6px' }}>({totalMarks} M)</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Negative Marking */}
+                                                <div style={{
+                                                    backgroundColor: isNegEnabled ? '#fff1f2' : '#f8fafc',
+                                                    border: isNegEnabled ? '1px solid #fecdd3' : '1px solid #e2e8f0',
+                                                    borderRadius: '12px',
+                                                    padding: '16px'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: isNegEnabled ? '#e11d48' : '#64748b', marginBottom: '8px' }}>
+                                                        <AlertCircle size={18} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '700', color: isNegEnabled ? '#be123c' : '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Negative Mark</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '20px', fontWeight: '700', color: isNegEnabled ? '#9f1239' : '#0f172a' }}>
+                                                        {isNegEnabled ? `-${negMarks}` : 'None'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Extra details strip */}
+                                            <div style={{
+                                                backgroundColor: '#f1f5f9',
+                                                borderRadius: '8px',
+                                                padding: '10px 18px',
+                                                marginBottom: '32px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                flexWrap: 'wrap',
+                                                gap: '20px',
+                                                fontSize: '13px',
+                                                color: '#475569'
+                                            }}>
+                                                {passMarks && (
+                                                    <span><strong>Passing Marks:</strong> {passMarks}</span>
+                                                )}
+                                                <span><strong>Auto-submit:</strong> On Timeout</span>
+                                                <span><strong>Attempts:</strong> {currentExam.max_attempts ? `${currentExam.max_attempts} Attempt(s)` : 'Unlimited'}</span>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                                                <button
+                                                    onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/take`, { state: { courseId: id } })}
+                                                    style={{ padding: '12px 28px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
+                                                >
+                                                    Start Exam <ArrowRight size={18} />
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/student/exam/${activeContent.exam_id || activeContent.content_url}/results`, { state: { courseId: id } })}
+                                                    style={{ padding: '12px 24px', backgroundColor: '#64748b', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}
+                                                >
+                                                    View Results
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })()
                             ) : activeContent.type === 'pdf' ? (
                                 <div style={{ textAlign: 'center', padding: '40px' }}>
                                     <div style={{ width: '80px', height: '80px', backgroundColor: '#e3f2fd', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#1976d2' }}>
