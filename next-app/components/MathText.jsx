@@ -38,6 +38,18 @@ function cleanLatexString(latex) {
     return latex.trim();
 }
 
+// Preprocess LaTeX to preserve spaces in text
+function preprocessLatex(latex) {
+    if (!latex) return '';
+    return latex.replace(/(?<!\\[a-zA-Z]*)\b([a-zA-Z]{2,}\s+[a-zA-Z]{2,}(?:\s+[a-zA-Z]{2,})*)\b/g, (match, words, offset, fullStr) => {
+        const preceding = fullStr.slice(0, offset);
+        if (/\\text\s*\{[^}]*$/.test(preceding)) {
+            return match;
+        }
+        return `\\text{${match}}`;
+    });
+}
+
 // Regex to capture:
 // 1. $$...$$ (Display)
 // 2. \[...\] (Display)
@@ -53,7 +65,24 @@ function processHTMLWithLatex(html) {
     // 1. Handle explicit .math-tex elements (Legacy support)
     const mathElements = temp.querySelectorAll('.math-tex');
     mathElements.forEach((el) => {
-        renderLatexInElement(el, el.textContent.trim());
+        const rawContent = el.textContent.trim();
+        if (!rawContent) return;
+
+        // If .math-tex contains LaTeX delimiters or mixed text, unwrap it so that
+        // step 2 parses each formula and intervening text accurately.
+        const hasDelims = /\\\(|\\\[|\$\$|\$/.test(rawContent);
+        if (hasDelims) {
+            const parent = el.parentNode;
+            if (parent) {
+                while (el.firstChild) {
+                    parent.insertBefore(el.firstChild, el);
+                }
+                parent.removeChild(el);
+                return;
+            }
+        }
+
+        renderLatexInElement(el, rawContent);
     });
 
     // 2. Walk text nodes to find embedded LaTeX
@@ -61,7 +90,11 @@ function processHTMLWithLatex(html) {
     const textNodes = [];
     let node;
     while ((node = walker.nextNode())) {
-        textNodes.push(node);
+        if (node.parentElement && !node.parentElement.closest('.katex, .katex-container, script, style')) {
+            if (/(\\\[|\\\(|\$\$|\$[^$<>\n]+\$|\\text\{)/.test(node.nodeValue)) {
+                textNodes.push(node);
+            }
+        }
     }
 
     textNodes.forEach((textNode) => {
@@ -82,10 +115,10 @@ function processHTMLWithLatex(html) {
                 if (part.startsWith('$$')) {
                     math = part.slice(2, -2);
                     displayMode = true;
-                } else if (part.startsWith('\[')) {
+                } else if (part.startsWith('\\[')) {
                     math = part.slice(2, -2);
                     displayMode = true;
-                } else if (part.startsWith('\(')) {
+                } else if (part.startsWith('\\(')) {
                     math = part.slice(2, -2);
                 } else if (part.startsWith('$')) {
                     math = part.slice(1, -1);
@@ -97,7 +130,7 @@ function processHTMLWithLatex(html) {
                 const span = document.createElement('span');
                 span.className = 'katex-container';
                 try {
-                    katex.render(cleanLatexString(math), span, {
+                    katex.render(preprocessLatex(cleanLatexString(math)), span, {
                         throwOnError: false,
                         displayMode: displayMode,
                         output: 'html'
@@ -130,7 +163,7 @@ function renderLatexInElement(el, latex) {
             .replace(/\\\]$/, '')
             .trim();
 
-        cleanLatex = cleanLatexString(cleanLatex);
+        cleanLatex = preprocessLatex(cleanLatexString(cleanLatex));
         const container = document.createElement('span');
         container.className = 'katex-container';
 

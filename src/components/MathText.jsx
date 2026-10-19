@@ -51,10 +51,10 @@ function processHTMLWithLatex(html) {
         const rawContent = el.textContent.trim();
         if (!rawContent) return;
 
-        // If .math-tex contains internal delimiters or mixed text with delimiters,
-        // unwrap it so that step 2 parses each math formula and text separately!
-        const delimMatches = rawContent.match(/\\\(|\\\[|\$\$|\$/g);
-        if (delimMatches && (delimMatches.length > 2 || (delimMatches.length > 0 && !rawContent.startsWith('\\(') && !rawContent.startsWith('\\[')))) {
+        // If .math-tex contains LaTeX delimiters or mixed text, unwrap it so that
+        // step 2 parses each formula and intervening text accurately.
+        const hasDelims = /\\\(|\\\[|\$\$|\$/.test(rawContent);
+        if (hasDelims) {
             const parent = el.parentNode;
             if (parent) {
                 while (el.firstChild) {
