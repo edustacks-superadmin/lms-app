@@ -96,7 +96,7 @@ export default function Dashboard() {
                         const { count: activeCount } = await supabase
                             .from('enrollments')
                             .select('*', { count: 'exact', head: true })
-                            .eq('student_id', memberId)
+                            .eq('member_id', memberId)
                             .eq('status', 'active');
 
                         const { data: examAttempts } = await supabase

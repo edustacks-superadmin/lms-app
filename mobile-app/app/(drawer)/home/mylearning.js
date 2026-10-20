@@ -87,8 +87,7 @@ export default function MyLearning() {
                         chapters:chapters(id, chapter_contents(count))
                     )
                 `)
-                .eq('student_id', member.id)
-                .eq('student_id', member.id)
+                .eq('member_id', member.id)
                 .in('status', ['active', 'completed']);
 
             // Filter out courses not allowed on mobile
@@ -131,7 +130,7 @@ export default function MyLearning() {
             const { data: orders } = await supabase
                 .from('orders')
                 .select('product_id')
-                .eq('member_id', member.id)
+                .or(`member_id.eq.${member.id},user_id.eq.${member.id},user_email.ilike.${member.email}`)
                 .eq('status', 'completed');
 
             if (orders && orders.length > 0) {

@@ -89,7 +89,7 @@ export default function Dashboard() {
                         const { data: manualEnrollments } = await supabase
                             .from('enrollments')
                             .select('course_id')
-                            .eq('student_id', memberId)
+                            .eq('member_id', memberId)
                             .in('status', ['active', 'completed']);
 
                         (manualEnrollments || []).forEach(e => countedCourseIds.add(e.course_id));

@@ -249,7 +249,7 @@ export default function Checkout() {
             const { data: existingEnrollments } = await supabase
                 .from('enrollments')
                 .select('course_id')
-                .eq('student_id', memberData.id)
+                .eq('member_id', memberData.id)
                 .in('course_id', courses.map(c => c.id));
 
             console.log('Existing Enrollments:', existingEnrollments);
@@ -270,7 +270,7 @@ export default function Checkout() {
 
             // Create enrollments for all linked courses
             const enrollmentData = coursesToEnroll.map(course => ({
-                student_id: memberData.id,
+                member_id: memberData.id,
                 course_id: course.id,
                 status: 'active',
                 enrolled_at: new Date().toISOString(),

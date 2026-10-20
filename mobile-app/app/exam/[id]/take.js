@@ -651,14 +651,14 @@ export default function NativeExamScreen() {
             // 5. Update Progress (if part of a course)
             if (courseId) {
                 await supabase.from('content_progress').upsert({
-                    student_id: memberData.id,
+                    member_id: memberData.id,
                     course_id: courseId,
                     content_id: id,
                     content_type: 'exam',
                     completed: true,
                     completion_percentage: Math.round((score / exam.total_marks) * 100) || 0,
                     completed_at: new Date().toISOString()
-                }, { onConflict: 'student_id,content_id,content_type' });
+                }, { onConflict: 'member_id,content_id,content_type' });
             }
 
             // DELETE SESSION after successful submission
