@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -17,8 +18,15 @@ export default function ProductDetails() {
     const [expandedChapters, setExpandedChapters] = useState({});
     const { width } = useWindowDimensions();
 
+    // Auto-refresh product details & pricing when returning to screen
+    useFocusEffect(
+        useCallback(() => {
+            if (id) fetchProductDetails();
+        }, [id])
+    );
+
     useEffect(() => {
-        fetchProductDetails();
+        if (id) fetchProductDetails();
     }, [id]);
 
     const fetchProductDetails = async () => {

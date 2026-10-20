@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Image, ToastAndroid, Platform, Alert } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
 import { ORG_CONFIG, getApiUrl } from '../../../config/organization';
 import { StatusBar } from 'expo-status-bar';
@@ -23,17 +23,22 @@ export default function Store() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [filteredProducts, setFilteredProducts] = useState([]);
 
-    useEffect(() => {
-        fetchStoreData();
-    }, []);
+    // Auto-refresh product prices and catalog every time the student visits or returns to the Store tab
+    useFocusEffect(
+        useCallback(() => {
+            fetchStoreData(products.length > 0);
+        }, [products.length])
+    );
 
     useEffect(() => {
         filterProducts();
     }, [products, searchQuery, selectedCategory]);
 
-    const fetchStoreData = async () => {
+    const fetchStoreData = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
 
             // 1. Fetch Categories
             let categoriesData = [];
@@ -60,7 +65,7 @@ export default function Store() {
 
             setCategories(categoriesData);
 
-            // 2. Fetch Products
+            // 2. Fetch Products with latest real-time prices
             const { data: productsData, error: prodError } = await supabase
                 .from('products')
                 .select('*')
@@ -68,8 +73,11 @@ export default function Store() {
                 .eq('institute_id', ORG_CONFIG.id)
                 .order('created_at', { ascending: false });
 
-            if (prodError) console.error('Error fetching products:', prodError);
-            else setProducts(productsData || []);
+            if (prodError) {
+                console.error('Error fetching products:', prodError);
+            } else {
+                setProducts(productsData || []);
+            }
 
         } catch (error) {
             console.error('Store data fetch error:', error);
@@ -81,7 +89,7 @@ export default function Store() {
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchStoreData();
+        fetchStoreData(false);
     };
 
     const filterProducts = () => {

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
 import { ORG_CONFIG } from '../../../config/organization';
 import { StatusBar } from 'expo-status-bar';
@@ -24,13 +24,18 @@ export default function MyLearning() {
         return course.allowed_platforms.includes('mobile');
     };
 
-    useEffect(() => {
-        fetchEnrolledCourses();
-    }, []);
+    // Auto-refresh courses and thumbnails whenever student returns to My Courses / Learn tab
+    useFocusEffect(
+        useCallback(() => {
+            fetchEnrolledCourses(courses.length > 0);
+        }, [courses.length])
+    );
 
-    const fetchEnrolledCourses = async () => {
+    const fetchEnrolledCourses = async (silent = false) => {
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
             const { data: { user } } = await supabase.auth.getUser();
 
             if (!user) {
@@ -213,7 +218,7 @@ export default function MyLearning() {
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchEnrolledCourses();
+        fetchEnrolledCourses(false);
     };
 
     const getImageUrl = (imagePath) => {
@@ -229,6 +234,7 @@ export default function MyLearning() {
         const course = item.courses || item;
         const chapCount = course.chapters?.length || 0;
         const progress = item.progress || 0;
+        const iconOrThumb = course.image || course.thumbnail_url || course.thumbnail || course.image_url;
 
         return (
             <TouchableOpacity
@@ -248,9 +254,9 @@ export default function MyLearning() {
                 {/* Image Section */}
                 <View className="justify-center pl-4">
                     <View className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
-                        {(course.image || course.thumbnail_url) ? (
+                        {iconOrThumb ? (
                             <Image
-                                source={{ uri: getImageUrl(course.image || course.thumbnail_url) }}
+                                source={{ uri: getImageUrl(iconOrThumb) }}
                                 className="w-full h-full"
                                 resizeMode="cover"
                             />
@@ -288,7 +294,7 @@ export default function MyLearning() {
         );
     };
 
-    if (loading) {
+    if (loading && courses.length === 0) {
         return (
             <View className="flex-1 justify-center items-center bg-gray-50">
                 <ActivityIndicator size="large" color="#2563EB" />
