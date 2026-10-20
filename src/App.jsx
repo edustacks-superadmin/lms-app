@@ -98,6 +98,7 @@ import SettingsSEO from './components/SettingsSEO';
 import SettingsIntegrations from './components/SettingsIntegrations';
 import ImportData from './components/ImportData';
 import SEO from './components/SEO';
+import RazorpayCheckoutTest from './components/RazorpayCheckoutTest';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 import { CourseProvider } from './context/CourseContext';
@@ -184,7 +185,9 @@ function App() {
                                                 <PWAInstallPrompt />
                                                 <Routes>
                                                   {/* Public Routes */}
-                                                  <Route path="/login" element={
+                                                  <Route path="/test-payment" element={<RazorpayCheckoutTest />} />
+                                                   <Route path="/student/test-payment" element={<RazorpayCheckoutTest />} />
+                                                   <Route path="/login" element={
                                                     <PublicLayout>
                                                       <Login />
                                                     </PublicLayout>

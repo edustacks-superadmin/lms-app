@@ -215,30 +215,55 @@ export const TransactionProvider = ({ children }) => {
     const createRazorpayOrder = async (orderData) => {
         setLoading(true);
         try {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-            const functionUrl = `${supabaseUrl}/functions/v1/create-razorpay-order`;
-
-            const response = await fetch(functionUrl, {
+            const amountInPaise = Math.round((orderData.amount || 0) * 100);
+            const response = await fetch('/api/create-order', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-                },
-                body: JSON.stringify(orderData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: amountInPaise,
+                    currency: 'INR',
+                    receipt: `rcpt_${Date.now()}`,
+                    notes: {
+                        productId: orderData.productId,
+                        userId: orderData.userId,
+                        userEmail: orderData.userEmail
+                    }
+                })
             });
 
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                throw new Error(result.error || 'Failed to create Razorpay order');
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                const functionUrl = `${supabaseUrl}/functions/v1/create-razorpay-order`;
+                const fbRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                const fbResult = await fbRes.json();
+                if (!fbRes.ok || !fbResult.success) {
+                    throw new Error(result.error || fbResult.error || 'Failed to create Razorpay order');
+                }
+                return {
+                    success: true,
+                    orderId: fbResult.orderId,
+                    amount: fbResult.amount,
+                    currency: fbResult.currency,
+                    dbOrderId: fbResult.dbOrderId
+                };
             }
 
             return {
                 success: true,
-                orderId: result.orderId,
+                orderId: result.order_id || result.orderId,
                 amount: result.amount,
                 currency: result.currency,
-                dbOrderId: result.dbOrderId
+                dbOrderId: result.order_id || result.orderId,
+                keyId: result.key_id || result.keyId
             };
         } catch (err) {
             console.error('Error creating Razorpay order:', err);
@@ -251,26 +276,35 @@ export const TransactionProvider = ({ children }) => {
     const verifyRazorpayPayment = async (paymentData) => {
         setLoading(true);
         try {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-            const functionUrl = `${supabaseUrl}/functions/v1/verify-razorpay-payment`;
-
-            const response = await fetch(functionUrl, {
+            const response = await fetch('/api/verify-payment', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(paymentData)
             });
 
             const result = await response.json();
 
-            if (!response.ok || !result.success) {
-                throw new Error(result.error || 'Payment verification failed');
+            if (!response.ok || !result.verified) {
+                const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                const functionUrl = `${supabaseUrl}/functions/v1/verify-razorpay-payment`;
+                const fbRes = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                const fbResult = await fbRes.json();
+                if (!fbRes.ok || !fbResult.success) {
+                    throw new Error(result.error || fbResult.error || 'Payment verification failed');
+                }
+                await fetchTransactions();
+                return { success: true, verified: fbResult.verified };
             }
 
-            await fetchTransactions(); // Refresh transactions list
-            return { success: true, verified: result.verified };
+            await fetchTransactions();
+            return { success: true, verified: true };
         } catch (err) {
             console.error('Error verifying Razorpay payment:', err);
             return { success: false, error: err.message };
