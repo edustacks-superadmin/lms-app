@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image, Alert, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cartService } from '../../lib/cartService';
@@ -12,13 +13,8 @@ export default function CartScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-        loadCart();
-    }, []);
-
-    const loadCart = async () => {
+    const loadCart = useCallback(async () => {
         try {
-            setLoading(true);
             const data = await cartService.getCart();
             setCart(data);
         } catch (error) {
@@ -27,7 +23,26 @@ export default function CartScreen() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
+
+    // Load every time the Cart screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            loadCart();
+        }, [loadCart])
+    );
+
+    // Subscribe to real-time cart changes (add/remove anywhere in app)
+    useEffect(() => {
+        const unsubscribe = cartService.subscribeCart((count, cartData) => {
+            if (cartData && cartData.items) {
+                setCart(cartData);
+            } else {
+                loadCart();
+            }
+        });
+        return unsubscribe;
+    }, [loadCart]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -43,6 +58,38 @@ export default function CartScreen() {
         }
     };
 
+    const handleProceedToCheckout = () => {
+        if (!cart.items || cart.items.length === 0) {
+            Alert.alert('Cart Empty', 'Your cart has no items to purchase.');
+            return;
+        }
+
+        if (cart.items.length === 1) {
+            const primaryProduct = cart.items[0];
+            router.push({
+                pathname: '/checkout',
+                params: { productId: primaryProduct.product_id || primaryProduct.id }
+            });
+            return;
+        }
+
+        // Multiple items: allow selecting which course to checkout
+        Alert.alert(
+            'Proceed to Checkout',
+            'Choose a course to checkout:',
+            [
+                ...cart.items.map(item => ({
+                    text: `${item.title.length > 28 ? item.title.substring(0, 28) + '...' : item.title} (₹${item.price})`,
+                    onPress: () => router.push({
+                        pathname: '/checkout',
+                        params: { productId: item.product_id || item.id }
+                    })
+                })),
+                { text: 'Cancel', style: 'cancel' }
+            ]
+        );
+    };
+
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
@@ -52,27 +99,53 @@ export default function CartScreen() {
 
     const renderItem = ({ item }) => {
         const imageUrl = getImageUrl(item.image);
+        const targetProductId = item.product_id || item.id;
+
         return (
             <View className="bg-white p-4 mx-4 mb-3 rounded-2xl shadow-sm border border-gray-100 flex-row items-center">
-                <View className="w-20 h-16 bg-gray-50 rounded-lg overflow-hidden items-center justify-center mr-4">
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/product/${targetProductId}`)}
+                    className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden items-center justify-center mr-3 border border-gray-100"
+                >
                     {imageUrl ? (
                         <Image source={{ uri: imageUrl }} className="w-full h-full" resizeMode="contain" />
                     ) : (
                         <Ionicons name="image-outline" size={24} color="#cbd5e1" />
                     )}
-                </View>
-                <View className="flex-1">
-                    <Text className="text-[15px] font-bold text-slate-900 leading-snug" numberOfLines={2}>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push(`/product/${targetProductId}`)}
+                    className="flex-1 mr-2"
+                >
+                    <Text className="text-[14px] font-bold text-slate-900 leading-snug" numberOfLines={2}>
                         {item.title}
                     </Text>
-                    <Text className="text-blue-600 font-bold mt-1">₹{item.price}</Text>
-                </View>
-                <TouchableOpacity
-                    onPress={() => handleRemove(item.product_id || item.id)}
-                    className="p-2 ml-2"
-                >
-                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                    <Text className="text-blue-600 font-bold mt-1 text-base">₹{item.price}</Text>
                 </TouchableOpacity>
+
+                <View className="flex-row items-center">
+                    <TouchableOpacity
+                        onPress={() => router.push({
+                            pathname: '/checkout',
+                            params: { productId: targetProductId }
+                        })}
+                        className="bg-blue-600 px-3 py-1.5 rounded-xl mr-2 shadow-sm"
+                        activeOpacity={0.8}
+                    >
+                        <Text className="text-white font-bold text-xs">Buy Now</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => handleRemove(targetProductId)}
+                        className="p-1.5 rounded-lg bg-red-50"
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     };
@@ -132,7 +205,7 @@ export default function CartScreen() {
                                 </View>
                                 <TouchableOpacity
                                     className="bg-blue-600 py-4 rounded-2xl items-center shadow-lg shadow-blue-200"
-                                    onPress={() => Alert.alert('Checkout', 'Checkout functionality will be integrated soon.')}
+                                    onPress={handleProceedToCheckout}
                                 >
                                     <Text className="text-white font-black text-lg">Proceed to Checkout</Text>
                                 </TouchableOpacity>

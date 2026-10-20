@@ -431,17 +431,114 @@ export default function CoursePlayer() {
 
                         {/* Chapters List */}
                         <View className="pb-8">
-                            {chapters.map((chapter, index) => (
-                                <ChapterAccordion
-                                    key={chapter.id}
-                                    index={index}
-                                    chapter={chapter}
-                                    isExpanded={activeChapterId === chapter.id}
-                                    onToggle={() => setActiveChapterId(activeChapterId === chapter.id ? null : chapter.id)}
-                                    onContentPress={handleContentPress}
-                                    currentContentId={null}
-                                />
-                            ))}
+                            {/* Breadcrumb when drilled into a parent chapter */}
+                            {currentParentChapter && (
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setCurrentParentChapter(null);
+                                        setActiveChapterId(null);
+                                    }}
+                                    activeOpacity={0.7}
+                                    className="flex-row items-center mb-4 p-3.5 bg-white rounded-2xl border border-blue-100 shadow-sm"
+                                >
+                                    <View className="w-8 h-8 rounded-full bg-blue-50 items-center justify-center mr-2.5">
+                                        <Ionicons name="arrow-back" size={18} color="#2563EB" />
+                                    </View>
+                                    <View className="flex-1">
+                                        <Text className="text-[11px] text-blue-600 font-bold uppercase tracking-wider">
+                                            Back to Main Chapters
+                                        </Text>
+                                        <Text className="text-base font-bold text-slate-800 mt-0.5" numberOfLines={1}>
+                                            {currentParentChapter.name}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            )}
+
+                            {/* Parent Chapter direct contents (if any) */}
+                            {currentParentChapter && currentParentChapter.contents?.length > 0 && (
+                                <View className="mb-4">
+                                    <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">
+                                        Chapter Material
+                                    </Text>
+                                    <ChapterAccordion
+                                        index={0}
+                                        chapter={currentParentChapter}
+                                        isExpanded={activeChapterId === currentParentChapter.id}
+                                        onToggle={() => setActiveChapterId(activeChapterId === currentParentChapter.id ? null : currentParentChapter.id)}
+                                        onContentPress={handleContentPress}
+                                        currentContentId={null}
+                                    />
+                                    <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 ml-1">
+                                        Sub-Chapters
+                                    </Text>
+                                </View>
+                            )}
+
+                            {/* Render Visible Chapters or Sub-chapters */}
+                            {(() => {
+                                const visibleList = chapters.filter(c =>
+                                    currentParentChapter ? c.parent_id === currentParentChapter.id : !c.parent_id
+                                );
+
+                                if (visibleList.length === 0) {
+                                    return (
+                                        <View className="p-8 items-center bg-white rounded-2xl border border-gray-100">
+                                            <Ionicons name="folder-open-outline" size={40} color="#94a3b8" />
+                                            <Text className="text-slate-400 text-sm mt-2 font-medium">No contents available</Text>
+                                        </View>
+                                    );
+                                }
+
+                                return visibleList.map((chapter, index) => {
+                                    const subChapters = chapters.filter(c => c.parent_id === chapter.id);
+
+                                    // If chapter has sub-chapters, render as Folder Card
+                                    if (subChapters.length > 0) {
+                                        return (
+                                            <TouchableOpacity
+                                                key={chapter.id}
+                                                activeOpacity={0.7}
+                                                onPress={() => {
+                                                    setCurrentParentChapter(chapter);
+                                                    setActiveChapterId(null);
+                                                }}
+                                                className="mb-3 bg-white rounded-2xl p-4 flex-row items-center justify-between border border-blue-100 shadow-sm"
+                                            >
+                                                <View className="flex-row items-center flex-1 pr-3">
+                                                    <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3.5 border border-blue-100">
+                                                        <Ionicons name="folder" size={24} color="#2563EB" />
+                                                    </View>
+                                                    <View className="flex-1">
+                                                        <Text className="font-bold text-slate-800 text-[15px]">
+                                                            {chapter.name}
+                                                        </Text>
+                                                        <Text className="text-xs text-blue-600 mt-0.5 font-semibold">
+                                                            {subChapters.length} Sub-chapters
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                <View className="w-8 h-8 rounded-full bg-slate-50 items-center justify-center">
+                                                    <Ionicons name="chevron-forward" size={18} color="#64748b" />
+                                                </View>
+                                            </TouchableOpacity>
+                                        );
+                                    }
+
+                                    // Leaf chapter: Render normal accordion with its contents
+                                    return (
+                                        <ChapterAccordion
+                                            key={chapter.id}
+                                            index={index}
+                                            chapter={chapter}
+                                            isExpanded={activeChapterId === chapter.id}
+                                            onToggle={() => setActiveChapterId(activeChapterId === chapter.id ? null : chapter.id)}
+                                            onContentPress={handleContentPress}
+                                            currentContentId={null}
+                                        />
+                                    );
+                                });
+                            })()}
                         </View>
                     </>
                 )}

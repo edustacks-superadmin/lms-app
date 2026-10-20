@@ -11,10 +11,10 @@ export const subscribeCart = (listener) => {
     return () => listeners.delete(listener);
 };
 
-const notifyListeners = (count) => {
+const notifyListeners = (count, cart = null) => {
     listeners.forEach(fn => {
         try {
-            fn(count);
+            fn(count, cart);
         } catch (e) {
             console.warn('[cartService] Listener error:', e);
         }
@@ -61,7 +61,7 @@ export const cartService = {
                 // Return guest cart from AsyncStorage
                 const guestCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
                 const result = guestCart ? JSON.parse(guestCart) : { items: [], count: 0, total: 0 };
-                notifyListeners(result.count || 0);
+                notifyListeners(result.count || 0, result);
                 return result;
             }
 
@@ -76,7 +76,7 @@ export const cartService = {
                 console.warn('Supabase getCart error, falling back to local cache:', error);
                 const cached = await AsyncStorage.getItem(CART_STORAGE_KEY);
                 const res = cached ? JSON.parse(cached) : { items: [], count: 0, total: 0 };
-                notifyListeners(res.count || 0);
+                notifyListeners(res.count || 0, res);
                 return res;
             }
 
@@ -97,7 +97,7 @@ export const cartService = {
 
             // Keep local cache synced
             await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartResult));
-            notifyListeners(cartResult.count);
+            notifyListeners(cartResult.count, cartResult);
 
             return cartResult;
         } catch (error) {
@@ -106,11 +106,11 @@ export const cartService = {
                 const cached = await AsyncStorage.getItem(CART_STORAGE_KEY);
                 if (cached) {
                     const parsed = JSON.parse(cached);
-                    notifyListeners(parsed.count || 0);
+                    notifyListeners(parsed.count || 0, parsed);
                     return parsed;
                 }
             } catch (e) {}
-            notifyListeners(0);
+            notifyListeners(0, { items: [], count: 0, total: 0 });
             return { items: [], count: 0, total: 0 };
         }
     },
@@ -143,7 +143,7 @@ export const cartService = {
                 guestCart.total = guestCart.items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 
                 await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(guestCart));
-                notifyListeners(guestCart.count);
+                notifyListeners(guestCart.count, guestCart);
                 return { success: true, message: `${product.title} added to cart` };
             }
 
