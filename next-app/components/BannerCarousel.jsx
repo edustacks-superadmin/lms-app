@@ -121,6 +121,39 @@ const BannerCarousel = ({ banners }) => {
                     ))}
                 </div>
             )}
+
+            <style jsx>{`
+                .home-banner-carousel {
+                    height: 650px;
+                }
+                .banner-slide {
+                    background-size: cover;
+                    background-position: center center;
+                    background-repeat: no-repeat;
+                }
+                @media (max-width: 1200px) {
+                    .home-banner-carousel {
+                        height: 550px;
+                    }
+                }
+                @media (max-width: 768px) {
+                    .home-banner-carousel {
+                        height: 380px;
+                    }
+                    .banner-slide h2 {
+                        font-size: 32px !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .home-banner-carousel {
+                        height: 260px;
+                    }
+                    .banner-slide h2 {
+                        font-size: 24px !important;
+                        margin-bottom: 8px !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

@@ -1261,22 +1261,34 @@ textarea.form-input {
 
 /* Home Banner Carousel Responsive Styles */
 .home-banner-carousel {
-  height: 500px;
+  height: 650px;
 }
 
 .banner-slide {
   background-size: cover;
-  background-position: top center;
+  background-position: center center;
   background-repeat: no-repeat;
+}
+
+@media (max-width: 1200px) {
+  .home-banner-carousel {
+    height: 550px;
+  }
 }
 
 @media (max-width: 768px) {
   .home-banner-carousel {
-    height: 250px;
+    height: 380px;
   }
 
   .banner-slide {
-    background-size: 100% 100%;
+    background-size: cover;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-banner-carousel {
+    height: 260px;
   }
 }
 

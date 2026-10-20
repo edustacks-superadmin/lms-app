@@ -64,7 +64,7 @@ const HomePage = () => {
                 <section style={{
                     position: 'relative',
                     backgroundColor: '#f3f4f6',
-                    minHeight: '500px',
+                    minHeight: '650px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

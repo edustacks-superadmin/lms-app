@@ -242,16 +242,21 @@ const BannerCarousel = ({ banners }) => {
 
             <style>{`
                 .home-banner-carousel {
-                    height: 500px;
+                    height: 650px;
                 }
                 .banner-slide {
                     background-size: cover;
-                    background-position: center;
+                    background-position: center center;
                     background-repeat: no-repeat;
+                }
+                @media (max-width: 1200px) {
+                    .home-banner-carousel {
+                        height: 550px;
+                    }
                 }
                 @media (max-width: 768px) {
                     .home-banner-carousel {
-                        height: 350px;
+                        height: 380px;
                     }
                     .banner-slide h2 {
                         font-size: 32px !important;
@@ -259,7 +264,7 @@ const BannerCarousel = ({ banners }) => {
                 }
                 @media (max-width: 480px) {
                     .home-banner-carousel {
-                        height: 250px;
+                        height: 260px;
                     }
                     .banner-slide h2 {
                         font-size: 24px !important;
