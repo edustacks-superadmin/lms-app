@@ -34,7 +34,7 @@ export default function SignupScreen() {
         // Check for existing session
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
-                router.replace('/(drawer)/(tabs)');
+                router.replace('/home');
             }
         });
 

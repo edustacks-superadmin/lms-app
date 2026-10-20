@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Image, Alert, RefreshControl } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,22 @@ import { supabase } from '../../lib/supabase';
 
 export default function CartScreen() {
     const router = useRouter();
+    const navigation = useNavigation();
+
+    const navigateToMyCourses = () => {
+        try {
+            navigation.navigate('(drawer)', {
+                screen: 'home',
+                params: { screen: 'My Courses' }
+            });
+        } catch (e1) {
+            try {
+                navigation.navigate('home', { screen: 'My Courses' });
+            } catch (e2) {
+                router.replace('/home');
+            }
+        }
+    };
     const [cart, setCart] = useState({ items: [], count: 0, total: 0 });
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -88,7 +104,7 @@ export default function CartScreen() {
                     [
                         {
                             text: 'Go to My Courses',
-                            onPress: () => router.push('/(drawer)/(tabs)/mylearning')
+                            onPress: () => navigateToMyCourses()
                         }
                     ]
                 );

@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity, Platform, View, Text } from 'react-native';
@@ -13,8 +14,14 @@ import Profile from './profile';
 
 const Tab = createMaterialTopTabNavigator();
 
-export default function TabsLayout() {
+export default function TabsLayout({ route }) {
     const navigation = useNavigation();
+
+    useEffect(() => {
+        if (route?.params?.screen) {
+            navigation.navigate(route.params.screen);
+        }
+    }, [route?.params?.screen]);
 
     return (
         <Tab.Navigator

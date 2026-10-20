@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, Dimensions, Linking, Platform, FlatList } from 'react-native';
 import PdfViewer from '../../components/PdfViewer';
 import ExamViewer from '../../components/ExamViewer';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { ResizeMode, Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
@@ -159,7 +159,7 @@ export default function CoursePlayer() {
                 if (router.canGoBack()) {
                     router.back();
                 } else {
-                    router.replace('/(drawer)/(tabs)/mylearning');
+                    navigateToMyCourses();
                 }
                 return;
             }
@@ -372,7 +372,7 @@ export default function CoursePlayer() {
         } else if (router.canGoBack()) {
             router.back();
         } else {
-            router.replace('/(drawer)/(tabs)/mylearning');
+            navigateToMyCourses();
         }
     };
 

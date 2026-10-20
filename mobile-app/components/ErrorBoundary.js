@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component {
         });
         // Navigate to home - using router if available
         if (this.props.router) {
-            this.props.router.replace('/(drawer)/(tabs)');
+            this.props.router.replace('/home');
         }
     };
 

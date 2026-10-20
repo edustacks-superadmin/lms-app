@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, useNavigation, Stack } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,22 @@ import { initiatePayment } from '../lib/payment';
 export default function Checkout() {
     const { productId } = useLocalSearchParams();
     const router = useRouter();
+    const navigation = useNavigation();
+
+    const navigateToMyCourses = () => {
+        try {
+            navigation.navigate('(drawer)', {
+                screen: 'home',
+                params: { screen: 'My Courses' }
+            });
+        } catch (e1) {
+            try {
+                navigation.navigate('home', { screen: 'My Courses' });
+            } catch (e2) {
+                router.replace('/home');
+            }
+        }
+    };
 
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
@@ -191,7 +207,7 @@ export default function Checkout() {
                     Alert.alert(
                         'Payment Successful! 🎉',
                         `You have successfully purchased ${product.title}.`,
-                        [{ text: 'Go to My Courses', onPress: () => router.push('/(drawer)/(tabs)/mylearning') }]
+                        [{ text: 'Go to My Courses', onPress: () => navigateToMyCourses() }]
                     );
                 } else {
                     // Start of manual error handling if needed, but initiatePayment usually alerts errors.
@@ -263,7 +279,7 @@ export default function Checkout() {
                 Alert.alert(
                     'Already Enrolled',
                     `You already have access to ${courses.length > 1 ? 'these courses' : 'this course'}`,
-                    [{ text: 'OK', onPress: () => router.push('/(drawer)/(tabs)/mylearning') }]
+                    [{ text: 'OK', onPress: () => navigateToMyCourses() }]
                 );
                 return;
             }
@@ -289,7 +305,7 @@ export default function Checkout() {
                 if (enrollError.code === '23505') {
                     // Duplicate key - already enrolled
                     Alert.alert('Already Enrolled', 'You already have access to this course');
-                    router.push('/(drawer)/(tabs)/mylearning');
+                    navigateToMyCourses();
                 } else {
                     throw enrollError;
                 }
@@ -321,7 +337,7 @@ export default function Checkout() {
             Alert.alert(
                 'Success! 🎉',
                 `You have been enrolled in ${coursesToEnroll.length} course${coursesToEnroll.length > 1 ? 's' : ''}!\n\n${coursesToEnroll.map(c => '• ' + c.title).join('\n')}`,
-                [{ text: 'Go to My Courses', onPress: () => router.push('/(drawer)/(tabs)/My Courses') }]
+                [{ text: 'Go to My Courses', onPress: () => navigateToMyCourses() }]
             );
 
         } catch (error) {
