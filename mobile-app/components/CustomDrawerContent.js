@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Share, Platform, Linking } from 'react-native';
-import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import { DrawerContentScrollView, DrawerItem, useDrawerStatus } from '@react-navigation/drawer';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,6 +14,7 @@ import { fetchAppConfig, isFeatureEnabled } from '../lib/configService';
 export default function CustomDrawerContent(props) {
     const router = useRouter();
     const isFocused = useIsFocused();
+    const drawerStatus = useDrawerStatus();
     const [appConfig, setAppConfig] = useState(null);
     const [cartCount, setCartCount] = useState(0);
 
@@ -25,25 +26,31 @@ export default function CustomDrawerContent(props) {
         loadConfig();
     }, []);
 
+    // Real-time cart synchronization
     useEffect(() => {
-        const loadCartCount = async () => {
-            const cart = await cartService.getCart();
-            setCartCount(cart.count || 0);
-        };
-        if (isFocused) {
-            loadCartCount();
+        // Fetch current count on mount
+        cartService.getCart().then(cart => setCartCount(cart.count || 0));
+
+        // Subscribe to live cart changes (add/remove anywhere in app)
+        const unsubscribe = cartService.subscribeCart(count => {
+            setCartCount(count);
+        });
+
+        return unsubscribe;
+    }, []);
+
+    // Re-verify immediately when drawer is slid open
+    useEffect(() => {
+        if (drawerStatus === 'open') {
+            cartService.getCart().then(cart => setCartCount(cart.count || 0));
         }
-    }, [isFocused]);
+    }, [drawerStatus]);
 
     const handleRateUs = async () => {
         try {
             console.log('[Drawer] Rate Us clicked');
-
-            // Get store URL from config or use default
             const storeUrl = appConfig?.version?.storeUrl || 'https://play.google.com/store/apps/details?id=com.maheshiesacademy.mobile';
             console.log('[Drawer] Opening store URL:', storeUrl);
-
-            // Directly open Play Store (StoreReview doesn't work reliably in dev builds)
             await Linking.openURL(storeUrl);
         } catch (error) {
             console.error('[Drawer] Rate Us Error:', error);
@@ -52,7 +59,6 @@ export default function CustomDrawerContent(props) {
 
     const handleShare = async () => {
         try {
-            // Use Play Store URL from config, fallback to website
             const storeUrl = appConfig?.version?.storeUrl || 'https://play.google.com/store/apps/details?id=com.maheshiesacademy.mobile';
             const appName = appConfig?.appName || 'Mahesh IES Academy';
             const message = `Check out ${appName} App for competitive exam preparation!\n\nDownload here: ${storeUrl}`;
@@ -70,21 +76,11 @@ export default function CustomDrawerContent(props) {
     const handleLogout = async () => {
         try {
             console.log('Logging out...');
-
-            // Close drawer first
             props.navigation.closeDrawer();
-
-            // Sign out from Supabase
             const { error } = await supabase.auth.signOut();
-
             if (error) {
                 console.error('Logout error:', error);
-                // Continue to clear navigation even if server request fails
             }
-
-            console.log('Sign out successful, navigating to login...');
-
-            // Reset navigation stack to login screen
             setTimeout(() => {
                 props.navigation.dispatch(
                     CommonActions.reset({
@@ -98,86 +94,180 @@ export default function CustomDrawerContent(props) {
         }
     };
 
-    const DrawerList = [
-        { label: 'Cart', icon: 'cart', route: '/(drawer)/cart', badge: cartCount },
-        ...(isFeatureEnabled(appConfig, 'bookmarks') ? [{ label: 'Bookmarks', icon: 'bookmark', route: '/(drawer)/bookmarks' }] : []),
-        ...(isFeatureEnabled(appConfig, 'posts') ? [{ label: 'Posts', icon: 'newspaper', route: '/(drawer)/posts' }] : []),
-        { label: 'Analytics', icon: 'pie-chart', route: '/(drawer)/analytics' },
-        { label: 'Your Report', icon: 'bar-chart', route: '' },
-    ];
-
-    const ProfileList = [
-        ...(isFeatureEnabled(appConfig, 'aiChat') ? [{ label: 'AI Chat', icon: 'chatbubble-ellipses', route: '/(drawer)/chat' }] : []),
-        { label: 'Login Activity', icon: 'lock-closed-outline', route: '/(drawer)/login-activity' },
-        { label: 'Logout', icon: 'log-out-outline', action: handleLogout },
-    ];
-
-    const OtherList = [
-        { label: 'Privacy Policy', icon: 'shield-checkmark-outline', route: '/(drawer)/privacy-policy' },
-        { label: 'Rate Us', icon: 'create-outline', action: handleRateUs },
-        { label: 'Share', icon: 'share-social-outline', action: handleShare },
-    ];
-
-    const DrawerRow = ({ item }) => (
-        <TouchableOpacity
-            style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 24 }}
-            className="flex-row items-center py-4 px-6"
-            onPress={() => {
-                if (item.action) {
-                    item.action();
-                } else if (item.route) {
-                    router.push(item.route);
-                }
-            }}
-        >
-            <View className="w-8 items-center">
-                <Ionicons name={item.icon} size={22} color="#555" />
-            </View>
-            <Text style={{ marginLeft: 16 }} className="ml-4 text-slate-700 font-medium text-[15px] flex-1">{item.label}</Text>
-            {item.badge > 0 && (
-                <View className="bg-red-500 rounded-full px-2 py-0.5 ml-2">
-                    <Text className="text-white text-[10px] font-bold">{item.badge}</Text>
-                </View>
-            )}
-        </TouchableOpacity>
-    );
-
     return (
-        <View style={{ flex: 1 }}>
-            <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 20 }}>
-                {/* Section 1 */}
-                <View className="mb-2">
-                    {DrawerList.map((item, index) => (
-                        <DrawerRow key={index} item={item} />
-                    ))}
+        <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }}>
+                {/* Custom Drawer Header / Profile Section */}
+                <View style={styles.headerContainer}>
+                    <Image
+                        source={require('../assets/adaptive-icon.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.appName}>
+                        {appConfig?.appName || 'Mahesh IES Academy'}
+                    </Text>
                 </View>
 
-                {/* Divider */}
-                <View className="h-[1px] bg-gray-200 mx-0 my-1" />
+                {/* Main Navigation Items */}
+                <View style={styles.drawerItemsContainer}>
+                    {/* Cart */}
+                    <DrawerItem
+                        label={() => (
+                            <View style={styles.menuItemRow}>
+                                <Text style={styles.menuItemLabel}>Cart</Text>
+                                {cartCount > 0 && (
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>{cartCount}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        )}
+                        icon={({ color, size }) => (
+                            <Ionicons name="cart-outline" size={22} color="#475569" />
+                        )}
+                        onPress={() => {
+                            props.navigation.closeDrawer();
+                            router.push('/(drawer)/cart');
+                        }}
+                    />
 
-                {/* Section 2 */}
-                <View className="my-2">
-                    {ProfileList.map((item, index) => (
-                        <DrawerRow key={index} item={item} />
-                    ))}
-                </View>
+                    {/* Bookmarks */}
+                    {isFeatureEnabled(appConfig, 'bookmarksEnabled') && (
+                        <DrawerItem
+                            label={appConfig?.labels?.bookmarks || 'Bookmarks'}
+                            labelStyle={styles.menuItemLabel}
+                            icon={({ color, size }) => (
+                                <Ionicons name="bookmark-outline" size={22} color="#475569" />
+                            )}
+                            onPress={() => {
+                                props.navigation.closeDrawer();
+                                router.push('/(drawer)/bookmarks');
+                            }}
+                        />
+                    )}
 
-                {/* Divider */}
-                <View className="h-[1px] bg-gray-200 mx-0 my-1" />
+                    {/* Posts */}
+                    {isFeatureEnabled(appConfig, 'postsEnabled') && (
+                        <DrawerItem
+                            label="Posts"
+                            labelStyle={styles.menuItemLabel}
+                            icon={({ color, size }) => (
+                                <Ionicons name="newspaper-outline" size={22} color="#475569" />
+                            )}
+                            onPress={() => {
+                                props.navigation.closeDrawer();
+                                router.push('/(drawer)/posts');
+                            }}
+                        />
+                    )}
 
-                {/* Section 3 */}
-                <View className="mt-2">
-                    {OtherList.map((item, index) => (
-                        <DrawerRow key={index} item={item} />
-                    ))}
+                    {/* Analytics */}
+                    {isFeatureEnabled(appConfig, 'studentAnalyticsEnabled') && (
+                        <DrawerItem
+                            label="Analytics"
+                            labelStyle={styles.menuItemLabel}
+                            icon={({ color, size }) => (
+                                <Ionicons name="pie-chart-outline" size={22} color="#475569" />
+                            )}
+                            onPress={() => {
+                                props.navigation.closeDrawer();
+                                router.push('/(drawer)/analytics');
+                            }}
+                        />
+                    )}
 
-                    {/* Version */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 24 }} className="flex-row items-center py-4 px-6">
-                        <View className="w-8 items-center">
-                            <Ionicons name="information-circle-outline" size={24} color="#555" />
-                        </View>
-                        <Text style={{ marginLeft: 16 }} className="ml-4 text-slate-500 font-medium text-[15px]">
-                            Version - {Constants.expoConfig?.version || Constants.manifest?.version || '1.0.0'}
+                    {/* Your Report */}
+                    {isFeatureEnabled(appConfig, 'studentAnalyticsEnabled') && (
+                        <DrawerItem
+                            label="Your Report"
+                            labelStyle={styles.menuItemLabel}
+                            icon={({ color, size }) => (
+                                <Ionicons name="bar-chart-outline" size={22} color="#475569" />
+                            )}
+                            onPress={() => {
+                                props.navigation.closeDrawer();
+                                router.push('/(drawer)/analytics');
+                            }}
+                        />
+                    )}
+
+                    {/* AI Chat */}
+                    {isFeatureEnabled(appConfig, 'aiChatEnabled') && (
+                        <DrawerItem
+                            label="AI Chat"
+                            labelStyle={styles.menuItemLabel}
+                            icon={({ color, size }) => (
+                                <Ionicons name="chatbubbles-outline" size={22} color="#475569" />
+                            )}
+                            onPress={() => {
+                                props.navigation.closeDrawer();
+                                router.push('/(drawer)/chat');
+                            }}
+                        />
+                    )}
+
+                    {/* Login Activity */}
+                    <DrawerItem
+                        label="Login Activity"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="lock-closed-outline" size={22} color="#475569" />
+                        )}
+                        onPress={() => {
+                            props.navigation.closeDrawer();
+                            router.push('/(drawer)/login-activity');
+                        }}
+                    />
+
+                    {/* Logout */}
+                    <DrawerItem
+                        label="Logout"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="log-out-outline" size={22} color="#475569" />
+                        )}
+                        onPress={handleLogout}
+                    />
+
+                    {/* Privacy Policy */}
+                    <DrawerItem
+                        label="Privacy Policy"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="shield-checkmark-outline" size={22} color="#475569" />
+                        )}
+                        onPress={() => {
+                            props.navigation.closeDrawer();
+                            router.push('/(drawer)/privacy-policy');
+                        }}
+                    />
+
+                    {/* Rate Us */}
+                    <DrawerItem
+                        label="Rate Us"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="create-outline" size={22} color="#475569" />
+                        )}
+                        onPress={handleRateUs}
+                    />
+
+                    {/* Share */}
+                    <DrawerItem
+                        label="Share"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="share-social-outline" size={22} color="#475569" />
+                        )}
+                        onPress={handleShare}
+                    />
+
+                    {/* Version info */}
+                    <View style={styles.versionContainer}>
+                        <Ionicons name="information-circle-outline" size={20} color="#64748b" style={{ marginRight: 12 }} />
+                        <Text style={styles.versionText}>
+                            Version - {appConfig?.version?.current || '1.0.2'}
                         </Text>
                     </View>
                 </View>
@@ -185,3 +275,68 @@ export default function CustomDrawerContent(props) {
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    headerContainer: {
+        padding: 20,
+        paddingTop: Platform.OS === 'android' ? 40 : 20,
+        backgroundColor: '#f8fafc',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+        alignItems: 'center',
+    },
+    logo: {
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        marginBottom: 10,
+    },
+    appName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#1e293b',
+        textAlign: 'center',
+    },
+    drawerItemsContainer: {
+        paddingTop: 8,
+    },
+    menuItemLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1e293b',
+        marginLeft: -10,
+    },
+    menuItemRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flex: 1,
+        paddingRight: 12,
+    },
+    badge: {
+        backgroundColor: '#ef4444',
+        borderRadius: 10,
+        minWidth: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+    },
+    badgeText: {
+        color: '#ffffff',
+        fontSize: 11,
+        fontWeight: 'bold',
+    },
+    versionContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginTop: 8,
+    },
+    versionText: {
+        fontSize: 13,
+        color: '#64748b',
+        fontWeight: '500',
+    },
+});
