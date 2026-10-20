@@ -185,7 +185,7 @@ export default function Checkout() {
             // Paid Product - Razorpay Flow
             setProcessing(true);
             try {
-                const result = await initiatePayment(product, user, appliedCoupon?.code);
+                const result = await initiatePayment({ ...product, finalPrice: total }, user, appliedCoupon?.code);
 
                 if (result.success) {
                     Alert.alert(

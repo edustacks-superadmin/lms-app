@@ -16,6 +16,13 @@ export const initiatePayment = async (product, user, couponCode = null) => {
             throw new Error('User email is required for payment.');
         }
 
+        const payableAmount = product.finalPrice !== undefined ? product.finalPrice : (product.price || 0);
+        const amountInPaise = Math.round(Number(payableAmount) * 100);
+
+        if (amountInPaise < 100) {
+            throw new Error('Amount must be at least ₹1 (100 paise)');
+        }
+
         // 1. Create Order on Backend
         const createOrderResponse = await fetch(getApiUrl('/api/razorpay/create-order'), {
             method: 'POST',
@@ -23,7 +30,10 @@ export const initiatePayment = async (product, user, couponCode = null) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                amount: amountInPaise,
+                currency: 'INR',
                 productId: product.id,
+                instituteId: product.institute_id || 10,
                 userId: user.id,
                 userEmail: user.email,
                 couponCode: couponCode
@@ -41,15 +51,15 @@ export const initiatePayment = async (product, user, couponCode = null) => {
         // 2. Open Razorpay Checkout
         const options = {
             description: `Purchase ${product.title}`,
-            image: product.image_url || 'https://xalbtjoykovnlbjeddtv.supabase.co/storage/v1/object/public/institute-assets/logo_1765636679232.jpg', // Fallback to default if no product image
-            currency: currency,
+            image: product.image_url || 'https://xalbtjoykovnlbjeddtv.supabase.co/storage/v1/object/public/institute-assets/logo_1765636679232.jpg',
+            currency: currency || 'INR',
             key: keyId,
             amount: amount,
             name: ORG_CONFIG.name,
             order_id: orderId, // Razorpay Order ID
             prefill: {
                 email: user.email,
-                contact: user.phone || '', // Check if phone is available in user object
+                contact: user.phone || '',
                 name: user.user_metadata?.full_name || user.email.split('@')[0]
             },
             theme: { color: ORG_CONFIG.colors.primary }
@@ -67,6 +77,7 @@ export const initiatePayment = async (product, user, couponCode = null) => {
                 orderId: paymentData.razorpay_order_id,
                 paymentId: paymentData.razorpay_payment_id,
                 signature: paymentData.razorpay_signature,
+                instituteId: product.institute_id || 10,
                 dbOrderId: dbOrderId
             }),
         });
@@ -81,7 +92,6 @@ export const initiatePayment = async (product, user, couponCode = null) => {
 
     } catch (error) {
         console.error('Payment Error:', error);
-        // Razorpay specific error handling if needed
         if (error.code && error.description) {
             Alert.alert('Payment Failed', error.description);
         } else {

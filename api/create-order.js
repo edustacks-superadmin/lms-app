@@ -26,6 +26,27 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
         let { amount, currency = 'INR', receipt, notes, isTest, instituteId } = body;
 
+        // If amount is not provided, try fetching from product
+        if ((!amount || isNaN(amount)) && (productId || notes?.productId)) {
+            const pId = productId || notes?.productId;
+            try {
+                const { data: prod } = await supabase
+                    .from('products')
+                    .select('price, institute_id')
+                    .eq('id', pId)
+                    .maybeSingle();
+
+                if (prod && prod.price) {
+                    amount = Math.round(Number(prod.price) * 100);
+                    if (!instituteId && prod.institute_id) {
+                        instituteId = prod.institute_id;
+                    }
+                }
+            } catch (err) {
+                console.warn('[create-order] Error looking up product:', err.message);
+            }
+        }
+
         // If amount is not provided or invalid
         if (!amount || isNaN(amount)) {
             return res.status(400).json({ error: 'Valid amount is required' });
