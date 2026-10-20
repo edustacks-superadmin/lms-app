@@ -156,6 +156,41 @@ const MembersManagement = () => {
         }
     };
 
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 7;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            pages.push(1);
+
+            if (currentPage <= 4) {
+                for (let i = 2; i <= 5; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages);
+            } else if (currentPage >= totalPages - 3) {
+                pages.push('...');
+                for (let i = totalPages - 4; i <= totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                pages.push('...');
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i);
+                }
+                pages.push('...');
+                pages.push(totalPages);
+            }
+        }
+
+        return pages;
+    };
+
     return (
         <div className="container" style={{ padding: '40px 20px' }}>
             {/* Header Section */}
@@ -426,33 +461,53 @@ const MembersManagement = () => {
                 {/* Pagination */}
                 {
                     sortedUsers.length > 0 && (
-                        <div style={{ padding: '20px 24px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ padding: '16px 24px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                             <div style={{ fontSize: '14px', color: '#666' }}>
                                 Showing <span style={{ fontWeight: '600', color: '#333' }}>{indexOfFirstItem + 1}</span> to <span style={{ fontWeight: '600', color: '#333' }}>{Math.min(indexOfLastItem, sortedUsers.length)}</span> of <span style={{ fontWeight: '600', color: '#333' }}>{sortedUsers.length}</span> entries
                             </div>
-                            <div className="pagination">
+                            <div className="pagination" style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                                 <button
                                     className="pagination-btn"
                                     onClick={handlePrevPage}
                                     disabled={currentPage === 1}
+                                    title="Previous Page"
                                 >
                                     <ChevronLeft size={16} />
                                 </button>
 
-                                {Array.from({ length: totalPages }, (_, i) => (
-                                    <button
-                                        key={i + 1}
-                                        onClick={() => paginate(i + 1)}
-                                        className={`pagination-btn ${currentPage === i + 1 ? 'active' : ''}`}
-                                    >
-                                        {i + 1}
-                                    </button>
+                                {getPageNumbers().map((page, idx) => (
+                                    page === '...' ? (
+                                        <span
+                                            key={`ellipsis-${idx}`}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '32px',
+                                                height: '32px',
+                                                color: '#9ca3af',
+                                                fontSize: '14px',
+                                                userSelect: 'none'
+                                            }}
+                                        >
+                                            ...
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={page}
+                                            onClick={() => paginate(page)}
+                                            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                                        >
+                                            {page}
+                                        </button>
+                                    )
                                 ))}
 
                                 <button
                                     className="pagination-btn"
                                     onClick={handleNextPage}
                                     disabled={currentPage === totalPages}
+                                    title="Next Page"
                                 >
                                     <ChevronRight size={16} />
                                 </button>
