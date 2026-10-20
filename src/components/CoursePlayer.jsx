@@ -265,7 +265,7 @@ const CoursePlayer = () => {
             const { data: existing } = await supabase
                 .from('content_progress')
                 .select('id')
-                .eq('student_id', memberId)
+                .eq('member_id', memberId)
                 .eq('content_id', contentId)
                 .eq('content_type', 'video')
                 .single();
@@ -275,7 +275,7 @@ const CoursePlayer = () => {
                 const { error } = await supabase
                     .from('content_progress')
                     .insert({
-                        student_id: memberId,
+                        member_id: memberId,
                         course_id: id,
                         chapter_id: activeChapter?.id,
                         content_type: 'video',
@@ -305,7 +305,7 @@ const CoursePlayer = () => {
             const { error } = await supabase
                 .from('content_progress')
                 .upsert({
-                    student_id: memberId,
+                    member_id: memberId,
                     course_id: id,
                     chapter_id: activeChapter?.id,
                     content_type: 'video',
@@ -315,7 +315,7 @@ const CoursePlayer = () => {
                     completion_percentage: Math.round(percentage),
                     completed_at: completed ? new Date().toISOString() : null
                 }, {
-                    onConflict: 'student_id,content_id,content_type'
+                    onConflict: 'member_id,content_id'
                 });
 
             if (error) {
@@ -326,7 +326,7 @@ const CoursePlayer = () => {
 
                 // Recalculate course progress
                 await supabase.rpc('calculate_course_progress', {
-                    p_student_id: memberId,
+                    p_member_id: memberId,
                     p_course_id: id
                 });
             }
@@ -352,7 +352,7 @@ const CoursePlayer = () => {
             const { error: progressError } = await supabase
                 .from('content_progress')
                 .upsert({
-                    student_id: memberId,
+                    member_id: memberId,
                     course_id: id,
                     chapter_id: activeChapter?.id,
                     content_type: activeContent.type,
@@ -364,7 +364,7 @@ const CoursePlayer = () => {
                     completion_percentage: 100,
                     completed_at: new Date().toISOString()
                 }, {
-                    onConflict: 'student_id,content_id,content_type'
+                    onConflict: 'member_id,content_id'
                 });
 
             if (progressError) throw progressError;
@@ -375,7 +375,7 @@ const CoursePlayer = () => {
             // Recalculate course progress
             const { data: newProgress, error: calcError } = await supabase
                 .rpc('calculate_course_progress', {
-                    p_student_id: memberId,
+                    p_member_id: memberId,
                     p_course_id: id
                 });
 
@@ -932,7 +932,7 @@ const CoursePlayer = () => {
                                     <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#1f2937' }}>{activeContent.title}</h2>
                                     <button
                                         onClick={() => {
-                                            setPdfViewerUrl(activeContent.content_url);
+                                            setPdfViewerUrl(`/api/proxy-pdf?id=${activeContent.id}`);
                                             setTimeout(() => markContentComplete(), 2000);
                                         }}
                                         style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}

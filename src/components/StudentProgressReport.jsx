@@ -131,7 +131,7 @@ const StudentProgressReport = () => {
                 enrollmentsData.map(async (enrollment) => {
                     const { data: progressData } = await supabase
                         .rpc('calculate_course_progress', {
-                            p_student_id: studentId,
+                            p_member_id: studentId,
                             p_course_id: enrollment.course_id
                         });
 
@@ -207,7 +207,7 @@ const StudentProgressReport = () => {
                         )
                     )
                 `)
-                .eq('student_id', studentId)
+                .eq('member_id', studentId)
                 .eq('content_type', 'video')
                 .order('updated_at', { ascending: false });
 

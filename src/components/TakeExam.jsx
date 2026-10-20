@@ -547,7 +547,7 @@ const TakeExam = () => {
                         await supabase
                             .from('content_progress')
                             .upsert({
-                                student_id: member.id,
+                                member_id: member.id,
                                 course_id: location.state.courseId,
                                 chapter_id: exam.chapter_id,
                                 content_type: 'exam',
@@ -557,12 +557,12 @@ const TakeExam = () => {
                                 completion_percentage: Math.round((score / exam.total_marks) * 100),
                                 completed_at: new Date().toISOString()
                             }, {
-                                onConflict: 'student_id,content_id,content_type'
+                                onConflict: 'member_id,content_id'
                             });
 
                         // Recalculate course progress
                         await supabase.rpc('calculate_course_progress', {
-                            p_student_id: member.id,
+                            p_member_id: member.id,
                             p_course_id: location.state.courseId
                         });
                     }

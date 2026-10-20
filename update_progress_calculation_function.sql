@@ -9,21 +9,15 @@ DECLARE
     progress_pct INTEGER;
 BEGIN
     -- Count total content items in the course
-    -- This includes all exams tied to this course
-    WITH course_exams AS (
-        SELECT COUNT(DISTINCT id) as exam_count
-        FROM exams
-        WHERE course_id = p_course_id
-    ),
-    course_chapters AS (
-        SELECT COUNT(DISTINCT id) as chapter_count
-        FROM chapters
-        WHERE course_id = p_course_id
+    WITH course_contents AS (
+        SELECT COUNT(DISTINCT cc.id) as content_count
+        FROM chapter_contents cc
+        JOIN chapters ch ON cc.chapter_id = ch.id
+        WHERE ch.course_id = p_course_id
     )
-    SELECT 
-        COALESCE(exam_count, 0) + COALESCE(chapter_count, 0)
+    SELECT COALESCE(content_count, 0)
     INTO total_items
-    FROM course_exams, course_chapters;
+    FROM course_contents;
     
     -- Count completed items from content_progress
     SELECT COUNT(*)
@@ -49,18 +43,17 @@ BEGIN
             WHEN progress_pct > 0 THEN 'active'
             ELSE status
         END,
-        updated_at = NOW()
-    WHERE student_id = p_member_id 
+        last_accessed_at = NOW()
+    WHERE member_id = p_member_id 
       AND course_id = p_course_id;
-    
-    -- If no enrollment exists, this might be a batch-assigned course
-    -- We don't create enrollments here, just return the progress
-    
+      
     RETURN progress_pct;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant execute to authenticated users
+-- Grant execute permissions
 GRANT EXECUTE ON FUNCTION calculate_course_progress(INT, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION calculate_course_progress(INT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION calculate_course_progress(INT, INT) TO service_role;
 
 COMMENT ON FUNCTION calculate_course_progress IS 'Calculates and updates course progress based on completed content items using member_id';
