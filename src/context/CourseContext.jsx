@@ -200,6 +200,11 @@ export const CourseProvider = ({ children }) => {
             delete dbData.tags;
             delete dbData.course_tags;
             delete dbData.batch_courses;
+            delete dbData.showScheduledContent;
+            delete dbData.enableProgressiveLock;
+            delete dbData.courseLayout;
+            delete dbData.enrollments;
+            delete dbData.chapters;
 
             const { error } = await supabase
                 .from('courses')

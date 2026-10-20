@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bold, Italic, Underline, List, Image, Link, FileText } from 'lucide-react';
+import { Bold, Italic, Underline, List, Image, Link, FileText, Book } from 'lucide-react';
 import { useCourses } from '../context/CourseContext';
 import TagSelector from './TagSelector';
+import IconPicker from './IconPicker';
 
 const CreateCourse = () => {
     const navigate = useNavigate();
     const { addCourse } = useCourses();
+    const fileInputRef = useRef(null);
+
+    const [fileName, setFileName] = useState('No file chosen');
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [showIconPicker, setShowIconPicker] = useState(false);
 
     const [courseData, setCourseData] = useState({
         title: '',
         description: '',
+        image: '',
         showScheduledContent: true,
         enableProgressiveLock: false,
         courseLayout: 'List',
@@ -25,12 +32,34 @@ const CreateCourse = () => {
         }));
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFileName(file.name);
+            setSelectedFile(file);
+            const imageUrl = URL.createObjectURL(file);
+            setCourseData(prev => ({
+                ...prev,
+                image: imageUrl
+            }));
+        }
+    };
+
+    const handleIconSelect = (iconUrl) => {
+        setCourseData(prev => ({
+            ...prev,
+            image: iconUrl
+        }));
+        setSelectedFile(null);
+        setFileName('From Preloaded Icons');
+    };
+
     const handleCreate = () => {
         if (!courseData.title.trim()) {
             alert('Please enter a course title');
             return;
         }
-        addCourse(courseData);
+        addCourse(courseData, selectedFile);
         navigate('/courses');
     };
 
@@ -87,9 +116,46 @@ const CreateCourse = () => {
                 {/* Icon */}
                 <div style={{ display: 'flex', marginBottom: '20px', alignItems: 'center' }}>
                     <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px' }}>Icon:</label>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#00bcd4' }}>
-                        <span style={{ color: 'white', fontSize: '20px' }}>📚</span>
+                    <div
+                        onClick={() => setShowIconPicker(true)}
+                        style={{
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '8px',
+                            border: '1px solid #0088cc',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            backgroundColor: courseData.image ? 'transparent' : '#f0f0f0',
+                            cursor: 'pointer',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}
+                        title="Click to choose from preloaded icons"
+                    >
+                        {courseData.image ? (
+                            <img src={courseData.image} alt="Icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        ) : (
+                            <Book size={20} color="#666" />
+                        )}
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowIconPicker(true)}
+                        style={{
+                            marginLeft: '12px',
+                            padding: '4px 10px',
+                            border: '1px solid #0088cc',
+                            background: '#f0f9ff',
+                            color: '#0088cc',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500'
+                        }}
+                    >
+                        Choose Icon
+                    </button>
                 </div>
 
                 {/* Thumbnail Image */}
@@ -97,8 +163,21 @@ const CreateCourse = () => {
                     <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px', marginTop: '5px' }}>Thumbnail Image:</label>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <button style={{ padding: '4px 10px', border: '1px solid #ccc', background: '#eee', borderRadius: '3px', cursor: 'pointer' }}>Choose File</button>
-                            <span style={{ fontSize: '13px', color: '#666' }}>No file chosen</span>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                style={{ display: 'none' }}
+                                accept="image/*"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{ padding: '4px 10px', border: '1px solid #ccc', background: '#eee', borderRadius: '3px', cursor: 'pointer' }}
+                            >
+                                Choose File
+                            </button>
+                            <span style={{ fontSize: '13px', color: '#666' }}>{fileName}</span>
                         </div>
                         <div style={{ fontSize: '12px', color: '#888', marginTop: '5px' }}>Thumbnail image for the course (1:1 aspect ratio, up to 2 MB).</div>
                     </div>
@@ -152,9 +231,17 @@ const CreateCourse = () => {
                     <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px', marginTop: '5px' }}>Tags:</label>
                     <div style={{ flex: 1 }}>
                         <TagSelector
-                            selectedTags={courseData.tags || []}
+                            selectedTags={courseData.tags}
                             onChange={(tags) => setCourseData(prev => ({ ...prev, tags }))}
                         />
+                    </div>
+                </div>
+
+                {/* Course Certificate */}
+                <div style={{ display: 'flex', marginBottom: '30px', alignItems: 'center' }}>
+                    <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px' }}>Course certificate:</label>
+                    <div style={{ fontSize: '14px' }}>
+                        To set-up, click <a href="#" style={{ color: 'var(--primary-color)', textDecoration: 'none' }}>here</a>.
                     </div>
                 </div>
 
@@ -165,7 +252,7 @@ const CreateCourse = () => {
                         style={{ backgroundColor: '#00bfa5', color: 'white', border: 'none' }}
                         onClick={handleCreate}
                     >
-                        Create course
+                        Save
                     </button>
                     <button
                         className="btn"
@@ -176,6 +263,14 @@ const CreateCourse = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Icon Picker Modal */}
+            <IconPicker
+                isOpen={showIconPicker}
+                onClose={() => setShowIconPicker(false)}
+                onSelect={handleIconSelect}
+                currentIcon={courseData.image}
+            />
         </div>
     );
 };

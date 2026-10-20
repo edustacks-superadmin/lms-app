@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, Image, Link, Type, FileText, Book } from 'lucide-react';
 import { useCourses } from '../context/CourseContext';
 import TagSelector from './TagSelector';
+import IconPicker from './IconPicker';
 
 const CourseSettings = () => {
     const navigate = useNavigate();
@@ -13,6 +14,7 @@ const CourseSettings = () => {
     const fileInputRef = useRef(null);
     const [fileName, setFileName] = useState('No file chosen');
     const [selectedFile, setSelectedFile] = useState(null);
+    const [showIconPicker, setShowIconPicker] = useState(false);
 
     useEffect(() => {
         const data = getCourse(id);
@@ -46,6 +48,15 @@ const CourseSettings = () => {
 
     const handleChooseFileClick = () => {
         fileInputRef.current.click();
+    };
+
+    const handleIconSelect = (iconUrl) => {
+        setCourseData(prev => ({
+            ...prev,
+            image: iconUrl
+        }));
+        setSelectedFile(null); // Clear local file if choosing from preloaded icons
+        setFileName('From Preloaded Icons');
     };
 
     const handleUpdate = async () => {
@@ -113,13 +124,47 @@ const CourseSettings = () => {
                 {/* Icon */}
                 <div style={{ display: 'flex', marginBottom: '20px', alignItems: 'center' }}>
                     <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px' }}>Icon:</label>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', backgroundColor: courseData.image ? 'transparent' : '#f0f0f0' }}>
+                    <div
+                        onClick={() => setShowIconPicker(true)}
+                        style={{
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '8px',
+                            border: '1px solid #0088cc',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            backgroundColor: courseData.image ? 'transparent' : '#f0f0f0',
+                            cursor: 'pointer',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            transition: 'all 0.15s ease'
+                        }}
+                        title="Click to choose from preloaded icons"
+                    >
                         {courseData.image ? (
-                            <img src={courseData.image} alt="Icon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={courseData.image} alt="Icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         ) : (
                             <Book size={20} color="#666" />
                         )}
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowIconPicker(true)}
+                        style={{
+                            marginLeft: '12px',
+                            padding: '4px 10px',
+                            border: '1px solid #0088cc',
+                            background: '#f0f9ff',
+                            color: '#0088cc',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '500'
+                        }}
+                    >
+                        Choose Icon
+                    </button>
                 </div>
 
                 {/* Thumbnail Image */}
@@ -226,6 +271,14 @@ const CourseSettings = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Icon Picker Modal */}
+            <IconPicker
+                isOpen={showIconPicker}
+                onClose={() => setShowIconPicker(false)}
+                onSelect={handleIconSelect}
+                currentIcon={courseData.image}
+            />
         </div>
     );
 };

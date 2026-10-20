@@ -1,240 +1,220 @@
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Search, Image as ImageIcon, RefreshCw, Plus, Upload } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Search, Image as ImageIcon, Upload, Check } from 'lucide-react';
+import PRELOADED_ICONS from '../data/preloadedIcons.json';
 
 const IconPicker = ({ isOpen, onClose, onSelect, currentIcon }) => {
-    const [categories, setCategories] = useState([]);
-    const [icons, setIcons] = useState({});
-    const [activeCategory, setActiveCategory] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [categoryLoading, setCategoryLoading] = useState(false);
-    const [uploading, setUploading] = useState(false);
+    const categories = Object.keys(PRELOADED_ICONS || {});
+    const [activeCategory, setActiveCategory] = useState(categories[0] || 'General');
     const [searchTerm, setSearchTerm] = useState('');
-    const [error, setError] = useState(null);
+    const [customIcons, setCustomIcons] = useState([]);
+    const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchCategories();
-        }
-    }, [isOpen]);
+    if (!isOpen) return null;
 
-    useEffect(() => {
-        if (isOpen && activeCategory) {
-            fetchIconsForCategory(activeCategory);
-        }
-    }, [isOpen, activeCategory]);
-
-    const fetchCategories = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetch('/api/storage/icons');
-            if (res.ok) {
-                const data = await res.json();
-                setCategories(data.categories || []);
-                if (data.categories && data.categories.length > 0 && !activeCategory) {
-                    setActiveCategory(data.categories.includes('General') ? 'General' : data.categories[0]);
-                }
-            } else {
-                setError('Failed to load categories');
-            }
-        } catch (err) {
-            console.error('Error loading categories:', err);
-            setError('Error loading categories');
-        } finally {
-            setLoading(false);
-        }
+    const allCategoryIcons = {
+        ...PRELOADED_ICONS,
+        Custom: [...(PRELOADED_ICONS.Custom || []), ...customIcons]
     };
 
-    const fetchIconsForCategory = async (category) => {
-        if (icons[category] && icons[category].length > 0) return;
+    let displayIcons = [];
+    if (searchTerm.trim()) {
+        const query = searchTerm.toLowerCase().trim();
+        const allIcons = Object.values(allCategoryIcons).flat();
+        const seen = new Set();
+        displayIcons = allIcons.filter(icon => {
+            if (seen.has(icon.url)) return false;
+            seen.add(icon.url);
+            return icon.name.toLowerCase().includes(query);
+        });
+    } else {
+        displayIcons = allCategoryIcons[activeCategory] || [];
+    }
 
-        setCategoryLoading(true);
-        try {
-            const res = await fetch(`/api/storage/icons?category=${encodeURIComponent(category)}`);
-            if (res.ok) {
-                const data = await res.json();
-                setIcons(prev => ({
-                    ...prev,
-                    [category]: data.icons || []
-                }));
-            }
-        } catch (err) {
-            console.error(`Error loading icons for ${category}:`, err);
-        } finally {
-            setCategoryLoading(false);
-        }
-    };
-
-    const handleUpload = async (e) => {
-        const file = e.target.files[0];
+    const handleUploadCustomIcon = async (e) => {
+        const file = e.target.files?.[0];
         if (!file) return;
 
         setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-            const res = await fetch('/api/storage/icons', {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'icons/Custom');
+
+            const res = await fetch('/api/admin/upload', {
                 method: 'POST',
                 body: formData
             });
 
             if (res.ok) {
                 const data = await res.json();
-                const catRes = await fetch(`/api/storage/icons?category=Custom`);
-                if (catRes.ok) {
-                    const catData = await catRes.json();
-                    setIcons(prev => ({
-                        ...prev,
-                        'Custom': catData.icons || []
-                    }));
-                }
-
                 if (data.url) {
+                    const newIcon = {
+                        name: file.name.replace(/\.[^/.]+$/, ''),
+                        url: data.url
+                    };
+                    setCustomIcons(prev => [newIcon, ...prev]);
                     onSelect(data.url);
+                    onClose();
                 }
             } else {
-                console.error('Upload failed');
-                setError('Failed to upload icon');
+                throw new Error('Upload failed');
             }
         } catch (err) {
-            console.error('Error uploading icon:', err);
-            setError('Error uploading icon');
+            console.error('Error uploading custom icon:', err);
+            alert('Failed to upload icon: ' + (err.message || 'Unknown error'));
         } finally {
             setUploading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
-    if (!isOpen) return null;
-
-    let displayIcons = [];
-
-    if (searchTerm) {
-        const allIcons = Object.values(icons).flat();
-        displayIcons = allIcons.filter(icon =>
-            icon.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    } else {
-        displayIcons = icons[activeCategory] || [];
-    }
-
     return (
-        <div className="fixed inset-0 bg-black/50 z-[1100] flex items-center justify-center">
-            <div className="bg-white rounded-xl w-[800px] max-w-[95%] h-[600px] flex flex-col overflow-hidden shadow-xl">
+        <div className="fixed inset-0 bg-black/50 z-[1100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl w-[880px] max-w-[96%] h-[620px] max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="py-4 px-5 border-b border-gray-200 flex justify-between items-center bg-white">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
-                        <ImageIcon size={20} className="text-blue-600" /> Select Icon
-                    </h3>
-                    <div className="flex gap-3">
-                        <div className="relative w-[250px]">
-                            <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <div className="py-4 px-6 border-b border-gray-200 flex justify-between items-center bg-white">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                            <ImageIcon size={18} />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">Select Course Icon</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-[260px]">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Search loaded icons..."
+                                placeholder="Search all icons..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-8 pr-2.5 py-2 w-full rounded-md border border-gray-300 text-sm"
+                                className="pl-9 pr-3 py-1.5 w-full rounded-md border border-gray-300 text-sm focus:outline-none focus:border-blue-500"
                             />
                         </div>
-                        <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-gray-500 hover:text-gray-700">
-                            <X size={24} />
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+                            <X size={20} />
                         </button>
                     </div>
                 </div>
 
                 {/* Body */}
                 <div className="flex flex-1 overflow-hidden">
-
-                    {/* Sidebar (Categories) */}
-                    {!searchTerm && (
-                        <div className="w-[200px] border-r border-gray-200 bg-gray-50 overflow-y-auto p-2.5">
-                            <div className="text-xs font-semibold text-gray-500 mb-2.5 uppercase tracking-wide">Categories</div>
-                            {loading ? (
-                                <div className="p-2.5 text-center text-gray-400">Loading...</div>
-                            ) : (
-                                categories.map(cat => (
+                    {/* Categories Sidebar */}
+                    {!searchTerm.trim() && (
+                        <div className="w-[200px] border-r border-gray-200 bg-gray-50 overflow-y-auto p-3">
+                            <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider px-3 mb-2">Categories</div>
+                            {categories.map(cat => {
+                                const isActive = activeCategory === cat;
+                                const count = (allCategoryIcons[cat] || []).length;
+                                return (
                                     <div
                                         key={cat}
                                         onClick={() => setActiveCategory(cat)}
-                                        className={`py-2.5 px-3 rounded-md cursor-pointer text-sm mb-1 flex justify-between items-center transition-colors ${activeCategory === cat ? 'bg-blue-600 text-white font-semibold' : 'bg-transparent text-gray-700 hover:bg-gray-100'}`}
+                                        className={`py-2 px-3 rounded-md cursor-pointer text-sm mb-1 flex justify-between items-center transition-colors ${
+                                            isActive
+                                                ? 'bg-blue-600 text-white font-semibold'
+                                                : 'text-gray-700 hover:bg-gray-200/60'
+                                        }`}
                                     >
-                                        {cat}
+                                        <span>{cat}</span>
+                                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+                                            isActive ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+                                        }`}>
+                                            {count}
+                                        </span>
                                     </div>
-                                ))
-                            )}
+                                );
+                            })}
                         </div>
                     )}
 
                     {/* Main Grid */}
                     <div className="flex-1 p-5 overflow-y-auto bg-white">
-                        {loading ? (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                                <RefreshCw size={32} className="animate-spin mb-4" />
-                                <p>Loading...</p>
+                        {(activeCategory === 'Custom' || searchTerm.trim()) && (
+                            <div className="mb-4 flex items-center gap-3">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleUploadCustomIcon}
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploading}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    <Upload size={14} />
+                                    {uploading ? 'Uploading...' : 'Upload Custom Icon'}
+                                </button>
+                                <span className="text-xs text-gray-500">PNG, JPG, or SVG up to 2MB</span>
                             </div>
-                        ) : error ? (
-                            <div className="h-full flex flex-col items-center justify-center text-red-500">
-                                <p>{error}</p>
-                                <button onClick={fetchCategories} className="mt-3 text-blue-600 underline bg-transparent border-none cursor-pointer">Try Again</button>
+                        )}
+
+                        {displayIcons.length === 0 ? (
+                            <div className="h-60 flex flex-col items-center justify-center text-gray-400">
+                                <ImageIcon size={40} className="opacity-40 mb-2" />
+                                <p className="text-sm">No icons found</p>
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="mt-2 text-xs text-blue-600 hover:underline"
+                                    >
+                                        Clear search
+                                    </button>
+                                )}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-4">
-                                {/* Upload Button for Custom Category */}
-                                {activeCategory === 'Custom' && !searchTerm && (
-                                    <div
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="border-2 border-dashed border-gray-300 rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center gap-2 bg-gray-50 text-gray-500 transition-all hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50"
-                                    >
-                                        <input
-                                            type="file"
-                                            hidden
-                                            ref={fileInputRef}
-                                            onChange={handleUpload}
-                                            accept="image/svg+xml,image/png,image/jpeg"
-                                        />
-                                        {uploading ? (
-                                            <RefreshCw size={24} className="animate-spin" />
-                                        ) : (
-                                            <Upload size={24} />
-                                        )}
-                                        <span className="text-xs font-medium">{uploading ? 'Uploading...' : 'Upload New'}</span>
-                                    </div>
-                                )}
-
-                                {categoryLoading ? (
-                                    <div className="col-span-full flex justify-center p-10 text-gray-500">
-                                        <RefreshCw size={24} className="animate-spin" />
-                                    </div>
-                                ) : displayIcons.length > 0 ? (
-                                    displayIcons.map((icon, idx) => (
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3">
+                                {displayIcons.map((icon, idx) => {
+                                    const isSelected = currentIcon === icon.url;
+                                    return (
                                         <div
-                                            key={idx}
-                                            onClick={() => onSelect(icon.url)}
-                                            className={`rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all hover:shadow-md hover:border-blue-300 ${currentIcon === icon.url ? 'border-2 border-blue-600 bg-blue-50' : 'border border-gray-200 bg-white'}`}
+                                            key={`${icon.url}-${idx}`}
+                                            onClick={() => {
+                                                onSelect(icon.url);
+                                                onClose();
+                                            }}
+                                            className={`relative rounded-lg p-3 cursor-pointer flex flex-col items-center justify-center gap-2 border transition-all hover:shadow-md hover:border-blue-400 ${
+                                                isSelected ? 'border-2 border-blue-600 bg-blue-50/50' : 'border-gray-200 bg-white'
+                                            }`}
+                                            title={icon.name}
                                         >
-                                            <div className="w-12 h-12 flex items-center justify-center">
-                                                <img src={icon.url} alt={icon.name} className="max-w-full max-h-full object-contain" loading="lazy" />
+                                            {isSelected && (
+                                                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                                                    <Check size={10} strokeWidth={3} />
+                                                </div>
+                                            )}
+                                            <div className="w-11 h-11 flex items-center justify-center">
+                                                <img
+                                                    src={icon.url}
+                                                    alt={icon.name}
+                                                    loading="lazy"
+                                                    className="max-w-full max-h-full object-contain"
+                                                />
                                             </div>
-                                            <span className="text-[11px] text-center text-gray-600 break-words leading-tight">
-                                                {icon.name.replace(/\.[^/.]+$/, "")}
+                                            <span className="text-[11px] text-center text-gray-600 truncate w-full px-1">
+                                                {icon.name}
                                             </span>
                                         </div>
-                                    ))
-                                ) : activeCategory !== 'Custom' && (
-                                    <div className="col-span-full flex flex-col items-center justify-center text-gray-400 p-10">
-                                        <ImageIcon size={48} className="opacity-20 mb-4" />
-                                        <p>No icons found in this category</p>
-                                    </div>
-                                )}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Footer */}
+                <div className="py-3 px-6 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+                    <span className="text-xs text-gray-500">{displayIcons.length} icons available</span>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-1.5 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
