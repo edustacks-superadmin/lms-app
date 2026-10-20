@@ -583,7 +583,7 @@ export default function ContentPlayer() {
                 ) : content.type === 'pdf' ? (
                     <View className="flex-1">
                         <PdfViewer
-                            url={getApiUrl(`/api/proxy-pdf?id=${content.id}`)}
+                            url={content.url || getApiUrl(`/api/proxy-pdf?id=${content.id}`)}
                             headers={{ 'x-platform': 'mobile' }}
                             initialPage={lastPosition || 1}
                             onPageChanged={(page) => {
