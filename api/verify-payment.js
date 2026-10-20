@@ -2,8 +2,8 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://xalbtjoykovnlbjeddtv.supabase.co';
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbGJ0am95a292bmxiamVkZHR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NTMyNDcsImV4cCI6MjA3OTAyOTI0N30.lcVDOTikpLEhVSW33yt7_JCWNlceGHaEAaBguGRVT_c';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbGJ0am95a292bmxiamVkZHR2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzQ1MzI0NywiZXhwIjoyMDc5MDI5MjQ3fQ.DeztVEiT5tc3KjIinCqi9TMzmt-nRr2PMv54taSvm98';
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const DEFAULT_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'VbHg1p6oW8vTsM2tHWgIAX7G';
 
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
         const razorpay_order_id = body.razorpay_order_id || body.orderId || body.order_id;
         const razorpay_payment_id = body.razorpay_payment_id || body.paymentId || body.payment_id;
         const razorpay_signature = body.razorpay_signature || body.signature;
-        const instituteId = body.instituteId || body.institute_id;
+        const instituteId = body.instituteId || body.institute_id || 10;
+        const dbOrderId = body.dbOrderId;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
             return res.status(400).json({
@@ -77,6 +78,80 @@ export default async function handler(req, res) {
                 verified: false,
                 error: 'Payment verification failed: Signature mismatch'
             });
+        }
+
+        // Signature verified! Now complete order and enroll student in Supabase
+        try {
+            // Find order
+            let orderQuery = supabase.from('orders').select('*');
+            if (razorpay_order_id) {
+                orderQuery = orderQuery.eq('razorpay_order_id', razorpay_order_id);
+            } else if (dbOrderId) {
+                orderQuery = orderQuery.eq('id', dbOrderId);
+            }
+            const { data: order } = await orderQuery.maybeSingle();
+
+            if (order) {
+                // Update order to completed
+                await supabase
+                    .from('orders')
+                    .update({
+                        status: 'completed',
+                        razorpay_payment_id: razorpay_payment_id,
+                        razorpay_signature: razorpay_signature,
+                        payment_verified_at: new Date().toISOString()
+                    })
+                    .eq('id', order.id);
+
+                // Auto-enroll student into linked courses
+                const productId = order.product_id;
+                const userEmail = order.user_email;
+
+                if (productId && userEmail) {
+                    const { data: member } = await supabase
+                        .from('members')
+                        .select('id, institute_id')
+                        .ilike('email', userEmail)
+                        .maybeSingle();
+
+                    if (member) {
+                        const { data: courses } = await supabase
+                            .from('courses')
+                            .select('id, title, allowed_products');
+
+                        const matchedCourses = (courses || []).filter(c =>
+                            c.allowed_products &&
+                            Array.isArray(c.allowed_products) &&
+                            c.allowed_products.includes(Number(productId))
+                        );
+
+                        for (const c of matchedCourses) {
+                            const { data: existing } = await supabase
+                                .from('enrollments')
+                                .select('id')
+                                .eq('member_id', member.id)
+                                .eq('course_id', c.id)
+                                .maybeSingle();
+
+                            if (!existing) {
+                                await supabase
+                                    .from('enrollments')
+                                    .insert({
+                                        member_id: member.id,
+                                        course_id: c.id,
+                                        institute_id: member.institute_id || instituteId || 10,
+                                        status: 'active',
+                                        progress: 0,
+                                        enrolled_at: new Date().toISOString()
+                                    });
+                                console.log(`[verify-payment] Enrolled member ${member.id} in course ${c.id}`);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (dbErr) {
+            console.error('[verify-payment] Database update error:', dbErr.message);
         }
 
         return res.status(200).json({
