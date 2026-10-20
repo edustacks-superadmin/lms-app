@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.maheshiesacademy.mobile",
-      "versionCode": 20,
+      "versionCode": 22,
       "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -29,7 +29,8 @@
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
-        "com.google.android.gms.permission.AD_ID"
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.RECORD_AUDIO"
       ],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
@@ -72,8 +73,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "59eb61fb-994e-4aa0-843c-ce5390cda01e"
+        "projectId": "94efc2fa-dfbe-40b5-a365-c2075cdc874a"
       }
-    }
+    },
+    "owner": "hi0123443210s-team"
   }
 }

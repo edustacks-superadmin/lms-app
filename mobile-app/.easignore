@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Local Expo
+.expo/
+dist/
+web-build/
+
+# Android build outputs & caches
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.idea/
+android/.kotlin/
+
+# iOS build outputs & caches
+ios/build/
+ios/Pods/
+
+# Temp & debug files
+*.log
+*.apk
+*.aab
+*.tar.gz
