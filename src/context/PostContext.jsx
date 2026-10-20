@@ -21,7 +21,7 @@ export const PostProvider = ({ children }) => {
 
     const fetchPosts = async () => {
         try {
-            const { data, error } = await supabase
+            let { data, error } = await supabase
                 .from('posts')
                 .select(`
                     *,
@@ -35,7 +35,15 @@ export const PostProvider = ({ children }) => {
                 `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.warn('Full join failed, attempting fallback query:', error.message);
+                const { data: fallbackData, error: fallbackError } = await supabase
+                    .from('posts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (fallbackError) throw fallbackError;
+                data = fallbackData || [];
+            }
 
             // Transform data to match UI requirements
             const formattedPosts = data.map(post => ({
