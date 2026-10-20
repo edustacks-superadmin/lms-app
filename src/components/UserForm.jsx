@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Camera, X, Save, Eye, CheckCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import BatchMultiSelect from './BatchMultiSelect';
 import { INDIAN_STATES } from '../utils/indianStates';
 
 const UserForm = ({
     initialData = {},
     mode = 'create',
+    memberId = null,
+    redirectUrl = null,
+    backPath = null,
     onSubmit,
     loading = false,
     title = 'Add a new member',
     subtitle = 'Fill in the details to create a new user account.'
 }) => {
     const navigate = useNavigate();
+    const { id: routeId } = useParams();
+    const effectiveMemberId = memberId || routeId || initialData?.id;
+    const resolvedRedirectUrl = redirectUrl || (mode === 'edit' && effectiveMemberId ? `/members/${effectiveMemberId}` : '/members');
+    const resolvedBackPath = backPath || (mode === 'edit' && effectiveMemberId ? `/members/${effectiveMemberId}` : '/members');
     const [formData, setFormData] = useState({
         username: '',
         password: '',
@@ -95,7 +102,7 @@ const UserForm = ({
         if (result && result.success) {
             setShowSuccess(true);
             setTimeout(() => {
-                navigate('/members');
+                navigate(resolvedRedirectUrl);
             }, 1500);
         } else if (result && result.error) {
             alert('Error: ' + result.error);
@@ -131,7 +138,7 @@ const UserForm = ({
             {/* Header */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
                             <button
-                                onClick={() => navigate('/members')}
+                                onClick={() => navigate(resolvedBackPath)}
                                 className="btn-icon"
                                 style={{ backgroundColor: 'white', border: '1px solid #e0e0e0' }}
                             >
@@ -489,7 +496,7 @@ const UserForm = ({
                                     }}>
                                         <button
                                             className="btn btn-outline"
-                                            onClick={() => navigate('/members')}
+                                            onClick={() => navigate(resolvedBackPath)}
                                         >
                                             Cancel
                                         </button>

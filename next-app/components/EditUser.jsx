@@ -99,6 +99,9 @@ const EditUser = () => {
     return (
         <UserForm
             mode="edit"
+            memberId={id}
+            redirectUrl={`/members/${id}`}
+            backPath={`/members/${id}`}
             initialData={initialData}
             onSubmit={handleUpdateUser}
             title="Edit Member"
