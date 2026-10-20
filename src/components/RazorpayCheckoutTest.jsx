@@ -29,7 +29,8 @@ const RazorpayCheckoutTest = () => {
                 body: JSON.stringify({
                     amount: amountInPaise,
                     currency: 'INR',
-                    receipt: `test_rcpt_${Date.now()}`
+                    receipt: `test_rcpt_${Date.now()}`,
+                    isTest: true
                 })
             });
 
@@ -49,7 +50,7 @@ const RazorpayCheckoutTest = () => {
 
             // 2. Open Razorpay Standard Checkout
             const options = {
-                key: key_id || import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: key_id || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Tq3mKqJrkwcF5A',
                 amount: amount,
                 currency: currency || 'INR',
                 name: 'Mahesh IES Academy',
