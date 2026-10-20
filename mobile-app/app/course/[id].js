@@ -128,6 +128,7 @@ export default function CoursePlayer() {
 
     const [course, setCourse] = useState(null);
     const [chapters, setChapters] = useState([]);
+    const [currentParentChapter, setCurrentParentChapter] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeChapterId, setActiveChapterId] = useState(null);
     const [activeTab, setActiveTab] = useState('learn');
@@ -168,7 +169,7 @@ export default function CoursePlayer() {
             // 2. Fetch Chapters
             const { data: chaptersData, error: chaptersError } = await supabase
                 .from('chapters')
-                .select('id, name, order')
+                .select('id, name, order, parent_id, icon')
                 .eq('course_id', id)
                 .order('order', { ascending: true });
 
@@ -364,13 +365,24 @@ export default function CoursePlayer() {
         </View>
     );
 
+    const handleBack = () => {
+        if (currentParentChapter) {
+            setCurrentParentChapter(null);
+            setActiveChapterId(null);
+        } else if (router.canGoBack()) {
+            router.back();
+        } else {
+            router.replace('/(drawer)/(tabs)/mylearning');
+        }
+    };
+
     return (
         <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
             <StatusBar style="dark" backgroundColor="#f8fafc" />
 
             {/* Header */}
             <View className="px-4 py-3 flex-row items-center border-b border-gray-100 bg-white">
-                <TouchableOpacity onPress={() => router.back()} className="mr-3 p-1">
+                <TouchableOpacity onPress={handleBack} className="mr-3 p-1">
                     <Ionicons name="arrow-back" size={24} color="#1e293b" />
                 </TouchableOpacity>
                 <Text className="text-lg font-bold text-slate-900 flex-1" numberOfLines={1}>
