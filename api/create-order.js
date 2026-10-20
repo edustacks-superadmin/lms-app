@@ -24,9 +24,10 @@ export default async function handler(req, res) {
 
     try {
         const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-        let { amount, currency = 'INR', receipt, notes, isTest, instituteId, productId, userId, userEmail, couponCode } = body;
+        let { amount, currency = 'INR', receipt, notes, isTest, instituteId, productId, productIds, items, isCart, userId, userEmail, couponCode } = body;
 
-        const effectiveProductId = productId || notes?.productId || notes?.product_id;
+        const effectiveProductIds = Array.isArray(productIds) ? productIds : (productId ? [productId] : []);
+        const effectiveProductId = productId || (effectiveProductIds.length > 0 ? effectiveProductIds[0] : null) || notes?.productId || notes?.product_id;
         const effectiveUserEmail = userEmail || notes?.userEmail || notes?.user_email;
 
         // If amount is not provided, try fetching from product
@@ -95,7 +96,9 @@ export default async function handler(req, res) {
             currency: currency.toUpperCase(),
             receipt: receipt || `rcpt_${Date.now()}`,
             notes: {
-                productId: effectiveProductId || '',
+                productId: effectiveProductId ? String(effectiveProductId) : '',
+                productIds: effectiveProductIds.join(','),
+                isCart: String(Boolean(isCart || effectiveProductIds.length > 1)),
                 userId: userId || '',
                 userEmail: effectiveUserEmail || '',
                 instituteId: effectiveInstituteId || '',
@@ -119,6 +122,12 @@ export default async function handler(req, res) {
                 if (mem) memberId = mem.id;
             }
 
+            const paymentNotesObj = {
+                is_cart: Boolean(isCart || effectiveProductIds.length > 1),
+                product_ids: effectiveProductIds.map(Number),
+                items: items || []
+            };
+
             const { data: dbOrder } = await supabase
                 .from('orders')
                 .insert({
@@ -133,6 +142,7 @@ export default async function handler(req, res) {
                     payment_method: 'razorpay',
                     razorpay_order_id: order.id,
                     institute_id: effectiveInstituteId || 10,
+                    payment_notes: JSON.stringify(paymentNotesObj),
                     created_at: new Date().toISOString()
                 })
                 .select('id')

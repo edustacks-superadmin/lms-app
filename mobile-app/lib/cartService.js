@@ -260,5 +260,24 @@ export const cartService = {
         } catch (error) {
             console.error('syncCart error:', error);
         }
+    },
+
+    // Clear entire cart (e.g. after successful checkout)
+    clearCart: async () => {
+        try {
+            const member = await getMember();
+            if (member) {
+                await supabase
+                    .from('cart_items')
+                    .delete()
+                    .eq('member_id', member.id);
+            }
+            await AsyncStorage.removeItem(CART_STORAGE_KEY);
+            notifyListeners(0, { items: [], count: 0, total: 0 });
+            return { success: true };
+        } catch (e) {
+            console.error('clearCart error:', e);
+            return { success: false, error: e.message };
+        }
     }
 };

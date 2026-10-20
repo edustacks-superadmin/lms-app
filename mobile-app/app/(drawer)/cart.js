@@ -6,12 +6,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cartService } from '../../lib/cartService';
 import { ORG_CONFIG } from '../../config/organization';
+import { initiateCartPayment } from '../../lib/payment';
+import { supabase } from '../../lib/supabase';
 
 export default function CartScreen() {
     const router = useRouter();
     const [cart, setCart] = useState({ items: [], count: 0, total: 0 });
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [processing, setProcessing] = useState(false);
 
     const loadCart = useCallback(async () => {
         try {
@@ -58,36 +61,44 @@ export default function CartScreen() {
         }
     };
 
-    const handleProceedToCheckout = () => {
+    const handleProceedToCheckout = async () => {
         if (!cart.items || cart.items.length === 0) {
             Alert.alert('Cart Empty', 'Your cart has no items to purchase.');
             return;
         }
 
-        if (cart.items.length === 1) {
-            const primaryProduct = cart.items[0];
-            router.push({
-                pathname: '/checkout',
-                params: { productId: primaryProduct.product_id || primaryProduct.id }
-            });
-            return;
-        }
+        try {
+            setProcessing(true);
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                Alert.alert('Login Required', 'Please login to complete your purchase.');
+                return;
+            }
 
-        // Multiple items: allow selecting which course to checkout
-        Alert.alert(
-            'Proceed to Checkout',
-            'Choose a course to checkout:',
-            [
-                ...cart.items.map(item => ({
-                    text: `${item.title.length > 28 ? item.title.substring(0, 28) + '...' : item.title} (₹${item.price})`,
-                    onPress: () => router.push({
-                        pathname: '/checkout',
-                        params: { productId: item.product_id || item.id }
-                    })
-                })),
-                { text: 'Cancel', style: 'cancel' }
-            ]
-        );
+            const result = await initiateCartPayment(cart, user);
+            if (result.success) {
+                // Clear cart locally and notify
+                await cartService.clearCart();
+
+                Alert.alert(
+                    'Payment Successful! 🎉',
+                    `You have successfully purchased ${result.count || cart.items.length} ${
+                        (result.count || cart.items.length) === 1 ? 'course' : 'courses'
+                    }. All materials are now unlocked.`,
+                    [
+                        {
+                            text: 'Go to My Courses',
+                            onPress: () => router.push('/(drawer)/(tabs)/mylearning')
+                        }
+                    ]
+                );
+            }
+        } catch (err) {
+            console.error('Cart checkout error:', err);
+            Alert.alert('Checkout Error', err.message || 'Failed to complete checkout');
+        } finally {
+            setProcessing(false);
+        }
     };
 
     const getImageUrl = (imagePath) => {
@@ -132,10 +143,10 @@ export default function CartScreen() {
                             pathname: '/checkout',
                             params: { productId: targetProductId }
                         })}
-                        className="bg-blue-600 px-3 py-1.5 rounded-xl mr-2 shadow-sm"
+                        className="bg-blue-50 px-2.5 py-1.5 rounded-xl mr-2 border border-blue-200"
                         activeOpacity={0.8}
                     >
-                        <Text className="text-white font-bold text-xs">Buy Now</Text>
+                        <Text className="text-blue-600 font-bold text-xs">Buy Alone</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -196,18 +207,36 @@ export default function CartScreen() {
                         <View className="px-5 pt-4 pb-20">
                             <View className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                                 <View className="flex-row justify-between mb-2">
-                                    <Text className="text-slate-500">Subtotal</Text>
+                                    <Text className="text-slate-500 font-medium">Items in Cart</Text>
+                                    <Text className="text-slate-800 font-bold">{cart.count} items</Text>
+                                </View>
+                                <View className="flex-row justify-between mb-2">
+                                    <Text className="text-slate-500 font-medium">Subtotal</Text>
                                     <Text className="text-slate-900 font-bold">₹{cart.total}</Text>
                                 </View>
-                                <View className="flex-row justify-between mb-6 pt-4 border-t border-gray-50">
-                                    <Text className="text-lg font-bold text-slate-900">Total Amount</Text>
+                                <View className="flex-row justify-between mb-6 pt-4 border-t border-gray-100">
+                                    <View>
+                                        <Text className="text-lg font-bold text-slate-900">Total Amount</Text>
+                                        <Text className="text-xs text-slate-400">All courses in single transaction</Text>
+                                    </View>
                                     <Text className="text-2xl font-black text-blue-600">₹{cart.total}</Text>
                                 </View>
                                 <TouchableOpacity
-                                    className="bg-blue-600 py-4 rounded-2xl items-center shadow-lg shadow-blue-200"
+                                    className={`py-4 rounded-2xl items-center shadow-lg shadow-blue-200 flex-row justify-center ${
+                                        processing ? 'bg-blue-400' : 'bg-blue-600'
+                                    }`}
                                     onPress={handleProceedToCheckout}
+                                    disabled={processing}
+                                    activeOpacity={0.85}
                                 >
-                                    <Text className="text-white font-black text-lg">Proceed to Checkout</Text>
+                                    {processing ? (
+                                        <ActivityIndicator color="#ffffff" className="mr-2" />
+                                    ) : (
+                                        <Ionicons name="card-outline" size={20} color="#ffffff" style={{ marginRight: 8 }} />
+                                    )}
+                                    <Text className="text-white font-black text-lg">
+                                        {processing ? 'Processing...' : `Pay Total ₹${cart.total}`}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

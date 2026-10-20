@@ -104,10 +104,28 @@ export default async function handler(req, res) {
                     .eq('id', order.id);
 
                 // Auto-enroll student into linked courses
-                const productId = order.product_id;
                 const userEmail = order.user_email;
+                let productIdsToEnroll = [];
 
-                if (productId && userEmail) {
+                // Check payment_notes for multiple cart product IDs
+                try {
+                    if (order.payment_notes) {
+                        const notesData = typeof order.payment_notes === 'string'
+                            ? JSON.parse(order.payment_notes)
+                            : order.payment_notes;
+                        if (Array.isArray(notesData?.product_ids) && notesData.product_ids.length > 0) {
+                            productIdsToEnroll = notesData.product_ids.map(Number);
+                        }
+                    }
+                } catch (notesErr) {
+                    console.warn('[verify-payment] Error parsing payment_notes:', notesErr.message);
+                }
+
+                if (productIdsToEnroll.length === 0 && order.product_id) {
+                    productIdsToEnroll = [Number(order.product_id)];
+                }
+
+                if (productIdsToEnroll.length > 0 && userEmail) {
                     const { data: member } = await supabase
                         .from('members')
                         .select('id, institute_id')
@@ -122,7 +140,7 @@ export default async function handler(req, res) {
                         const matchedCourses = (courses || []).filter(c =>
                             c.allowed_products &&
                             Array.isArray(c.allowed_products) &&
-                            c.allowed_products.includes(Number(productId))
+                            productIdsToEnroll.some(pid => c.allowed_products.includes(pid))
                         );
 
                         for (const c of matchedCourses) {
@@ -147,6 +165,13 @@ export default async function handler(req, res) {
                                 console.log(`[verify-payment] Enrolled member ${member.id} in course ${c.id}`);
                             }
                         }
+
+                        // Clear cart for this member
+                        await supabase
+                            .from('cart_items')
+                            .delete()
+                            .eq('member_id', member.id);
+                        console.log(`[verify-payment] Cleared cart for member ${member.id}`);
                     }
                 }
             }
