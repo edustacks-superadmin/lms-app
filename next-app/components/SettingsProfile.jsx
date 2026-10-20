@@ -41,8 +41,8 @@ const SettingsProfile = () => {
             const { data, error } = await supabase
                 .from('members')
                 .select('*')
-                .eq('email', user.email)
-                .single();
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+                .maybeSingle();
 
             if (error) throw error;
 
@@ -50,7 +50,7 @@ const SettingsProfile = () => {
                 setProfileData({
                     first_name: data.first_name || '',
                     last_name: data.last_name || '',
-                    display_name: data.display_name || '',
+                    display_name: data.display_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || user.user_metadata?.full_name || '',
                     email: data.email || '',
                     phone_number: data.phone_number || '',
                     role: data.role || '',
@@ -102,7 +102,7 @@ const SettingsProfile = () => {
             const { error: updateError } = await supabase
                 .from('members')
                 .update({ photo_url: publicUrl })
-                .eq('email', user.email);
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`);
 
             if (updateError) throw updateError;
 

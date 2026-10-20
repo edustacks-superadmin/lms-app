@@ -33,20 +33,29 @@ const StudentProfile = () => {
             const { data, error } = await supabase
                 .from('members')
                 .select('*')
-                .eq('email', user.email)
-                .single();
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+                .maybeSingle();
 
             if (error) throw error;
 
             if (data) {
+                const resolvedName = (
+                    data.display_name ||
+                    `${data.first_name || ''} ${data.last_name || ''}`.trim() ||
+                    user.user_metadata?.full_name ||
+                    `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
+                    user.email?.split('@')[0] ||
+                    ''
+                );
+
                 setProfile({
-                    name: data.name || '',
-                    email: data.email || '',
+                    name: resolvedName,
+                    email: data.email || user.email || '',
                     phone_number: data.phone_number || '',
-                    photo_url: data.photo_url || '',
-                    location: data.location || '',
-                    joining_date: data.joining_date || '',
-                    role: data.role || ''
+                    photo_url: data.photo_url || user.user_metadata?.avatar_url || '',
+                    location: data.city || data.address1 || '',
+                    joining_date: data.joining_date || data.created_at || user.created_at || '',
+                    role: data.role || 'student'
                 });
             }
         } catch (error) {
@@ -93,7 +102,11 @@ const StudentProfile = () => {
             const { error: updateError } = await supabase
                 .from('members')
                 .update({ photo_url: publicUrl })
-                .eq('email', user.email);
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`);
+
+            await supabase.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
 
             if (updateError) throw updateError;
 
@@ -113,14 +126,29 @@ const StudentProfile = () => {
         setSaving(true);
 
         try {
+            const nameParts = (profile.name || '').trim().split(/\s+/);
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
             const { error } = await supabase
                 .from('members')
                 .update({
-                    name: profile.name,
+                    display_name: profile.name,
+                    first_name: firstName,
+                    last_name: lastName,
                     phone_number: profile.phone_number,
-                    location: profile.location
+                    city: profile.location
                 })
-                .eq('email', user.email);
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`);
+
+            // Also sync auth metadata
+            await supabase.auth.updateUser({
+                data: {
+                    full_name: profile.name,
+                    first_name: firstName,
+                    last_name: lastName
+                }
+            });
 
             if (error) throw error;
 

@@ -34,29 +34,47 @@ const SettingsProfile = () => {
     }, [user]);
 
     const fetchProfile = async () => {
+        setLoading(true);
         try {
+            if (!user) return;
+
             const { data, error } = await supabase
                 .from('members')
-                .select('name, email, role, status, joining_date, photo_url, custom_data')
-                .eq('email', user.email)
-                .single();
+                .select('*')
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+                .maybeSingle();
 
-            if (error) throw error;
-
-            if (data) {
-                setProfileData({
-                    name: data.name || '',
-                    email: data.email || '',
-                    role: data.role || '',
-                    status: data.status || '',
-                    joining_date: data.joining_date || '',
-                    photo_url: data.photo_url || ''
-                });
-
-                setCustomData(data.custom_data || {});
+            if (error) {
+                console.warn('Error fetching member record, using user session fallback:', error);
             }
+
+            const resolvedName = (
+                data?.display_name ||
+                `${data?.first_name || ''} ${data?.last_name || ''}`.trim() ||
+                user.user_metadata?.full_name ||
+                `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() ||
+                user.email?.split('@')[0] ||
+                ''
+            );
+
+            const resolvedStatus = data?.status
+                ? (data.status.charAt(0).toUpperCase() + data.status.slice(1).toLowerCase())
+                : 'Active';
+
+            setProfileData({
+                name: resolvedName,
+                email: data?.email || user.email || '',
+                role: data?.role || user.user_metadata?.role || 'admin',
+                status: resolvedStatus,
+                joining_date: data?.joining_date || data?.created_at || user.created_at || '',
+                photo_url: data?.photo_url || user.user_metadata?.avatar_url || ''
+            });
+
+            setCustomData(data?.custom_data || {});
         } catch (error) {
             console.error('Error fetching profile:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,11 +113,18 @@ const SettingsProfile = () => {
             const { error: updateError } = await supabase
                 .from('members')
                 .update({ photo_url: publicUrl })
-                .eq('email', user.email);
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.warn('Members photo_url update warning:', updateError);
+            }
 
-            setProfileData({ ...profileData, photo_url: publicUrl });
+            // Sync with auth metadata
+            await supabase.auth.updateUser({
+                data: { avatar_url: publicUrl }
+            });
+
+            setProfileData(prev => ({ ...prev, photo_url: publicUrl }));
             setMessage({ type: 'success', text: 'Profile photo updated successfully!' });
         } catch (error) {
             console.error('Error uploading photo:', error);
@@ -115,17 +140,32 @@ const SettingsProfile = () => {
         setMessage({ type: '', text: '' });
 
         try {
+            const nameParts = profileData.name.trim().split(/\s+/);
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
             const { error } = await supabase
                 .from('members')
                 .update({
-                    name: profileData.name,
+                    display_name: profileData.name,
+                    first_name: firstName,
+                    last_name: lastName,
                     role: profileData.role,
-                    status: profileData.status,
+                    status: profileData.status.toLowerCase(),
                     custom_data: customData
                 })
-                .eq('email', user.email);
+                .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`);
 
             if (error) throw error;
+
+            // Sync with auth metadata
+            await supabase.auth.updateUser({
+                data: {
+                    full_name: profileData.name,
+                    first_name: firstName,
+                    last_name: lastName
+                }
+            });
 
             setMessage({ type: 'success', text: 'Profile updated successfully!' });
         } catch (error) {
