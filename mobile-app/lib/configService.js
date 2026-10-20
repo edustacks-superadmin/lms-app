@@ -41,6 +41,10 @@ export const fetchAppConfig = async (forceRefresh = false) => {
             throw new Error('Failed to fetch config');
         }
 
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return getDefaultConfig();
+        }
         const config = await response.json();
 
         // Cache the config

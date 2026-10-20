@@ -26,6 +26,10 @@ export const cartService = {
                     ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
                 }
             });
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return { items: [], count: 0, total: 0 };
+            }
             return await response.json();
         } catch (error) {
             console.error('getCart error:', error);
