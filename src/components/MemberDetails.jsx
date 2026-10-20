@@ -74,11 +74,8 @@ const MemberDetails = () => {
     );
 
     return (
-        <div className="app-container">
-            <div className="main-content">
-                <div className="content-area">
-                    <div className="container">
-                        {/* Header */}
+        <div className="container" style={{ padding: '24px 0 40px' }}>
+            {/* Header */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                 <button
@@ -245,9 +242,6 @@ const MemberDetails = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
     );
 };
 

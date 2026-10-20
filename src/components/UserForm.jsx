@@ -103,35 +103,32 @@ const UserForm = ({
     };
 
     return (
-        <div className="app-container">
-            <div className="main-content">
-                {/* Success Notification */}
-                {showSuccess && (
-                    <div style={{
-                        position: 'fixed',
-                        top: '20px',
-                        right: '20px',
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        padding: '16px 24px',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        zIndex: 9999,
-                        animation: 'slideIn 0.3s ease-out'
-                    }}>
-                        <CheckCircle size={24} />
-                        <span style={{ fontSize: '16px', fontWeight: '500' }}>
-                            {mode === 'create' ? 'Member created successfully!' : 'Member updated successfully!'}
-                        </span>
-                    </div>
-                )}
+        <div className="container" style={{ padding: '24px 0 40px' }}>
+            {/* Success Notification */}
+            {showSuccess && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    backgroundColor: '#4caf50',
+                    color: 'white',
+                    padding: '16px 24px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    zIndex: 9999,
+                    animation: 'slideIn 0.3s ease-out'
+                }}>
+                    <CheckCircle size={24} />
+                    <span style={{ fontSize: '16px', fontWeight: '500' }}>
+                        {mode === 'create' ? 'Member created successfully!' : 'Member updated successfully!'}
+                    </span>
+                </div>
+            )}
 
-                <div className="content-area">
-                    <div className="container">
-                        {/* Header */}
+            {/* Header */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '32px' }}>
                             <button
                                 onClick={() => navigate('/members')}
@@ -507,9 +504,6 @@ const UserForm = ({
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-            </div>
         </div>
     );
 };
