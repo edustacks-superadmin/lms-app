@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useUsers } from '../context/UserContext';
+import { useInstitute } from '../context/InstituteContext';
+import { useTransactions } from '../context/TransactionContext';
 import { supabase } from '../supabaseClient';
 import { ChevronLeft, Edit, Mail, Phone, MapPin, Calendar, User, Shield, Layers, Plus } from 'lucide-react';
 import { getStateName } from '../utils/indianStates';
@@ -8,18 +10,49 @@ import { getStateName } from '../utils/indianStates';
 const MemberDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { institute } = useInstitute();
+    const { transactions } = useTransactions();
     const { users, loading: contextLoading } = useUsers();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [subscriptions, setSubscriptions] = useState([]);
+    const [directOrders, setDirectOrders] = useState([]);
+    const [loadingOrders, setLoadingOrders] = useState(false);
+
+    const orderPrefix = useMemo(() => {
+        if (!institute?.name) return 'ORD';
+        return institute.name.substring(0, 6).toUpperCase();
+    }, [institute]);
 
     useEffect(() => {
-        if (contextLoading) return;
+        const loadMember = async () => {
+            if (contextLoading) return;
 
-        // Use loose equality to handle string/number ID mismatch
-        const foundUser = users.find(u => String(u.id) === String(id));
-        setUser(foundUser);
-        setLoading(false);
+            const foundUser = users.find(u => String(u.id) === String(id));
+            if (foundUser) {
+                setUser(foundUser);
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('members')
+                    .select('*')
+                    .eq('id', id)
+                    .maybeSingle();
+
+                if (data) {
+                    setUser(data);
+                }
+            } catch (err) {
+                console.error('Error fetching member directly:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadMember();
     }, [id, users, contextLoading]);
 
     useEffect(() => {
@@ -37,6 +70,97 @@ const MemberDetails = () => {
             fetchSubscriptions();
         }
     }, [user]);
+
+    // Fetch Orders directly for this member
+    useEffect(() => {
+        const fetchOrders = async () => {
+            const memberId = user?.id || id;
+            const memberEmail = user?.email;
+            if (!memberId && !memberEmail) return;
+
+            setLoadingOrders(true);
+            try {
+                const orParts = [];
+                if (memberId) {
+                    orParts.push(`member_id.eq.${memberId}`);
+                    orParts.push(`user_id.eq.${memberId}`);
+                }
+                if (memberEmail) {
+                    orParts.push(`user_email.ilike.${memberEmail}`);
+                }
+
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*, products(title)')
+                    .or(orParts.join(','))
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    setDirectOrders(data);
+                }
+            } catch (err) {
+                console.error('Error fetching member orders:', err);
+            } finally {
+                setLoadingOrders(false);
+            }
+        };
+
+        fetchOrders();
+    }, [user, id]);
+
+    // Combine transactions context and direct orders
+    const memberOrders = useMemo(() => {
+        const memberId = user?.id || id;
+        const memberEmail = user?.email?.toLowerCase();
+
+        const contextMatches = (transactions || []).filter(t => {
+            const matchesId = memberId && (String(t.member_id) === String(memberId) || String(t.user_id) === String(memberId));
+            const matchesEmail = memberEmail && t.user_email && t.user_email.toLowerCase() === memberEmail;
+            return matchesId || matchesEmail;
+        });
+
+        const map = new Map();
+        [...directOrders, ...contextMatches].forEach(o => {
+            if (o && o.id) map.set(o.id, { ...map.get(o.id), ...o });
+        });
+
+        return Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }, [transactions, directOrders, user, id]);
+
+    const formatOrderDate = (dateString) => {
+        if (!dateString) return '--';
+        const date = new Date(dateString);
+        const day = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        let time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        time = time.replace(' AM', ' a.m.').replace(' PM', ' p.m.');
+        return `${day} ${time}`;
+    };
+
+    const getOrderItems = (order) => {
+        try {
+            if (order.payment_notes) {
+                const notes = typeof order.payment_notes === 'string'
+                    ? JSON.parse(order.payment_notes)
+                    : order.payment_notes;
+                if (notes?.items && Array.isArray(notes.items) && notes.items.length > 0) {
+                    return notes.items.map(i => i.title).join(', ');
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+        return order.products?.title || order.product?.title || order.product_name || 'Course / Material';
+    };
+
+    const getPaymentDetails = (order) => {
+        if (order.payment_method === 'razorpay') {
+            return order.razorpay_payment_id ? 'Card' : 'Razorpay';
+        }
+        if (order.payment_method) {
+            return order.payment_method.charAt(0).toUpperCase() + order.payment_method.slice(1);
+        }
+        return 'Card';
+    };
 
     if (contextLoading || loading) {
         return (
@@ -233,6 +357,96 @@ const MemberDetails = () => {
                                                 <tr>
                                                     <td colSpan="3" style={{ textAlign: 'center', padding: '24px', color: '#666' }}>
                                                         No active subscriptions found
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Orders Section */}
+                        <div className="card" style={{ maxWidth: '900px', margin: '32px auto' }}>
+                            <div className="card-body" style={{ padding: '32px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>Orders</h3>
+                                    {memberOrders.length > 0 && (
+                                        <span style={{ fontSize: '13px', color: '#666' }}>
+                                            {memberOrders.length} {memberOrders.length === 1 ? 'order' : 'orders'}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="table-container" style={{ overflowX: 'auto' }}>
+                                    <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid #eee' }}>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Date</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Items</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Order Id</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Details</th>
+                                                <th style={{ textAlign: 'right', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>+/-</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Status</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Expires On</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {memberOrders.length > 0 ? (
+                                                memberOrders.map((order) => {
+                                                    const displayId = `${orderPrefix}${order.id}`;
+                                                    const itemsText = getOrderItems(order);
+                                                    const formattedDate = formatOrderDate(order.created_at);
+                                                    const details = getPaymentDetails(order);
+                                                    const status = (order.status || '').toLowerCase();
+                                                    const statusText = status === 'completed' || status === 'success'
+                                                        ? 'Completed'
+                                                        : status === 'pending'
+                                                            ? 'Pending Payment'
+                                                            : 'Failed';
+
+                                                    return (
+                                                        <tr key={order.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#555', whiteSpace: 'nowrap' }}>
+                                                                {formattedDate}
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#2563eb', fontWeight: '500' }}>
+                                                                {itemsText}
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#2563eb', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                                                                <Link
+                                                                    to="/settings/sales"
+                                                                    style={{ color: '#2563eb', textDecoration: 'none' }}
+                                                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                                                >
+                                                                    {displayId}
+                                                                </Link>
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#555', whiteSpace: 'nowrap' }}>
+                                                                {details}
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#333', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: '500' }}>
+                                                                {(order.amount || 0).toFixed(2)}
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                                                                <span style={{
+                                                                    fontWeight: '500',
+                                                                    color: status === 'completed' || status === 'success' ? '#15803d' : status === 'pending' ? '#b45309' : '#b91c1c'
+                                                                }}>
+                                                                    {statusText}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '16px', fontSize: '13px', color: '#555', whiteSpace: 'nowrap' }}>
+                                                                {order.expires_on ? new Date(order.expires_on).toLocaleDateString('en-GB') : 'None'}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: '#666', fontSize: '14px' }}>
+                                                        {loadingOrders ? 'Loading orders...' : 'No orders found for this member'}
                                                     </td>
                                                 </tr>
                                             )}
