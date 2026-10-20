@@ -82,7 +82,8 @@ const StudentDashboard = () => {
                     subtitle: b.link_url ? "Click to learn more" : "",
                     image: b.image_url,
                     color: "#4f46e5",
-                    link: b.link_url
+                    link: b.link_url,
+                    hide_title: Boolean(b.hide_title)
                 })));
             }
 
@@ -233,47 +234,57 @@ const StudentDashboard = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
 
                     {/* Banner Carousel */}
-                    <div className="banner-container">
+                    <div
+                        className="banner-container"
+                        style={{
+                            position: 'relative',
+                            overflow: 'hidden',
+                            cursor: currentBanner.hide_title && currentBanner.link ? 'pointer' : 'default'
+                        }}
+                        onClick={() => currentBanner.hide_title && currentBanner.link && window.open(currentBanner.link, '_blank')}
+                    >
                         <img
                             src={currentBanner.image}
                             alt="Banner"
                             style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease-in-out' }}
                         />
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            padding: '24px'
-                        }}>
-                            <h2 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginBottom: '4px', maxWidth: '600px' }}>
-                                {currentBanner.title}
-                            </h2>
-                            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', marginBottom: '12px', maxWidth: '500px' }}>
-                                {currentBanner.subtitle}
-                            </p>
-                            <button style={{
-                                backgroundColor: 'white',
-                                color: currentBanner.color,
-                                border: 'none',
-                                padding: '8px 16px',
-                                borderRadius: '6px',
-                                fontWeight: 'bold',
-                                fontSize: '13px',
-                                width: 'fit-content',
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s'
-                            }}
-                                onClick={() => currentBanner.link && window.open(currentBanner.link, '_blank')}
-                            >
-                                Explore Now
-                            </button>
-                        </div>
+                        {!currentBanner.hide_title && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                padding: '24px'
+                            }}>
+                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', marginBottom: '4px', maxWidth: '600px' }}>
+                                    {currentBanner.title}
+                                </h2>
+                                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', marginBottom: '12px', maxWidth: '500px' }}>
+                                    {currentBanner.subtitle}
+                                </p>
+                                <button style={{
+                                    backgroundColor: 'white',
+                                    color: currentBanner.color,
+                                    border: 'none',
+                                    padding: '8px 16px',
+                                    borderRadius: '6px',
+                                    fontWeight: 'bold',
+                                    fontSize: '13px',
+                                    width: 'fit-content',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s'
+                                }}
+                                    onClick={() => currentBanner.link && window.open(currentBanner.link, '_blank')}
+                                >
+                                    Explore Now
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Stats Grid */}

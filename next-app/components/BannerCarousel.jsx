@@ -50,35 +50,45 @@ const BannerCarousel = ({ banners }) => {
     return (
         <div className="home-banner-carousel relative w-full overflow-hidden bg-black">
             {/* Banner Images */}
-            {activeBanners.map((banner, index) => (
-                <div
-                    key={banner.id}
-                    className={`banner-slide absolute top-0 left-0 w-full h-full transition-opacity duration-500 ease-in-out ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ backgroundImage: `url(${banner.image_url})` }}
-                >
-                    {/* Optional: Add overlay for better text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/50" />
+            {activeBanners.map((banner, index) => {
+                const shouldHideTitle = Boolean(banner.hide_title);
+                return (
+                    <div
+                        key={banner.id}
+                        className={`banner-slide absolute top-0 left-0 w-full h-full transition-opacity duration-500 ease-in-out ${index === currentIndex ? 'opacity-100' : 'opacity-0'} ${shouldHideTitle && banner.link_url ? 'cursor-pointer' : ''}`}
+                        style={{ backgroundImage: `url(${banner.image_url})` }}
+                        onClick={() => {
+                            if (shouldHideTitle && banner.link_url) {
+                                window.open(banner.link_url, '_blank');
+                            }
+                        }}
+                    >
+                        {/* Optional: Add overlay for better text readability only when title is visible */}
+                        {!shouldHideTitle && (
+                            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/50" />
+                        )}
 
-                    {/* Banner Content */}
-                    {banner.title && (
-                        <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 text-center text-white z-[2] max-w-[90%]">
-                            <h2 className="text-5xl font-bold mb-4 drop-shadow-lg">
-                                {banner.title}
-                            </h2>
-                            {banner.link_url && (
-                                <a
-                                    href={banner.link_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-block px-8 py-3 bg-blue-600 text-white no-underline rounded-lg font-semibold text-base transition-transform duration-200 shadow-lg hover:bg-blue-700 hover:scale-105"
-                                >
-                                    Learn More
-                                </a>
-                            )}
-                        </div>
-                    )}
-                </div>
-            ))}
+                        {/* Banner Content (Only if title is not hidden) */}
+                        {!shouldHideTitle && banner.title && (
+                            <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 text-center text-white z-[2] max-w-[90%]">
+                                <h2 className="text-5xl font-bold mb-4 drop-shadow-lg">
+                                    {banner.title}
+                                </h2>
+                                {banner.link_url && (
+                                    <a
+                                        href={banner.link_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block px-8 py-3 bg-blue-600 text-white no-underline rounded-lg font-semibold text-base transition-transform duration-200 shadow-lg hover:bg-blue-700 hover:scale-105"
+                                    >
+                                        Learn More
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
 
             {/* Navigation Arrows (only show if more than 1 banner) */}
             {activeBanners.length > 1 && (

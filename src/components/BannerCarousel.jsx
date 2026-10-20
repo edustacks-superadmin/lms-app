@@ -57,78 +57,89 @@ const BannerCarousel = ({ banners }) => {
                 backgroundColor: '#000'
             }}>
             {/* Banner Images */}
-            {activeBanners.map((banner, index) => (
-                <div
-                    key={banner.id}
-                    className="banner-slide"
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        opacity: index === currentIndex ? 1 : 0,
-                        transition: 'opacity 0.5s ease-in-out',
-                        backgroundImage: `url(${banner.image_url})`
-                    }}
-                >
-                    {/* Optional: Add overlay for better text readability */}
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))'
-                    }} />
-
-                    {/* Banner Content */}
-                    {banner.title && (
-                        <div style={{
+            {activeBanners.map((banner, index) => {
+                const shouldHideTitle = Boolean(banner.hide_title);
+                return (
+                    <div
+                        key={banner.id}
+                        className="banner-slide"
+                        onClick={() => {
+                            if (shouldHideTitle && banner.link_url) {
+                                window.open(banner.link_url, '_blank');
+                            }
+                        }}
+                        style={{
                             position: 'absolute',
-                            bottom: '60px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            textAlign: 'center',
-                            color: 'white',
-                            zIndex: 2,
-                            maxWidth: '90%'
-                        }}>
-                            <h2 style={{
-                                fontSize: '48px',
-                                fontWeight: 'bold',
-                                marginBottom: '16px',
-                                textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: index === currentIndex ? 1 : 0,
+                            transition: 'opacity 0.5s ease-in-out',
+                            backgroundImage: `url(${banner.image_url})`,
+                            cursor: shouldHideTitle && banner.link_url ? 'pointer' : 'default'
+                        }}
+                    >
+                        {/* Optional: Add overlay for better text readability only when title is visible */}
+                        {!shouldHideTitle && (
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5))'
+                            }} />
+                        )}
+
+                        {/* Banner Content (Only if title is not hidden) */}
+                        {!shouldHideTitle && banner.title && (
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '60px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                textAlign: 'center',
+                                color: 'white',
+                                zIndex: 2,
+                                maxWidth: '90%'
                             }}>
-                                {banner.title}
-                            </h2>
-                            {banner.link_url && (
-                                <a
-                                    href={banner.link_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        display: 'inline-block',
-                                        padding: '12px 32px',
-                                        backgroundColor: 'var(--primary-color)',
-                                        color: 'white',
-                                        textDecoration: 'none',
-                                        borderRadius: '8px',
-                                        fontWeight: '600',
-                                        fontSize: '16px',
-                                        transition: 'transform 0.2s',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                                    }}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                                >
-                                    Learn More
-                                </a>
-                            )}
-                        </div>
-                    )}
-                </div>
-            ))}
+                                <h2 style={{
+                                    fontSize: '48px',
+                                    fontWeight: 'bold',
+                                    marginBottom: '16px',
+                                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                                }}>
+                                    {banner.title}
+                                </h2>
+                                {banner.link_url && (
+                                    <a
+                                        href={banner.link_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'inline-block',
+                                            padding: '12px 32px',
+                                            backgroundColor: 'var(--primary-color)',
+                                            color: 'white',
+                                            textDecoration: 'none',
+                                            borderRadius: '8px',
+                                            fontWeight: '600',
+                                            fontSize: '16px',
+                                            transition: 'transform 0.2s',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                    >
+                                        Learn More
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
 
             {/* Navigation Arrows (only show if more than 1 banner) */}
             {activeBanners.length > 1 && (
@@ -141,7 +152,7 @@ const BannerCarousel = ({ banners }) => {
                             top: '50%',
                             transform: 'translateY(-50%)',
                             zIndex: 3,
-                            backgroundColor: 'rgba(255,255,255,0.3)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
                             border: 'none',
                             borderRadius: '50%',
                             width: '48px',
@@ -154,11 +165,11 @@ const BannerCarousel = ({ banners }) => {
                             backdropFilter: 'blur(4px)'
                         }}
                         onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
                             e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
                         }}
                         onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
                             e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                         }}
                     >
@@ -173,7 +184,7 @@ const BannerCarousel = ({ banners }) => {
                             top: '50%',
                             transform: 'translateY(-50%)',
                             zIndex: 3,
-                            backgroundColor: 'rgba(255,255,255,0.3)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
                             border: 'none',
                             borderRadius: '50%',
                             width: '48px',
@@ -186,11 +197,11 @@ const BannerCarousel = ({ banners }) => {
                             backdropFilter: 'blur(4px)'
                         }}
                         onMouseOver={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
                             e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
                         }}
                         onMouseOut={(e) => {
-                            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)';
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
                             e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                         }}
                     >
@@ -218,8 +229,8 @@ const BannerCarousel = ({ banners }) => {
                                 width: index === currentIndex ? '32px' : '12px',
                                 height: '12px',
                                 borderRadius: '6px',
+                                backgroundColor: index === currentIndex ? '#fff' : 'rgba(255, 255, 255, 0.5)',
                                 border: 'none',
-                                backgroundColor: index === currentIndex ? '#fff' : 'rgba(255,255,255,0.5)',
                                 cursor: 'pointer',
                                 transition: 'all 0.3s',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
@@ -228,6 +239,34 @@ const BannerCarousel = ({ banners }) => {
                     ))}
                 </div>
             )}
+
+            <style>{`
+                .home-banner-carousel {
+                    height: 500px;
+                }
+                .banner-slide {
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                }
+                @media (max-width: 768px) {
+                    .home-banner-carousel {
+                        height: 350px;
+                    }
+                    .banner-slide h2 {
+                        font-size: 32px !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .home-banner-carousel {
+                        height: 250px;
+                    }
+                    .banner-slide h2 {
+                        font-size: 24px !important;
+                        margin-bottom: 8px !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

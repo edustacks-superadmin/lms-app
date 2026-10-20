@@ -869,9 +869,11 @@ export default function Dashboard() {
                                         <Ionicons name="image-outline" size={32} color="#fcd34d" />
                                     </View>
                                 )}
-                                <View className="p-3">
-                                    <Text className="text-sm font-bold text-slate-900" numberOfLines={2}>{item.title || 'Announcement'}</Text>
-                                </View>
+                                {!item.hide_title && (
+                                    <View className="p-3">
+                                        <Text className="text-sm font-bold text-slate-900" numberOfLines={2}>{item.title || 'Announcement'}</Text>
+                                    </View>
+                                )}
                             </TouchableOpacity>
                         )}
                     />

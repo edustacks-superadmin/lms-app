@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Image as ImageIcon, Save, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Image as ImageIcon, Save, X, EyeOff } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 const SettingsBannerAds = () => {
@@ -13,7 +13,8 @@ const SettingsBannerAds = () => {
         title: '',
         link_url: '',
         image_url: '',
-        status: 'Active'
+        status: 'Active',
+        hide_title: false
     });
     const [imagePreview, setImagePreview] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -40,8 +41,11 @@ const SettingsBannerAds = () => {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
     };
 
     const handleImageUpload = async (e) => {
@@ -88,18 +92,26 @@ const SettingsBannerAds = () => {
 
         setUploading(true);
         try {
+            const payload = {
+                title: formData.title,
+                link_url: formData.link_url,
+                image_url: formData.image_url,
+                status: formData.status,
+                hide_title: Boolean(formData.hide_title)
+            };
+
             if (editingId) {
                 // Update
                 const { error } = await supabase
                     .from('banner_ads')
-                    .update(formData)
+                    .update(payload)
                     .eq('id', editingId);
                 if (error) throw error;
             } else {
                 // Create
                 const { error } = await supabase
                     .from('banner_ads')
-                    .insert([formData]);
+                    .insert([payload]);
                 if (error) throw error;
             }
 
@@ -115,10 +127,11 @@ const SettingsBannerAds = () => {
 
     const handleEdit = (banner) => {
         setFormData({
-            title: banner.title,
-            link_url: banner.link_url,
-            image_url: banner.image_url,
-            status: banner.status
+            title: banner.title || '',
+            link_url: banner.link_url || '',
+            image_url: banner.image_url || '',
+            status: banner.status || 'Active',
+            hide_title: Boolean(banner.hide_title)
         });
         setImagePreview(banner.image_url);
         setEditingId(banner.id);
@@ -143,7 +156,7 @@ const SettingsBannerAds = () => {
     };
 
     const resetForm = () => {
-        setFormData({ title: '', link_url: '', image_url: '', status: 'Active' });
+        setFormData({ title: '', link_url: '', image_url: '', status: 'Active', hide_title: false });
         setImagePreview(null);
         setEditingId(null);
         setIsCreating(false);
@@ -184,6 +197,36 @@ const SettingsBannerAds = () => {
                                 placeholder="e.g. Summer Sale"
                                 required
                             />
+                        </div>
+
+                        {/* Hide Title Option */}
+                        <div style={{
+                            marginBottom: '20px',
+                            padding: '14px 16px',
+                            backgroundColor: '#f8fafc',
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <label style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                color: '#1e293b'
+                            }}>
+                                <input
+                                    type="checkbox"
+                                    name="hide_title"
+                                    checked={formData.hide_title}
+                                    onChange={handleInputChange}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2563eb' }}
+                                />
+                                <span>Hide Banner Title on Frontend (Home Page & App)</span>
+                            </label>
+                            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '6px', marginLeft: '28px', lineHeight: '1.4' }}>
+                                When enabled, this title will only be used as an internal label in admin. It will not be overlaid on the banner image in the home page carousel or mobile app.
+                            </p>
                         </div>
 
                         <div style={{ marginBottom: '20px' }}>
@@ -277,7 +320,25 @@ const SettingsBannerAds = () => {
                                 </div>
                             </div>
                             <div className="card-body" style={{ padding: '16px' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '4px' }}>{banner.title}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                    <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>{banner.title}</h3>
+                                    {banner.hide_title && (
+                                        <span style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            fontSize: '11px',
+                                            padding: '2px 8px',
+                                            borderRadius: '12px',
+                                            backgroundColor: '#f1f5f9',
+                                            color: '#64748b',
+                                            fontWeight: '600',
+                                            border: '1px solid #e2e8f0'
+                                        }}>
+                                            <EyeOff size={11} /> Title Hidden
+                                        </span>
+                                    )}
+                                </div>
                                 <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                     {banner.link_url || 'No link'}
                                 </p>
