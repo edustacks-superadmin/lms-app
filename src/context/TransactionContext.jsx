@@ -345,7 +345,7 @@ export const TransactionProvider = ({ children }) => {
             }
 
             let discountAmount = 0;
-            if (offer.discount_type === 'percentage') {
+            if (offer.discount_type === 'percentage' || offer.discount_type === 'percent') {
                 discountAmount = (originalPrice * offer.discount_value) / 100;
             } else {
                 discountAmount = offer.discount_value;

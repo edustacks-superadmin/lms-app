@@ -46,13 +46,14 @@ const CreateCoupon = () => {
 
         const offerData = {
             type: 'coupon',
-            code: formData.code,
+            code: formData.code.trim().toUpperCase(),
             discount_type: formData.discount_type,
             discount_value: Number(formData.discount_value),
-            start_date: formData.start_date,
-            end_date: formData.end_date,
+            start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
+            end_date: formData.end_date ? new Date(formData.end_date + 'T23:59:59').toISOString() : null,
             applicable_products: formData.applicable_products,
-            status: 'active'
+            status: 'active',
+            institute_id: 10
         };
 
         const result = await createOffer(offerData);
