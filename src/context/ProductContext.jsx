@@ -153,18 +153,43 @@ export const ProductProvider = ({ children }) => {
         }
     };
 
-    const getProductById = async (id) => {
+    const getProductById = async (idOrSlug) => {
         setLoading(true);
         setError(null);
         try {
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .eq('id', id)
-                .single();
+            if (!idOrSlug) {
+                return { success: false, error: 'Product ID or slug is required' };
+            }
+
+            const rawVal = String(idOrSlug).trim();
+            const isNumeric = /^\d+$/.test(rawVal);
+
+            let query = supabase.from('products').select('*');
+            if (isNumeric) {
+                query = query.eq('id', Number(rawVal));
+            } else {
+                query = query.ilike('slug', rawVal);
+            }
+
+            const { data, error } = await query.maybeSingle();
 
             if (error) throw error;
-            return { success: true, data };
+            if (data) {
+                return { success: true, data };
+            }
+
+            // Fallback: If not found by slug, try searching by title or lowercase slug
+            const { data: fallbackData } = await supabase
+                .from('products')
+                .select('*')
+                .or(`slug.ilike.${rawVal},title.ilike.${rawVal.replace(/-/g, ' ')}`)
+                .maybeSingle();
+
+            if (fallbackData) {
+                return { success: true, data: fallbackData };
+            }
+
+            return { success: false, error: 'Product not found' };
         } catch (err) {
             console.error('Error fetching product:', err);
             setError(err.message);

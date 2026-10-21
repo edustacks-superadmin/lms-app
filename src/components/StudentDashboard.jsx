@@ -505,7 +505,7 @@ const StudentDashboard = () => {
                         <div className="products-grid">
                             {products.map(product => {
                                 const prodImg = product.image || product.image_url;
-                                const prodLink = product.slug ? `/student/store/product/${product.slug}` : `/student/store/product/${product.id}`;
+                                const prodLink = `/student/store/product/${product.id}`;
                                 const priceText = product.price ? `₹${product.price}` : 'Free';
 
                                 return (
