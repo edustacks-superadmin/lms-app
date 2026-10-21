@@ -674,8 +674,8 @@ textarea.form-input {
 
 
   .content-area {
-    padding-bottom: 80px !important;
-    /* Ensure content isn't hidden behind nav */
+    padding: 0 0 80px !important;
+    /* Remove unnecessary outer padding around content on small screens while maintaining clearance for bottom nav */
   }
 
   .desktop-nav-links {

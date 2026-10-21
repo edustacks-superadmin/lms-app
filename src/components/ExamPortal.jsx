@@ -632,7 +632,7 @@ const ExamPortal = () => {
 
                 @media (max-width: 768px) {
                     .exam-portal-container {
-                        padding: 12px 12px 40px !important;
+                        padding: 10px 8px 40px !important;
                     }
                     .exam-portal-title {
                         font-size: 19px !important;

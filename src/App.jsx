@@ -282,7 +282,7 @@ function App() {
                                                   <Route path="/student/exams" element={
                                                     <StudentLayout>
                                                       <StudentSidebar />
-                                                      <div className="content-area">
+                                                      <div className="content-area" style={{ padding: 0 }}>
                                                         <ExamPortal />
                                                       </div>
                                                     </StudentLayout>
