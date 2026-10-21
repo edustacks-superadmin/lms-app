@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Tag, Edit2, MessageSquare, HelpCircle, Trash2, Loader, RotateCcw } from 'lucide-react';
+import { Tag, Edit2, MessageSquare, HelpCircle, Trash2, Loader, RotateCcw, Share2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePosts } from '../context/PostContext';
+import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import CommentSection from './CommentSection';
@@ -9,9 +10,11 @@ import CommentSection from './CommentSection';
 const PostList = ({ activeStatus = 'published', filters, readOnly = false, userAccess = null }) => {
     const navigate = useNavigate();
     const { posts, loading, deletePost, restorePost } = usePosts();
+    const { showToast } = useToast();
     const [filteredPosts, setFilteredPosts] = useState([]);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, post: null });
     const [expandedComments, setExpandedComments] = useState({});
+    const [copiedPostId, setCopiedPostId] = useState(null);
 
     const toggleComments = (postId) => {
         setExpandedComments(prev => ({
@@ -112,6 +115,31 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
         }
     };
 
+    const handleCopyLink = async (post) => {
+        const shareUrl = `${window.location.origin}/post/${post.id}`;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: post.title,
+                    text: post.summary || post.description || post.title,
+                    url: shareUrl
+                });
+                return;
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+        }
+
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setCopiedPostId(post.id);
+            showToast('Post link copied to clipboard!', 'success');
+            setTimeout(() => setCopiedPostId(null), 2500);
+        } catch (err) {
+            showToast('Failed to copy link', 'error');
+        }
+    };
+
 
     if (loading || (readOnly && userAccess?.loading)) {
         return (
@@ -150,7 +178,23 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                 ) : (
                     filteredPosts.map((post) => (
                         <div key={post.id} className="post-item">
-                            <h3 style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h3
+                                style={{
+                                    fontSize: '18px',
+                                    fontWeight: '600',
+                                    marginBottom: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    color: '#1f2937',
+                                    transition: 'color 0.2s'
+                                }}
+                                onClick={() => navigate(`/post/${post.id}`)}
+                                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color)'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#1f2937'}
+                                title="Click to open full post"
+                            >
                                 {post.icon && <span>{post.icon}</span>}
                                 {post.title}
                             </h3>
@@ -179,7 +223,7 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                                         <span>•</span>
                                     </>
                                 )}
-                                <div style={{ display: 'flex', gap: '12px', color: 'var(--primary-color)' }}>
+                                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', color: 'var(--primary-color)' }}>
                                     <span
                                         style={{
                                             cursor: 'pointer',
@@ -192,6 +236,31 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                                     >
                                         <MessageSquare size={16} />
                                         {expandedComments[post.id] ? 'Hide Comments' : 'Comments'}
+                                    </span>
+
+                                    <span
+                                        style={{
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            color: copiedPostId === post.id ? '#10b981' : '#4b5563',
+                                            fontWeight: copiedPostId === post.id ? '600' : 'normal'
+                                        }}
+                                        onClick={() => handleCopyLink(post)}
+                                        title="Copy link to this post"
+                                    >
+                                        {copiedPostId === post.id ? (
+                                            <>
+                                                <Check size={16} color="#10b981" />
+                                                <span style={{ color: '#10b981' }}>Copied!</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Share2 size={16} />
+                                                <span>Copy Link</span>
+                                            </>
+                                        )}
                                     </span>
 
                                     {!readOnly && activeStatus !== 'deleted' && (

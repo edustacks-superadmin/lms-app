@@ -30,6 +30,7 @@ import CreateCategory from './components/CreateCategory';
 import EditCategory from './components/EditCategory';
 import DeleteCategory from './components/DeleteCategory';
 import CreatePost from './components/CreatePost';
+import PostDetail from './components/PostDetail';
 import PostsPageWrapper from './components/PostsPageWrapper';
 import ProductList from './components/ProductList';
 import StoreSidebar from './components/StoreSidebar';
@@ -234,6 +235,11 @@ function App() {
                                                       <HomePage />
                                                     </PublicLayout>
                                                   } />
+                                                  <Route path="/post/:id" element={
+                                                    <PublicLayout>
+                                                      <PostDetail />
+                                                    </PublicLayout>
+                                                  } />
                                                   <Route path="/shipping-policy" element={
                                                     <PublicLayout>
                                                       <ShippingPolicy />
@@ -346,6 +352,14 @@ function App() {
                                                       <StudentSidebar />
                                                       <div className="content-area" style={{ padding: 0 }}>
                                                         <StudentPosts />
+                                                      </div>
+                                                    </StudentLayout>
+                                                  } />
+                                                  <Route path="/student/posts/:id" element={
+                                                    <StudentLayout>
+                                                      <StudentSidebar />
+                                                      <div className="content-area" style={{ padding: 0 }}>
+                                                        <PostDetail />
                                                       </div>
                                                     </StudentLayout>
                                                   } />
@@ -582,6 +596,14 @@ function App() {
                                                       <PostsSidebar />
                                                       <div className="content-area">
                                                         <CreatePost />
+                                                      </div>
+                                                    </AdminLayout>
+                                                  } />
+                                                  <Route path="/posts/:id" element={
+                                                    <AdminLayout>
+                                                      <PostsSidebar />
+                                                      <div className="content-area">
+                                                        <PostDetail />
                                                       </div>
                                                     </AdminLayout>
                                                   } />
