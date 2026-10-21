@@ -315,10 +315,11 @@ export const TransactionProvider = ({ children }) => {
 
     const validateCoupon = async (code, productId, originalPrice) => {
         try {
+            const trimmedCode = (code || '').trim();
             const { data: offer, error } = await supabase
                 .from('offers')
                 .select('*')
-                .eq('code', code)
+                .ilike('code', trimmedCode)
                 .eq('type', 'coupon')
                 .eq('status', 'active')
                 .single();
@@ -337,7 +338,8 @@ export const TransactionProvider = ({ children }) => {
 
             // Check applicable products
             if (offer.applicable_products && offer.applicable_products.length > 0) {
-                if (!offer.applicable_products.includes(productId)) {
+                const isApplicable = offer.applicable_products.some(p => String(p) === String(productId));
+                if (!isApplicable) {
                     return { valid: false, message: 'Coupon not applicable to this product' };
                 }
             }

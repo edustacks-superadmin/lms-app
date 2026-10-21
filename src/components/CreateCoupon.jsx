@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useOffers } from '../context/OfferContext';
 import { useProducts } from '../context/ProductContext';
 import { ArrowLeft } from 'lucide-react';
 
 const CreateCoupon = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { createOffer } = useOffers();
     const { products } = useProducts();
+
+    const preselectedProduct = location.state?.selectedProductId;
 
     const [formData, setFormData] = useState({
         code: '',
@@ -15,7 +18,7 @@ const CreateCoupon = () => {
         discount_value: '',
         start_date: '',
         end_date: '',
-        applicable_products: []
+        applicable_products: preselectedProduct ? [preselectedProduct] : []
     });
 
     const [loading, setLoading] = useState(false);

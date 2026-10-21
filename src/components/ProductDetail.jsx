@@ -133,6 +133,14 @@ const ProductDetail = () => {
                                 {['Analytics', 'Extended Analytics', 'Send Email', 'Comments', 'Record Cash Payment', 'Offers', 'Extend Validity', 'Installment Plans', 'Subscription Plans'].map((item) => (
                                     <button
                                         key={item}
+                                        onClick={() => {
+                                            setShowMoreMenu(false);
+                                            if (item === 'Offers') {
+                                                navigate('/offers/create-coupon', { state: { selectedProductId: product.id } });
+                                            } else if (item === 'Analytics' || item === 'Extended Analytics') {
+                                                navigate('/admin/analytics');
+                                            }
+                                        }}
                                         style={{
                                             width: '100%',
                                             padding: '10px 16px',

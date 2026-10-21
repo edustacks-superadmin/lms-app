@@ -17,7 +17,7 @@ const StoreSidebar = () => {
     const handleStatusChange = (status) => {
         const newParams = new URLSearchParams(searchParams);
         newParams.set('status', status);
-        setSearchParams(newParams);
+        navigate(`/store?${newParams.toString()}`);
     };
 
     const handleCategoryChange = (e) => {
@@ -28,7 +28,7 @@ const StoreSidebar = () => {
         } else {
             newParams.delete('category');
         }
-        setSearchParams(newParams);
+        navigate(`/store?${newParams.toString()}`);
     };
 
     const getButtonStyle = (status) => ({
