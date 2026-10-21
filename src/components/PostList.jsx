@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Tag, Edit2, MessageSquare, HelpCircle, Trash2, Loader, RotateCcw, Share2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePosts } from '../context/PostContext';
@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import CommentSection from './CommentSection';
+import Pagination from './Pagination';
 
 const PostList = ({ activeStatus = 'published', filters, readOnly = false, userAccess = null }) => {
     const navigate = useNavigate();
@@ -15,6 +16,8 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, post: null });
     const [expandedComments, setExpandedComments] = useState({});
     const [copiedPostId, setCopiedPostId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const toggleComments = (postId) => {
         setExpandedComments(prev => ({
@@ -94,6 +97,15 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
 
         setFilteredPosts(result);
     };
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeStatus, filters, userAccess]);
+
+    const paginatedPosts = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredPosts.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredPosts, currentPage, itemsPerPage]);
 
     const handleDeleteClick = (post) => {
         setDeleteModal({ isOpen: true, post });
@@ -176,7 +188,7 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                         {activeStatus === 'deleted' ? 'No deleted posts found.' : 'No posts found.'}
                     </div>
                 ) : (
-                    filteredPosts.map((post) => (
+                    paginatedPosts.map((post) => (
                         <div key={post.id} className="post-item">
                             <h3
                                 style={{
@@ -323,6 +335,17 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                     ))
                 )}
             </div>
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalItems={filteredPosts.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+                itemsPerPageOptions={[5, 10, 20, 50]}
+                itemName="posts"
+            />
 
             {/* Delete Confirmation Modal */}
             <DeleteConfirmationModal

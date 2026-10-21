@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import Pagination from './Pagination';
 import { Search, Clock, Info, Edit, Trash2, BarChart3, FileQuestion } from 'lucide-react';
 import { useExams } from '../context/ExamContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +10,8 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, exam: null });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     const handleDeleteClick = (exam) => {
         setDeleteModal({ isOpen: true, exam });
@@ -86,6 +89,15 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
 
     const currentExams = categorizedExams[activeTab] || [];
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchQuery, selectedCourses, selectedTags]);
+
+    const paginatedExams = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return currentExams.slice(startIndex, startIndex + itemsPerPage);
+    }, [currentExams, currentPage, itemsPerPage]);
+
     return (
         <div style={{ flex: 1 }}>
             {/* Top Controls */}
@@ -115,7 +127,7 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
                             : `No ${activeTab} exams found.`}
                     </div>
                 ) : (
-                    currentExams.map((exam) => (
+                    paginatedExams.map((exam) => (
                         <div key={exam.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 0', borderTop: '1px solid var(--border-color)' }}>
 
                             <div style={{ flex: 1 }}>
@@ -212,6 +224,17 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
                     ))
                 )}
             </div>
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalItems={currentExams.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+                itemsPerPageOptions={[10, 20, 50, 100]}
+                itemName="exams"
+            />
 
             {/* Delete Confirmation Modal */}
             <DeleteConfirmationModal

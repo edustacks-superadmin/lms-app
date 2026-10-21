@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Menu, Book, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '../context/CourseContext';
 import { supabase } from '../supabaseClient';
+import Pagination from './Pagination';
 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
@@ -14,6 +15,8 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
     const [courseToClone, setCourseToClone] = useState(null);
     const [cloneName, setCloneName] = useState('');
     const [cloning, setCloning] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     // Use props if provided, otherwise use local state (for standalone usage)
     const selectedTags = propTags;
@@ -64,11 +67,21 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
         return result;
     }, [courses, searchQuery, selectedTags, sortBy]);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, selectedTags, sortBy]);
+
+    const paginatedCourses = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredCourses.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredCourses, currentPage, itemsPerPage]);
+
     const onDragEnd = (result) => {
         if (!result.destination) {
             return;
         }
-        reorderCourses(result.source.index, result.destination.index);
+        const offset = (currentPage - 1) * itemsPerPage;
+        reorderCourses(offset + result.source.index, offset + result.destination.index);
     };
 
     const handleCloneClick = (course) => {
@@ -264,7 +277,7 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                             ref={provided.innerRef}
                             style={{ display: 'flex', flexDirection: 'column', gap: '0' }}
                         >
-                            {filteredCourses.map((course, index) => (
+                            {paginatedCourses.map((course, index) => (
                                 <Draggable key={course.id} draggableId={course.id.toString()} index={index}>
                                     {(provided) => (
                                         <div
@@ -371,6 +384,17 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                     )}
                 </Droppable>
             </DragDropContext>
+
+            {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalItems={filteredCourses.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+                itemsPerPageOptions={[10, 20, 50, 100]}
+                itemName="courses"
+            />
 
             {/* Clone Course Modal */}
             {cloneModalOpen && (
