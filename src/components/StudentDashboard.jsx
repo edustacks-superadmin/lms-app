@@ -136,23 +136,99 @@ const StudentDashboard = () => {
 
     const fetchStudentData = async () => {
         try {
-            // Get student ID
-            const { data: member } = await supabase
-                .from('members')
-                .select('id, name')
-                .eq('email', user.email)
-                .single();
+            // Get student ID safely
+            let member = null;
+            if (user?.email) {
+                const { data: memberData, error: memberError } = await supabase
+                    .from('members')
+                    .select('id, display_name, first_name, last_name, email')
+                    .ilike('email', user.email)
+                    .maybeSingle();
+
+                if (memberError) {
+                    console.warn('Error fetching member:', memberError);
+                } else {
+                    member = memberData;
+                }
+            }
 
             if (member) {
-                const displayName = member.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
+                const fullName = [member.first_name, member.last_name].filter(Boolean).join(' ');
+                const displayName = member.display_name || fullName || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
                 setStudentName(displayName);
 
-                // Get active courses count
-                const { count: activeCount } = await supabase
-                    .from('enrollments')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('member_id', member.id)
-                    .eq('status', 'active');
+                // Count active courses using comprehensive student enrollment logic
+                const enrolledCourseIds = new Set();
+
+                // 1. Manual enrollments
+                try {
+                    const { data: enrollmentsData } = await supabase
+                        .from('enrollments')
+                        .select('course_id')
+                        .eq('member_id', member.id)
+                        .in('status', ['active', 'completed']);
+
+                    (enrollmentsData || []).forEach(e => {
+                        if (e.course_id) enrolledCourseIds.add(e.course_id);
+                    });
+                } catch (enrErr) {
+                    console.warn('Error fetching enrollments:', enrErr);
+                }
+
+                // 2. Batch assignments
+                try {
+                    const { data: batchMemberships } = await supabase
+                        .from('batch_members')
+                        .select('batch_id')
+                        .eq('member_id', member.id);
+
+                    const studentBatches = (batchMemberships || []).map(bm => bm.batch_id).filter(Boolean);
+
+                    if (studentBatches.length > 0) {
+                        const { data: batchCourseLinks } = await supabase
+                            .from('batch_courses')
+                            .select('course_id')
+                            .in('batch_id', studentBatches);
+
+                        (batchCourseLinks || []).forEach(bc => {
+                            if (bc.course_id) enrolledCourseIds.add(bc.course_id);
+                        });
+
+                        const { data: privateCourses } = await supabase
+                            .from('courses')
+                            .select('id, allowed_batches')
+                            .eq('is_public', false);
+
+                        (privateCourses || []).forEach(c => {
+                            if (Array.isArray(c.allowed_batches) && c.allowed_batches.some(b => studentBatches.includes(b))) {
+                                enrolledCourseIds.add(c.id);
+                            }
+                        });
+                    }
+                } catch (batchErr) {
+                    console.warn('Error fetching batch courses:', batchErr);
+                }
+
+                // 3. Public courses for the institute
+                try {
+                    let pubQuery = supabase
+                        .from('courses')
+                        .select('id')
+                        .eq('is_public', true);
+
+                    if (institute?.id) {
+                        pubQuery = pubQuery.eq('institute_id', institute.id);
+                    }
+
+                    const { data: publicCourseData } = await pubQuery;
+                    (publicCourseData || []).forEach(c => {
+                        if (c.id) enrolledCourseIds.add(c.id);
+                    });
+                } catch (pubErr) {
+                    console.warn('Error fetching public courses:', pubErr);
+                }
+
+                const activeCount = enrolledCourseIds.size;
 
                 // Get completed exams and score from exam_attempts for consistency with Analytics
                 const { data: attempts } = await supabase
@@ -183,7 +259,7 @@ const StudentDashboard = () => {
 
                     // Calculate average percentage
                     if (totalMaxScore > 0) {
-                        avgScore = ((totalScore / totalMaxScore) * 100).toFixed(1);
+                        avgScore = Math.round((totalScore / totalMaxScore) * 100);
                     }
                 }
 
