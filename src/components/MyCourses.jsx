@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Award, Search, X, Filter, ArrowUpDown, Book, FileText } from 'lucide-react';
+import { BookOpen, Award, Search, X, Filter, ArrowUpDown, Book, FileText, ChevronRight } from 'lucide-react';
 
 const CourseThumbnail = ({ src, alt, isCompleted }) => {
     const [imgError, setImgError] = useState(false);
@@ -602,6 +602,10 @@ const MyCourses = () => {
                             {filteredCourses.map((enrollment) => {
                                 const progress = enrollment.progress || 0;
                                 const isCompleted = progress === 100;
+                                const isFree = Boolean(
+                                    enrollment.courses?.is_public === true &&
+                                    (!enrollment.courses?.allowed_products || enrollment.courses.allowed_products.length === 0)
+                                );
 
                                 return (
                                     <tr
@@ -610,22 +614,64 @@ const MyCourses = () => {
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <td>
-                                            <div className="course-info-cell">
-                                                <CourseThumbnail
-                                                    src={enrollment.courses?.image}
-                                                    alt={enrollment.courses?.title}
-                                                    isCompleted={isCompleted}
-                                                />
-                                                <div>
-                                                    <div className="course-list-title">{enrollment.courses?.title}</div>
-                                                    <div className="course-list-meta">
-                                                        <span>
-                                                            <Book size={12} /> {enrollment.totalChapters || 0} Chapters
-                                                        </span>
-                                                        <span>
-                                                            <FileText size={12} /> {enrollment.totalContents || 0} Lessons
-                                                        </span>
+                                            <div className="course-info-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0, flex: 1 }}>
+                                                    <CourseThumbnail
+                                                        src={enrollment.courses?.image}
+                                                        alt={enrollment.courses?.title}
+                                                        isCompleted={isCompleted}
+                                                    />
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                                                            <div className="course-list-title" style={{ margin: 0 }}>{enrollment.courses?.title}</div>
+                                                            <span style={{
+                                                                fontSize: '11px',
+                                                                fontWeight: '700',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                backgroundColor: isFree ? '#ecfdf5' : '#eff6ff',
+                                                                color: isFree ? '#059669' : '#2563eb',
+                                                                border: `1px solid ${isFree ? '#a7f3d0' : '#bfdbfe'}`,
+                                                                letterSpacing: '0.04em',
+                                                                display: 'inline-flex',
+                                                                alignItems: 'center'
+                                                            }}>
+                                                                {isFree ? 'FREE' : 'PAID'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="course-list-meta">
+                                                            <span>
+                                                                <Book size={12} /> {enrollment.totalChapters || 0} Chapters
+                                                            </span>
+                                                            <span>
+                                                                <FileText size={12} /> {enrollment.totalContents || 0} Lessons
+                                                            </span>
+                                                        </div>
                                                     </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, paddingLeft: '8px' }}>
+                                                    <span style={{
+                                                        fontSize: '12px',
+                                                        fontWeight: '600',
+                                                        padding: '4px 12px',
+                                                        borderRadius: '16px',
+                                                        backgroundColor: isFree ? '#f0fdf4' : '#f8fafc',
+                                                        color: isFree ? '#16a34a' : '#475569',
+                                                        border: `1px solid ${isFree ? '#bbf7d0' : '#e2e8f0'}`,
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '6px'
+                                                    }}>
+                                                        <span style={{
+                                                            width: '6px',
+                                                            height: '6px',
+                                                            borderRadius: '50%',
+                                                            backgroundColor: isFree ? '#16a34a' : '#3b82f6'
+                                                        }}></span>
+                                                        {isFree ? 'Free Access' : 'Paid Course'}
+                                                    </span>
+                                                    <ChevronRight size={18} color="#94a3b8" />
                                                 </div>
                                             </div>
                                         </td>
