@@ -28,7 +28,7 @@ const StudentSignup = () => {
         // Initialize formData with empty values for all fields
         const initialData = { first_name: '', last_name: '', email: '', password: '', confirmPassword: '' };
         fields.forEach(field => {
-            if (field.field_key !== 'photo') {
+            if (field.field_type !== 'file' && field.field_key !== 'photo' && field.field_key !== 'photo_url') {
                 initialData[field.field_key] = '';
             }
         });
@@ -46,6 +46,11 @@ const StudentSignup = () => {
         const file = e.target.files[0];
         if (file) {
             setPhotoFile(file);
+            setFormData(prev => ({
+                ...prev,
+                [e.target.name || 'photo_url']: file.name
+            }));
+            setError('');
         }
     };
 
@@ -82,7 +87,7 @@ const StudentSignup = () => {
         // Validate required fields
         const requiredFields = customFields.filter(f => f.is_required);
         for (const field of requiredFields) {
-            if (field.field_key === 'photo') {
+            if (field.field_type === 'file' || field.field_key === 'photo' || field.field_key === 'photo_url') {
                 if (!photoFile) {
                     setError(`${field.field_label} is required`);
                     return;
@@ -129,7 +134,7 @@ const StudentSignup = () => {
                 }
 
                 // 3. Prepare custom data (exclude standard fields)
-                const standardFields = ['first_name', 'last_name', 'email', 'password', 'confirmPassword', 'photo'];
+                const standardFields = ['first_name', 'last_name', 'email', 'password', 'confirmPassword', 'photo', 'photo_url'];
                 const custom_data = {};
 
                 Object.keys(formData).forEach(key => {
@@ -283,6 +288,7 @@ const StudentSignup = () => {
                         </div>
                         <input
                             type="file"
+                            name={field.field_key}
                             accept="image/*"
                             onChange={handleFileChange}
                             required={field.is_required}
