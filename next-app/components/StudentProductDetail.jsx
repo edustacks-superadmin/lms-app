@@ -496,8 +496,8 @@ const StudentProductDetail = () => {
                                                 type="text"
                                                 placeholder="Enter Coupon Code"
                                                 value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value)}
-                                                className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium"
+                                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                                className="flex-1 px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium uppercase"
                                             />
                                             <button
                                                 onClick={handleApplyCoupon}

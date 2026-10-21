@@ -266,11 +266,12 @@ const StudentProductDetail = () => {
     };
 
     const handleApplyCoupon = async () => {
-        if (!couponCode.trim()) return;
+        const cleanCode = couponCode.trim().toUpperCase();
+        if (!cleanCode) return;
         setValidatingCoupon(true);
         setCouponMessage({ type: '', text: '' });
 
-        const result = await validateCoupon(couponCode, product.id, product.price);
+        const result = await validateCoupon(cleanCode, product.id, product.price);
 
         if (result.valid) {
             setDiscountDetails({
@@ -941,8 +942,8 @@ const StudentProductDetail = () => {
                                             type="text"
                                             placeholder="Coupon Code"
                                             value={couponCode}
-                                            onChange={(e) => setCouponCode(e.target.value)}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', textTransform: 'uppercase' }}
                                         />
                                         <button
                                             onClick={handleApplyCoupon}

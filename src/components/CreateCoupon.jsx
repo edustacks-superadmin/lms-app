@@ -26,7 +26,11 @@ const CreateCoupon = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'code') {
+            setFormData(prev => ({ ...prev, code: value.toUpperCase() }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleProductToggle = (productId) => {
@@ -89,7 +93,7 @@ const CreateCoupon = () => {
                         onChange={handleChange}
                         required
                         className="form-control"
-                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd' }}
+                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ddd', textTransform: 'uppercase' }}
                     />
                 </div>
 
