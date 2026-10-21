@@ -159,6 +159,15 @@ function App() {
     };
   }, [navigate, location]);
 
+  useEffect(() => {
+    // If arriving with Supabase password recovery token in URL hash
+    if (window.location.hash && window.location.hash.includes('type=recovery')) {
+      if (location.pathname !== '/reset-password') {
+        navigate('/reset-password' + window.location.hash, { replace: true });
+      }
+    }
+  }, [location.pathname, navigate]);
+
   return (
 
     <HelmetProvider>

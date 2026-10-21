@@ -19,22 +19,46 @@ const ForgotPassword = () => {
 
         try {
             const redirectUrl = `${window.location.origin}/reset-password`;
-            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: redirectUrl
-            });
 
-            if (error) {
-                console.error('Password reset error:', error);
-                showToast(error.message || 'Failed to send reset email', 'error');
-                setLoading(false);
-            } else {
-                setSubmitted(true);
-                setLoading(false);
-                showToast('Password reset link sent to your email!', 'success');
+            // Call our robust serverless API endpoint
+            let sent = false;
+            try {
+                const res = await fetch('/api/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        origin: window.location.origin
+                    })
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data.success) {
+                    sent = true;
+                } else if (res.status !== 404 && res.status !== 502) {
+                    throw new Error(data.error || 'Failed to send recovery email');
+                }
+            } catch (apiErr) {
+                if (!apiErr.message.includes('Failed to fetch')) {
+                    throw apiErr;
+                }
             }
+
+            // Fallback to supabase native mailer if API not reachable (e.g. Vite dev server)
+            if (!sent) {
+                const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                    redirectTo: redirectUrl
+                });
+                if (error) throw error;
+            }
+
+            setSubmitted(true);
+            setLoading(false);
+            showToast('Password reset link sent to your email!', 'success');
         } catch (err) {
             console.error('Password reset error:', err);
-            showToast('Failed to send reset email. Please try again.', 'error');
+            showToast(err.message || 'Failed to send reset email. Please try again.', 'error');
             setLoading(false);
         }
     };

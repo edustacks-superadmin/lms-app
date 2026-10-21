@@ -23,6 +23,7 @@
     "dotenv": "^17.2.3",
     "katex": "^0.16.25",
     "lucide-react": "^0.554.0",
+    "nodemailer": "^10.1.7",
     "prop-types": "^15.8.1",
     "puppeteer": "^24.32.0",
     "razorpay": "^2.9.6",

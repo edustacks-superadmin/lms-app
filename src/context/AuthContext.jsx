@@ -173,6 +173,13 @@ export const AuthProvider = ({ children }) => {
                         setUser(newUser);
                         // Keep existing role - don't reset it
                     }
+                } else if (event === 'PASSWORD_RECOVERY') {
+                    console.log('🔑 Password recovery event received');
+                    setSession(session);
+                    setUser(session?.user ?? null);
+                    if (window.location.pathname !== '/reset-password') {
+                        window.location.href = '/reset-password';
+                    }
                 } else {
                     // Handle other events (INITIAL_SESSION, etc.)
                     console.log('📢 Other auth event:', event);

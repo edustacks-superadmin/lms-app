@@ -191,7 +191,7 @@ const Login = () => {
                                 <Lock size={18} />
                             </div>
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -199,7 +199,7 @@ const Login = () => {
                                 placeholder="Enter your password"
                                 style={{
                                     width: '100%',
-                                    padding: '12px 12px 12px 40px',
+                                    padding: '12px 42px 12px 40px',
                                     border: '1px solid #e5e7eb',
                                     borderRadius: '8px',
                                     fontSize: '14px',
@@ -218,6 +218,29 @@ const Login = () => {
                                     e.target.style.boxShadow = 'none';
                                 }}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                tabIndex={-1}
+                                style={{
+                                    position: 'absolute',
+                                    right: '12px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '4px',
+                                    cursor: 'pointer',
+                                    color: '#9ca3af',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.color = '#4b5563'}
+                                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                     </div>
 
