@@ -14,7 +14,7 @@ const CourseChapters = () => {
     const navigate = useNavigate();
     const {
         chapters, fetchChapters, addChapter, updateChapter, deleteChapter, reorderChapters,
-        addContent, deleteContent, loading, error
+        addContent, updateContent, deleteContent, loading, error
     } = useChapters();
     const { courses } = useCourses();
     const { exams } = useExams();
@@ -25,6 +25,17 @@ const CourseChapters = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChapter, setEditingChapter] = useState(null);
     const [formData, setFormData] = useState({ title: '', description: '', image: '', imageFile: null });
+
+    // Edit Content Modal State
+    const [editContentModal, setEditContentModal] = useState({ isOpen: false, content: null, chapterId: null });
+    const [editContentForm, setEditContentForm] = useState({
+        title: '',
+        description: '',
+        free_preview: false,
+        is_locked: false,
+        allow_download: true
+    });
+    const [savingEditContent, setSavingEditContent] = useState(false);
 
     // Content Modal State
     const [contentModal, setContentModal] = useState({ isOpen: false, type: null, chapterId: null });
@@ -250,6 +261,55 @@ const CourseChapters = () => {
         }
     };
 
+    const handleOpenEditContentModal = (content, chapterId) => {
+        setEditContentModal({ isOpen: true, content, chapterId });
+        setEditContentForm({
+            title: content.title || (content.exams?.title || ''),
+            description: content.description || '',
+            free_preview: !!content.free_preview,
+            is_locked: !!content.is_locked,
+            allow_download: content.allow_download !== undefined ? !!content.allow_download : true
+        });
+    };
+
+    const handleCloseEditContentModal = () => {
+        setEditContentModal({ isOpen: false, content: null, chapterId: null });
+        setEditContentForm({
+            title: '',
+            description: '',
+            free_preview: false,
+            is_locked: false,
+            allow_download: true
+        });
+    };
+
+    const handleUpdateContentSubmit = async (e) => {
+        e.preventDefault();
+        if (!editContentModal.content) return;
+
+        setSavingEditContent(true);
+        try {
+            const updates = {
+                title: editContentForm.title.trim(),
+                description: editContentForm.description ? editContentForm.description.trim() : null,
+                free_preview: editContentForm.free_preview,
+                is_locked: editContentForm.is_locked
+            };
+
+            const res = await updateContent(editContentModal.content.id, editContentModal.chapterId, updates);
+            if (res.success) {
+                handleCloseEditContentModal();
+            } else {
+                alert('Failed to update content: ' + res.error);
+            }
+        } catch (err) {
+            console.error('Error updating content:', err);
+            alert('Error: ' + err.message);
+        } finally {
+            setSavingEditContent(false);
+        }
+    };
+
     const toggleDropdown = (chapterId) => {
         setOpenDropdownId(openDropdownId === chapterId ? null : chapterId);
     };
@@ -468,25 +528,31 @@ const CourseChapters = () => {
                                                                     {content.type === 'exam' && <FileText size={18} />}
                                                                 </div>
                                                                 <div style={{ flex: 1 }}>
-                                                                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#333', marginBottom: '2px' }}>
+                                                                    <div style={{ fontSize: '14px', fontWeight: '500', color: '#333', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                                         {content.type === 'exam' && content.exams ? content.exams.title : content.title}
-                                                                        {content.type === 'exam' && <span style={{ marginLeft: '8px', fontSize: '11px', color: '#1976d2', fontWeight: 'bold' }}>EXAM</span>}
+                                                                        {content.type === 'exam' && <span style={{ fontSize: '11px', color: '#1976d2', fontWeight: 'bold' }}>EXAM</span>}
+                                                                        {content.free_preview && (
+                                                                            <span style={{ fontSize: '10px', color: '#15803d', fontWeight: 'bold', backgroundColor: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>
+                                                                                Preview
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                     {content.description && <div style={{ fontSize: '12px', color: '#888' }}>{content.description}</div>}
                                                                 </div>
-                                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                                    {(content.content_url || content.type === 'exam') && (
+                                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                                    {(content.url || content.content_url || content.type === 'exam') && (
                                                                         <button
                                                                             onClick={() => {
+                                                                                const viewUrl = content.url || content.content_url;
                                                                                 if (content.type === 'pdf') {
-                                                                                    setPdfViewerUrl(content.content_url);
+                                                                                    setPdfViewerUrl(viewUrl);
                                                                                 } else if (content.type === 'video') {
-                                                                                    setVideoViewerUrl(content.content_url);
+                                                                                    setVideoViewerUrl(viewUrl);
                                                                                 } else if (content.type === 'exam') {
                                                                                     // Navigate to exam
-                                                                                    navigate(`/student/exam/${content.exam_id || content.content_url}/take`);
+                                                                                    navigate(`/student/exam/${content.exam_id || viewUrl}/take`);
                                                                                 } else {
-                                                                                    window.open(content.content_url, '_blank');
+                                                                                    window.open(viewUrl, '_blank');
                                                                                 }
                                                                             }}
                                                                             style={{
@@ -510,7 +576,7 @@ const CourseChapters = () => {
                                                                                 if (content.type === 'video') {
                                                                                     navigate(`/courses/${id}/content/${content.id}/statistics`);
                                                                                 } else if (content.type === 'exam') {
-                                                                                    navigate(`/exams/${content.exam_id || content.content_url}/statistics`);
+                                                                                    navigate(`/exams/${content.exam_id || content.url || content.content_url}/statistics`);
                                                                                 }
                                                                             }}
                                                                             style={{
@@ -527,6 +593,21 @@ const CourseChapters = () => {
                                                                             <BarChart3 size={16} />
                                                                         </button>
                                                                     )}
+                                                                    <button
+                                                                        onClick={() => handleOpenEditContentModal(content, chapter.id)}
+                                                                        style={{
+                                                                            background: 'none',
+                                                                            border: 'none',
+                                                                            cursor: 'pointer',
+                                                                            color: '#0284c7',
+                                                                            padding: '4px',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center'
+                                                                        }}
+                                                                        title="Update Content"
+                                                                    >
+                                                                        <Edit2 size={16} />
+                                                                    </button>
                                                                     <button
                                                                         onClick={() => handleDeleteContentClick(content, chapter.id)}
                                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', padding: '4px' }}
@@ -816,6 +897,167 @@ const CourseChapters = () => {
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                                 <button type="button" onClick={handleCloseContentModal} style={cancelButtonStyle}>Cancel</button>
                                 <button type="submit" style={saveButtonStyle}><Save size={18} /> Add Content</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Update Content / Attachment Modal */}
+            {editContentModal.isOpen && editContentModal.content && (
+                <div style={modalOverlayStyle} onClick={handleCloseEditContentModal}>
+                    <div style={{ ...modalContentStyle, width: '560px', maxWidth: '92%' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={modalHeaderStyle}>
+                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#111' }}>
+                                Update {editContentModal.content.type === 'pdf' ? 'Attachment' : editContentModal.content.type === 'video' ? 'Video' : editContentModal.content.type === 'exam' ? 'Exam' : 'Content'}
+                            </h3>
+                            <button onClick={handleCloseEditContentModal} style={closeButtonStyle}>
+                                <X size={22} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateContentSubmit} style={{ padding: '24px' }}>
+                            {/* Attachment Info Preview */}
+                            <div style={{
+                                backgroundColor: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
+                                padding: '12px 16px',
+                                marginBottom: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px'
+                            }}>
+                                <div style={{
+                                    width: '38px',
+                                    height: '38px',
+                                    borderRadius: '6px',
+                                    backgroundColor: editContentModal.content.type === 'exam' ? '#e3f2fd' : editContentModal.content.type === 'video' ? '#fce4ec' : '#fee2e2',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: editContentModal.content.type === 'exam' ? '#1976d2' : editContentModal.content.type === 'video' ? '#c2185b' : '#dc2626',
+                                    flexShrink: 0
+                                }}>
+                                    {editContentModal.content.type === 'pdf' ? <FileText size={20} /> : editContentModal.content.type === 'video' ? <Video size={20} /> : <File size={20} />}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {editContentModal.content.url ? editContentModal.content.url.split('/').pop().split('?')[0] : (editContentModal.content.title || 'Attachment')}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', marginTop: '2px' }}>
+                                        {editContentModal.content.type || 'File'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Title Field */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={labelStyle}>
+                                    Title <span style={{ color: '#ef4444' }}>*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editContentForm.title}
+                                    onChange={(e) => setEditContentForm({ ...editContentForm, title: e.target.value })}
+                                    placeholder="Enter title"
+                                    style={inputStyle}
+                                />
+                            </div>
+
+                            {/* Description Field */}
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={labelStyle}>Description</label>
+                                <textarea
+                                    value={editContentForm.description}
+                                    onChange={(e) => setEditContentForm({ ...editContentForm, description: e.target.value })}
+                                    placeholder="Brief description (optional)..."
+                                    rows={3}
+                                    style={textareaStyle}
+                                />
+                            </div>
+
+                            {/* Checkbox Options */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                                {/* Allow free preview */}
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={editContentForm.free_preview}
+                                        onChange={(e) => setEditContentForm({ ...editContentForm, free_preview: e.target.checked })}
+                                        style={{ width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer', accentColor: '#00bfa5' }}
+                                    />
+                                    <div>
+                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
+                                            Allow free preview
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', lineHeight: '1.4' }}>
+                                            If enabled this content can be previewed before purchasing the course.
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Bypass progressive lock */}
+                                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={!editContentForm.is_locked}
+                                        onChange={(e) => setEditContentForm({ ...editContentForm, is_locked: !e.target.checked })}
+                                        style={{ width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer', accentColor: '#00bfa5' }}
+                                    />
+                                    <div>
+                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
+                                            Bypass progressive lock
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', lineHeight: '1.4' }}>
+                                            Enabling this will allow user access to the next content irrespective of the progressive lock setting on the course.
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {/* Allow download for documents / pdfs */}
+                                {(editContentModal.content.type === 'pdf' || editContentModal.content.type === 'file' || editContentModal.content.type === 'notes') && (
+                                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={editContentForm.allow_download}
+                                            onChange={(e) => setEditContentForm({ ...editContentForm, allow_download: e.target.checked })}
+                                            style={{ width: '18px', height: '18px', marginTop: '2px', cursor: 'pointer', accentColor: '#00bfa5' }}
+                                        />
+                                        <div>
+                                            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
+                                                Allow download
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', lineHeight: '1.4' }}>
+                                                If enabled, users can download this PDF/file.
+                                            </div>
+                                        </div>
+                                    </label>
+                                )}
+                            </div>
+
+                            {/* Modal Footer Buttons */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+                                <button
+                                    type="button"
+                                    onClick={handleCloseEditContentModal}
+                                    style={cancelButtonStyle}
+                                    disabled={savingEditContent}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={savingEditContent}
+                                    style={{
+                                        ...saveButtonStyle,
+                                        backgroundColor: '#00bfa5',
+                                        opacity: savingEditContent ? 0.7 : 1,
+                                        cursor: savingEditContent ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {savingEditContent ? 'Updating...' : 'Submit'}
+                                </button>
                             </div>
                         </form>
                     </div>

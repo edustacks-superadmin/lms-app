@@ -8,11 +8,12 @@ import {
     ArrowLeft, ShoppingCart, Clock, Copy, CreditCard, Smartphone, Check,
     BookOpen, Layers, ChevronDown, ChevronUp, ChevronRight, Folder, FolderOpen,
     FileText, Video, FileQuestion, Lock, PlayCircle, Search, Sparkles, CheckCircle2,
-    Award, HelpCircle, File
+    Award, HelpCircle, File, Eye, X
 } from 'lucide-react';
 import { initializeRazorpayCheckout } from '../utils/razorpay';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../supabaseClient';
+import PDFViewer from './PDFViewer';
 
 const StudentProductDetail = () => {
     const { id } = useParams();
@@ -39,6 +40,32 @@ const StudentProductDetail = () => {
     const [expandedChapters, setExpandedChapters] = useState({});
     const [chapterSearch, setChapterSearch] = useState('');
     const [activeCourseIndex, setActiveCourseIndex] = useState(0);
+
+    // Free Preview Modals State
+    const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+    const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
+
+    const handlePreviewContent = (item) => {
+        if (!item.free_preview) return;
+        const targetUrl = item.url || item.content_url;
+        if (item.type === 'pdf' || item.type === 'document' || item.type === 'notes' || item.type === 'file') {
+            if (targetUrl) {
+                setPreviewPdfUrl(targetUrl);
+            } else {
+                alert('Preview file is not available.');
+            }
+        } else if (item.type === 'video') {
+            if (targetUrl) {
+                setPreviewVideoUrl(targetUrl);
+            } else {
+                alert('Preview video is not available.');
+            }
+        } else if (item.type === 'exam') {
+            navigate(`/student/exam/${item.exam_id || targetUrl}/take`);
+        } else if (targetUrl) {
+            window.open(targetUrl, '_blank');
+        }
+    };
 
     const isManualPaymentEnabled = institute?.feature_flags?.manualPaymentEnabled !== false;
 
@@ -104,6 +131,7 @@ const StudentProductDetail = () => {
                         id,
                         title,
                         type,
+                        url,
                         duration,
                         is_locked,
                         free_preview,
@@ -713,37 +741,47 @@ const StudentProductDetail = () => {
                                                                             {sub.contents.map((item) => (
                                                                                 <div
                                                                                     key={item.id}
+                                                                                    onClick={() => item.free_preview && handlePreviewContent(item)}
                                                                                     style={{
                                                                                         display: 'flex',
                                                                                         alignItems: 'center',
                                                                                         justifyContent: 'space-between',
                                                                                         padding: '6px 10px',
                                                                                         borderRadius: '6px',
-                                                                                        backgroundColor: 'white',
-                                                                                        border: '1px solid #f1f5f9',
-                                                                                        fontSize: '13px'
+                                                                                        backgroundColor: item.free_preview ? '#f0fdf4' : 'white',
+                                                                                        border: item.free_preview ? '1px solid #bbf7d0' : '1px solid #f1f5f9',
+                                                                                        fontSize: '13px',
+                                                                                        cursor: item.free_preview ? 'pointer' : 'default',
+                                                                                        transition: 'all 0.15s ease'
                                                                                     }}
+                                                                                    title={item.free_preview ? 'Click to preview' : 'Locked content'}
                                                                                 >
                                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
                                                                                         {renderContentIcon(item.type)}
-                                                                                        <span style={{ color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                        <span style={{ color: item.free_preview ? '#166534' : '#334155', fontWeight: item.free_preview ? '500' : '400', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                             {item.title}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                                                                                        {item.free_preview && (
-                                                                                            <span style={{
-                                                                                                fontSize: '10px',
-                                                                                                fontWeight: '700',
-                                                                                                padding: '2px 6px',
-                                                                                                borderRadius: '4px',
-                                                                                                backgroundColor: '#dcfce7',
-                                                                                                color: '#15803d'
-                                                                                            }}>
-                                                                                                Preview
-                                                                                            </span>
+                                                                                        {item.free_preview ? (
+                                                                                            <>
+                                                                                                <span style={{
+                                                                                                    fontSize: '10px',
+                                                                                                    fontWeight: '700',
+                                                                                                    padding: '2px 6px',
+                                                                                                    borderRadius: '4px',
+                                                                                                    backgroundColor: '#dcfce7',
+                                                                                                    color: '#15803d',
+                                                                                                    display: 'inline-flex',
+                                                                                                    alignItems: 'center',
+                                                                                                    gap: '3px'
+                                                                                                }}>
+                                                                                                    <Eye size={10} /> Preview
+                                                                                                </span>
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <Lock size={12} color="#94a3b8" />
                                                                                         )}
-                                                                                        <Lock size={12} color="#94a3b8" />
                                                                                     </div>
                                                                                 </div>
                                                                             ))}
@@ -760,20 +798,24 @@ const StudentProductDetail = () => {
                                                             {chapter.contents.map((item) => (
                                                                 <div
                                                                     key={item.id}
+                                                                    onClick={() => item.free_preview && handlePreviewContent(item)}
                                                                     style={{
                                                                         display: 'flex',
                                                                         alignItems: 'center',
                                                                         justifyContent: 'space-between',
                                                                         padding: '8px 12px',
                                                                         borderRadius: '8px',
-                                                                        backgroundColor: '#f8fafc',
-                                                                        border: '1px solid #f1f5f9',
-                                                                        fontSize: '13px'
+                                                                        backgroundColor: item.free_preview ? '#f0fdf4' : '#f8fafc',
+                                                                        border: item.free_preview ? '1px solid #bbf7d0' : '1px solid #f1f5f9',
+                                                                        fontSize: '13px',
+                                                                        cursor: item.free_preview ? 'pointer' : 'default',
+                                                                        transition: 'all 0.15s ease'
                                                                     }}
+                                                                    title={item.free_preview ? 'Click to preview' : 'Locked content'}
                                                                 >
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                                                                         {renderContentIcon(item.type)}
-                                                                        <span style={{ color: '#334155', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                        <span style={{ color: item.free_preview ? '#166534' : '#334155', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                             {item.title}
                                                                         </span>
                                                                     </div>
@@ -783,19 +825,23 @@ const StudentProductDetail = () => {
                                                                                 {item.duration}
                                                                             </span>
                                                                         )}
-                                                                        {item.free_preview && (
+                                                                        {item.free_preview ? (
                                                                             <span style={{
                                                                                 fontSize: '10px',
                                                                                 fontWeight: '700',
                                                                                 padding: '2px 6px',
                                                                                 borderRadius: '4px',
                                                                                 backgroundColor: '#dcfce7',
-                                                                                color: '#15803d'
+                                                                                color: '#15803d',
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '3px'
                                                                             }}>
-                                                                                Preview
+                                                                                <Eye size={10} /> Preview
                                                                             </span>
+                                                                        ) : (
+                                                                            <Lock size={13} color="#94a3b8" />
                                                                         )}
-                                                                        <Lock size={13} color="#94a3b8" />
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -1188,6 +1234,71 @@ const StudentProductDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Free Preview PDF Viewer */}
+            {previewPdfUrl && (
+                <PDFViewer
+                    url={previewPdfUrl}
+                    onClose={() => setPreviewPdfUrl(null)}
+                />
+            )}
+
+            {/* Free Preview Video Modal */}
+            {previewVideoUrl && (
+                <div
+                    onClick={() => setPreviewVideoUrl(null)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 99999,
+                        padding: '20px'
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            backgroundColor: '#111827',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            width: '100%',
+                            maxWidth: '850px',
+                            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)'
+                        }}
+                    >
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '14px 20px',
+                            borderBottom: '1px solid #374151',
+                            color: 'white'
+                        }}>
+                            <span style={{ fontSize: '15px', fontWeight: '600' }}>Lesson Video Preview</span>
+                            <button
+                                onClick={() => setPreviewVideoUrl(null)}
+                                style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px', display: 'flex' }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div style={{ padding: '0', backgroundColor: 'black' }}>
+                            <video
+                                src={previewVideoUrl}
+                                controls
+                                autoPlay
+                                style={{ width: '100%', maxHeight: '70vh', display: 'block' }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

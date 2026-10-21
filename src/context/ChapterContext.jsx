@@ -315,22 +315,39 @@ export const ChapterProvider = ({ children }) => {
                 .from('chapter_contents')
                 .update(updates)
                 .eq('id', id)
-                .select();
+                .select(`
+                    *,
+                    exams (
+                        id,
+                        title,
+                        description,
+                        duration_minutes,
+                        total_marks,
+                        number_of_questions,
+                        marks_per_question,
+                        negative_marking_enabled,
+                        negative_marks_per_question,
+                        passing_marks,
+                        max_attempts
+                    )
+                `);
 
             if (error) throw error;
+
+            const updated = data && data[0] ? data[0] : null;
 
             // Update local state
             setChapters(prev => prev.map(ch => {
                 if (ch.id === chapterId) {
                     return {
                         ...ch,
-                        chapter_contents: ch.chapter_contents.map(c => c.id === id ? data[0] : c)
+                        chapter_contents: (ch.chapter_contents || []).map(c => c.id === id ? { ...c, ...updated } : c)
                     };
                 }
                 return ch;
             }));
 
-            return { success: true, data: data[0] };
+            return { success: true, data: updated };
         } catch (err) {
             console.error('Error updating content:', err);
             return { success: false, error: err.message };
