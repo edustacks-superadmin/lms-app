@@ -5,6 +5,14 @@
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/sitemap-pages.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/api/:match*",
       "destination": "/api/:match*"
     },

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /student/dashboard
+Disallow: /student/analytics
+Disallow: /student/bookmarks
+Disallow: /student/take-exam
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://maheshiesacademy.edustacks.co.in/sitemap.xml
