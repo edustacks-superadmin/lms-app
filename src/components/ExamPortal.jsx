@@ -105,37 +105,196 @@ const ExamPortal = () => {
                 setAttempts(memberAttempts);
             }
 
-            // 3. Fetch active exams for this institute
-            let examsQuery = supabase
-                .from('exams')
-                .select(`
-                    id,
-                    title,
-                    description,
-                    duration_minutes,
-                    total_marks,
-                    number_of_questions,
-                    start_date,
-                    end_date,
-                    is_active,
-                    created_at,
-                    course_id,
-                    course_exams (
-                        courses (
-                            id,
-                            title
-                        )
-                    )
-                `)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false });
+            // 3. Resolve student's activated/enrolled courses (identical to MyCourses logic)
+            const enrolledCourseIds = new Set();
 
-            if (instId) {
-                examsQuery = examsQuery.eq('institute_id', instId);
+            if (member?.id) {
+                // 3a. Manual enrollments
+                try {
+                    const { data: enrollmentsData } = await supabase
+                        .from('enrollments')
+                        .select('course_id')
+                        .eq('member_id', member.id)
+                        .in('status', ['active', 'completed']);
+
+                    (enrollmentsData || []).forEach(e => {
+                        if (e.course_id) enrolledCourseIds.add(e.course_id);
+                    });
+                } catch (enrErr) {
+                    console.warn('Error fetching enrollments:', enrErr);
+                }
+
+                // 3b. Batch assignments
+                try {
+                    const { data: batchMemberships } = await supabase
+                        .from('batch_members')
+                        .select('batch_id')
+                        .eq('member_id', member.id);
+
+                    const studentBatches = (batchMemberships || []).map(bm => bm.batch_id).filter(Boolean);
+
+                    if (studentBatches.length > 0) {
+                        // Direct batch_courses junction
+                        const { data: batchCourseLinks } = await supabase
+                            .from('batch_courses')
+                            .select('course_id')
+                            .in('batch_id', studentBatches);
+
+                        (batchCourseLinks || []).forEach(bc => {
+                            if (bc.course_id) enrolledCourseIds.add(bc.course_id);
+                        });
+
+                        // Courses where allowed_batches contains student's batch
+                        const { data: privateCourses } = await supabase
+                            .from('courses')
+                            .select('id, allowed_batches')
+                            .eq('is_public', false);
+
+                        (privateCourses || []).forEach(c => {
+                            if (Array.isArray(c.allowed_batches)) {
+                                if (c.allowed_batches.some(b => studentBatches.includes(b))) {
+                                    enrolledCourseIds.add(c.id);
+                                }
+                            }
+                        });
+                    }
+                } catch (batchErr) {
+                    console.warn('Error fetching batch courses:', batchErr);
+                }
             }
 
-            const { data: examsData, error: examsError } = await examsQuery;
-            if (examsError) throw examsError;
+            // 3c. Public courses for the institute
+            try {
+                let pubQuery = supabase
+                    .from('courses')
+                    .select('id')
+                    .eq('is_public', true);
+
+                if (instId) {
+                    pubQuery = pubQuery.eq('institute_id', instId);
+                }
+
+                const { data: publicCourseData } = await pubQuery;
+                (publicCourseData || []).forEach(c => {
+                    if (c.id) enrolledCourseIds.add(c.id);
+                });
+            } catch (pubErr) {
+                console.warn('Error fetching public courses:', pubErr);
+            }
+
+            const activeCourseIds = Array.from(enrolledCourseIds);
+            console.log('Student activated course IDs:', activeCourseIds);
+
+            // 4. Find all exams that belong to the student's activated courses
+            const linkedExamIds = new Set();
+
+            // Also include any exam the student has previously attempted
+            memberAttempts.forEach(att => {
+                if (att.exam_id) linkedExamIds.add(att.exam_id);
+            });
+
+            if (activeCourseIds.length > 0) {
+                // 4a. Direct exams with course_id matching active courses
+                try {
+                    const { data: directExams } = await supabase
+                        .from('exams')
+                        .select('id')
+                        .in('course_id', activeCourseIds)
+                        .eq('is_active', true);
+
+                    (directExams || []).forEach(e => {
+                        if (e.id) linkedExamIds.add(e.id);
+                    });
+                } catch (dirErr) {
+                    console.warn('Error fetching direct exams:', dirErr);
+                }
+
+                // 4b. Exams in course_exams junction table
+                try {
+                    const { data: ceExams } = await supabase
+                        .from('course_exams')
+                        .select('exam_id')
+                        .in('course_id', activeCourseIds);
+
+                    (ceExams || []).forEach(ce => {
+                        if (ce.exam_id) linkedExamIds.add(ce.exam_id);
+                    });
+                } catch (ceErr) {
+                    console.warn('Error fetching course_exams:', ceErr);
+                }
+
+                // 4c. Exams added inside course chapters (chapter_contents)
+                try {
+                    const { data: chapters } = await supabase
+                        .from('chapters')
+                        .select('id')
+                        .in('course_id', activeCourseIds);
+
+                    const chapterIds = (chapters || []).map(c => c.id).filter(Boolean);
+                    if (chapterIds.length > 0) {
+                        const chunkSize = 100;
+                        for (let i = 0; i < chapterIds.length; i += chunkSize) {
+                            const chunk = chapterIds.slice(i, i + chunkSize);
+                            const { data: ccExams } = await supabase
+                                .from('chapter_contents')
+                                .select('exam_id')
+                                .in('chapter_id', chunk)
+                                .not('exam_id', 'is', null);
+
+                            (ccExams || []).forEach(cc => {
+                                if (cc.exam_id) linkedExamIds.add(cc.exam_id);
+                            });
+                        }
+                    }
+                } catch (ccErr) {
+                    console.warn('Error fetching chapter contents exams:', ccErr);
+                }
+            }
+
+            const targetExamIds = Array.from(linkedExamIds);
+            console.log('Target exam IDs for student courses:', targetExamIds.length);
+
+            let examsData = [];
+            if (targetExamIds.length > 0) {
+                // Fetch full details of these exams in batches of 100
+                const batchSize = 100;
+                for (let i = 0; i < targetExamIds.length; i += batchSize) {
+                    const batch = targetExamIds.slice(i, i + batchSize);
+                    let q = supabase
+                        .from('exams')
+                        .select(`
+                            id,
+                            title,
+                            description,
+                            duration_minutes,
+                            total_marks,
+                            number_of_questions,
+                            start_date,
+                            end_date,
+                            is_active,
+                            created_at,
+                            course_id,
+                            course_exams (
+                                courses (
+                                    id,
+                                    title
+                                )
+                            )
+                        `)
+                        .in('id', batch)
+                        .eq('is_active', true);
+
+                    const { data: chunk, error: chunkErr } = await q;
+                    if (chunkErr) {
+                        console.error('Error fetching exam chunk:', chunkErr);
+                    } else if (chunk) {
+                        examsData.push(...chunk);
+                    }
+                }
+
+                // Sort by start_date / created_at descending
+                examsData.sort((a, b) => new Date(b.created_at || b.start_date || 0) - new Date(a.created_at || a.start_date || 0));
+            }
 
             // Combine exams with student attempt info
             const now = new Date();
