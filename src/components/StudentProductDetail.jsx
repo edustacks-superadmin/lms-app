@@ -4,8 +4,9 @@ import { useProducts } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
 import { useTransactions } from '../context/TransactionContext';
 import { useInstitute } from '../context/InstituteContext';
-import { ArrowLeft, ShoppingCart, Clock, Copy, CreditCard, Smartphone } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Clock, Copy, CreditCard, Smartphone, Check } from 'lucide-react';
 import { initializeRazorpayCheckout } from '../utils/razorpay';
+import { useCart } from '../context/CartContext';
 
 const StudentProductDetail = () => {
     const { id } = useParams();
@@ -14,6 +15,7 @@ const StudentProductDetail = () => {
     const { createOrder, createRazorpayOrder, verifyRazorpayPayment, validateCoupon } = useTransactions();
     const { user } = useAuth();
     const { institute } = useInstitute();
+    const { addToCart, isInCart, openCart } = useCart();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [buying, setBuying] = useState(false);
@@ -299,27 +301,59 @@ const StudentProductDetail = () => {
                         )}
 
                         {!showPayment ? (
-                            <button
-                                onClick={handleBuyClick}
-                                style={{
-                                    width: '100%',
-                                    padding: '14px',
-                                    backgroundColor: 'var(--primary-color)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    marginBottom: '16px'
-                                }}
-                            >
-                                <ShoppingCart size={20} /> Buy Now
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                                <button
+                                    onClick={() => {
+                                        if (isInCart(product.id)) {
+                                            openCart();
+                                        } else {
+                                            addToCart(product);
+                                        }
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        padding: '14px',
+                                        backgroundColor: isInCart(product.id) ? '#ecfdf5' : '#eff6ff',
+                                        border: `1.5px solid ${isInCart(product.id) ? '#10b981' : '#2563eb'}`,
+                                        borderRadius: '8px',
+                                        color: isInCart(product.id) ? '#059669' : '#2563eb',
+                                        fontSize: '15px',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {isInCart(product.id) ? <Check size={18} /> : <ShoppingCart size={18} />}
+                                    {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                                </button>
+
+                                <button
+                                    onClick={handleBuyClick}
+                                    style={{
+                                        flex: 1,
+                                        padding: '14px',
+                                        backgroundColor: 'var(--primary-color)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        fontSize: '15px',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '6px',
+                                        boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    Buy Now
+                                </button>
+                            </div>
                         ) : (
                             <div style={{ marginBottom: '20px' }}>
                                 {/* Payment Method Selection */}

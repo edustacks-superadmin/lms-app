@@ -5,11 +5,13 @@ import { useInstitute } from '../context/InstituteContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { useSidebar } from '../context/SidebarContext';
+import { useCart } from '../context/CartContext';
 
 const StudentHeader = () => {
     const { institute } = useInstitute();
     const { signOut, user: authUser } = useAuth();
     const { toggleSidebar } = useSidebar();
+    const { cartCount, openCart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
     const [currentUser, setCurrentUser] = useState(null);
@@ -298,6 +300,56 @@ const StudentHeader = () => {
 
                 {/* User Profile Section */}
                 <div className="desktop-profile-section" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    {/* Cart Trigger Button */}
+                    <button
+                        onClick={openCart}
+                        style={{
+                            position: 'relative',
+                            background: 'none',
+                            border: '1px solid #e2e8f0',
+                            padding: '7px 10px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            color: '#334155',
+                            backgroundColor: '#f8fafc',
+                            borderRadius: '8px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#eff6ff';
+                            e.currentTarget.style.borderColor = '#93c5fd';
+                            e.currentTarget.style.color = '#2563eb';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8fafc';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                            e.currentTarget.style.color = '#334155';
+                        }}
+                        title="View Cart"
+                    >
+                        <ShoppingCart size={17} />
+                        <span>Cart</span>
+                        {cartCount > 0 && (
+                            <span style={{
+                                backgroundColor: '#2563eb',
+                                color: 'white',
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                padding: '1px 6px',
+                                borderRadius: '10px',
+                                minWidth: '16px',
+                                textAlign: 'center',
+                                lineHeight: '14px'
+                            }}>
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+
                     <span style={{
                         fontWeight: '600',
                         fontSize: '14px',

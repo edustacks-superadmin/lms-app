@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../context/ProductContext';
 import { useProductCategories } from '../context/ProductCategoryContext';
-import { ShoppingCart, Tag, Search, X } from 'lucide-react';
+import { ShoppingCart, Tag, Search, X, Check } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 const StudentStore = () => {
     const navigate = useNavigate();
     const { products, fetchProducts, loading: productsLoading } = useProducts();
     const { categories, fetchCategories, loading: categoriesLoading } = useProductCategories();
+    const { addToCart, isInCart, openCart, cartCount } = useCart();
 
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -47,12 +49,40 @@ const StudentStore = () => {
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ marginBottom: '32px' }}>
-                <h2 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
-                    Store
-                </h2>
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
-                    Browse and purchase courses to enhance your skills.
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+                    <div>
+                        <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#1a1a1a' }}>
+                            Store
+                        </h2>
+                        <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+                            Browse and purchase courses to enhance your skills.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={openCart}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 18px',
+                            backgroundColor: '#2563eb',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+                            transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1d4ed8'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563eb'; }}
+                    >
+                        <ShoppingCart size={18} />
+                        <span>View Cart ({cartCount})</span>
+                    </button>
+                </div>
 
                 {/* Search and Filter Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -365,37 +395,68 @@ const StudentStore = () => {
                                         )}
                                     </div>
 
-                                    {/* Action Button */}
-                                    <button
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px 14px',
-                                            backgroundColor: '#f8fafc',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '8px',
-                                            color: '#2563eb',
-                                            fontSize: '13px',
-                                            fontWeight: '600',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#2563eb';
-                                            e.currentTarget.style.borderColor = '#2563eb';
-                                            e.currentTarget.style.color = '#ffffff';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#f8fafc';
-                                            e.currentTarget.style.borderColor = '#e2e8f0';
-                                            e.currentTarget.style.color = '#2563eb';
-                                        }}
-                                    >
-                                        <ShoppingCart size={15} /> View Details
-                                    </button>
+                                    {/* Action Buttons */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (isInCart(product.id)) {
+                                                    openCart();
+                                                } else {
+                                                    addToCart(product);
+                                                }
+                                            }}
+                                            style={{
+                                                padding: '9px 8px',
+                                                backgroundColor: isInCart(product.id) ? '#ecfdf5' : '#eff6ff',
+                                                border: `1px solid ${isInCart(product.id) ? '#10b981' : '#bfdbfe'}`,
+                                                borderRadius: '8px',
+                                                color: isInCart(product.id) ? '#059669' : '#2563eb',
+                                                fontSize: '12px',
+                                                fontWeight: '700',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '5px',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                        >
+                                            {isInCart(product.id) ? <Check size={14} /> : <ShoppingCart size={14} />}
+                                            {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                                        </button>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/student/store/product/${product.id}`);
+                                            }}
+                                            style={{
+                                                padding: '9px 8px',
+                                                backgroundColor: '#f8fafc',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '8px',
+                                                color: '#334155',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                                e.currentTarget.style.color = '#0f172a';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.backgroundColor = '#f8fafc';
+                                                e.currentTarget.style.color = '#334155';
+                                            }}
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

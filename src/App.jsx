@@ -131,6 +131,8 @@ import { OfferProvider } from './context/OfferContext';
 import CreateCoupon from './components/CreateCoupon';
 import CreateRepeatOffer from './components/CreateRepeatOffer';
 import { SidebarProvider } from './context/SidebarContext';
+import { CartProvider } from './context/CartContext';
+import CartDrawer from './components/CartDrawer';
 
 import './index.css';
 
@@ -205,7 +207,9 @@ function App() {
                                           <TransactionProvider>
                                             <OfferProvider>
                                               <SidebarProvider>
-                                                <SEO />
+                                                <CartProvider>
+                                                  <CartDrawer />
+                                                  <SEO />
                                                 <PWAInstallPrompt />
                                                 <Routes>
                                                   {/* Public Routes */}
@@ -963,6 +967,7 @@ function App() {
                                                   } />
 
                                                 </Routes>
+                                              </CartProvider>
                                               </SidebarProvider>
                                             </OfferProvider>
                                           </TransactionProvider>
