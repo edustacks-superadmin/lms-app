@@ -161,7 +161,7 @@ const StudentAnalytics = () => {
                     </div>
                     <div>
                         <p style={labelStyle}>Total Score</p>
-                        <p style={valueStyle}>{stats.totalScore}</p>
+                        <p style={valueStyle}>{Number(stats.totalScore || 0).toFixed(1)}</p>
                     </div>
                 </div>
 
@@ -252,7 +252,7 @@ const StudentAnalytics = () => {
                                         textOverflow: 'ellipsis',
                                         maxWidth: '100%'
                                     }}>
-                                        {new Date(attempt.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                        {new Date(attempt.submitted_at || attempt.started_at || attempt.completed_at || attempt.created_at || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                     </span>
                                 </div>
                             );

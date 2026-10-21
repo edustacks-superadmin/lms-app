@@ -521,110 +521,261 @@ const ExamPortal = () => {
     }
 
     return (
-        <div style={{ padding: '24px 32px 60px', maxWidth: '1400px', margin: '0 auto', boxSizing: 'border-box' }}>
+        <div className="exam-portal-container">
+            <style>{`
+                .exam-portal-container {
+                    padding: 24px 32px 60px;
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    box-sizing: border-box;
+                }
+                .exam-portal-title {
+                    font-size: 26px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin: 0 0 24px 0;
+                    letter-spacing: -0.5px;
+                }
+                .exam-metric-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 32px;
+                }
+                .exam-metric-card {
+                    border-radius: 16px;
+                    padding: 20px 24px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+                    box-sizing: border-box;
+                }
+                .exam-metric-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 14px;
+                }
+                .exam-metric-title {
+                    font-size: 14px;
+                    font-weight: 700;
+                }
+                .exam-metric-icon-box {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .exam-metric-val {
+                    font-size: 28px;
+                    font-weight: 800;
+                    line-height: 1.2;
+                    margin-bottom: 4px;
+                }
+                .exam-metric-sub {
+                    font-size: 13px;
+                    font-weight: 500;
+                }
+                .exam-tabs-bar {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    border-bottom: 1px solid #e2e8f0;
+                    padding: 0 20px;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .exam-tab-btn {
+                    padding: 16px 18px;
+                    border: none;
+                    background: none;
+                    font-size: 14px;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.2s ease;
+                }
+                .exam-controls-bar {
+                    padding: 18px 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 16px;
+                    flex-wrap: wrap;
+                }
+                .exam-search-wrapper {
+                    position: relative;
+                    flex: 1;
+                    min-width: 240px;
+                    max-width: 480px;
+                }
+                .exam-desktop-table-view {
+                    display: block;
+                    width: 100%;
+                    overflow-x: auto;
+                }
+                .exam-mobile-cards-view {
+                    display: none;
+                }
+                .exam-pagination-footer {
+                    padding: 16px 24px;
+                    border-top: 1px solid #f1f5f9;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                }
+
+                @media (max-width: 768px) {
+                    .exam-portal-container {
+                        padding: 12px 12px 40px !important;
+                    }
+                    .exam-portal-title {
+                        font-size: 19px !important;
+                        margin: 0 0 10px 0 !important;
+                    }
+                    .exam-metric-grid {
+                        grid-template-columns: repeat(3, 1fr) !important;
+                        gap: 6px !important;
+                        margin-bottom: 12px !important;
+                    }
+                    .exam-metric-card {
+                        padding: 10px 8px !important;
+                        border-radius: 10px !important;
+                    }
+                    .exam-metric-header {
+                        margin-bottom: 4px !important;
+                    }
+                    .exam-metric-title {
+                        font-size: 11px !important;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                    }
+                    .exam-metric-icon-box {
+                        display: none !important;
+                    }
+                    .exam-metric-val {
+                        font-size: 16px !important;
+                        margin-bottom: 2px !important;
+                    }
+                    .exam-metric-sub {
+                        font-size: 10px !important;
+                        white-space: nowrap !important;
+                        overflow: hidden !important;
+                        text-overflow: ellipsis !important;
+                    }
+                    .exam-tabs-bar {
+                        padding: 0 4px !important;
+                    }
+                    .exam-tab-btn {
+                        padding: 10px 10px !important;
+                        font-size: 13px !important;
+                    }
+                    .exam-controls-bar {
+                        padding: 10px 12px !important;
+                        gap: 8px !important;
+                    }
+                    .exam-search-wrapper {
+                        min-width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    .exam-desktop-table-view {
+                        display: none !important;
+                    }
+                    .exam-mobile-cards-view {
+                        display: block !important;
+                    }
+                    .exam-pagination-footer {
+                        padding: 12px 14px !important;
+                    }
+                }
+            `}</style>
+
             {/* Page Header */}
-            <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#0f172a', margin: '0 0 24px 0', letterSpacing: '-0.5px' }}>
+            <h1 className="exam-portal-title">
                 Exams
             </h1>
 
             {/* Top 3 Metric Cards */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '20px',
-                marginBottom: '32px'
-            }}>
+            <div className="exam-metric-grid">
                 {/* 1. Exams Attempted (Pastel Blue) */}
-                <div style={{
+                <div className="exam-metric-card" style={{
                     backgroundColor: '#f0f9ff',
-                    border: '1px solid #e0f2fe',
-                    borderRadius: '16px',
-                    padding: '20px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 2px 8px rgba(14, 165, 233, 0.04)'
+                    border: '1px solid #e0f2fe'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '4px', height: '16px', backgroundColor: '#0284c7', borderRadius: '2px' }} />
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#0369a1' }}>
-                                Exams Attempted
+                    <div className="exam-metric-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '3px', height: '14px', backgroundColor: '#0284c7', borderRadius: '2px' }} />
+                            <span className="exam-metric-title" style={{ color: '#0369a1' }}>
+                                Attempted
                             </span>
                         </div>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                        <div className="exam-metric-icon-box" style={{ backgroundColor: '#e0f2fe', color: '#0284c7' }}>
                             <FileCheck2 size={20} />
                         </div>
                     </div>
                     <div>
-                        <div style={{ fontSize: '28px', fontWeight: '800', color: '#0c4a6e', lineHeight: '1.2', marginBottom: '4px' }}>
+                        <div className="exam-metric-val" style={{ color: '#0c4a6e' }}>
                             {metrics.attemptedRatio}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#0284c7', fontWeight: '500' }}>
-                            {metrics.examsToday} exams today
+                        <div className="exam-metric-sub" style={{ color: '#0284c7' }}>
+                            {metrics.examsToday} today
                         </div>
                     </div>
                 </div>
 
                 {/* 2. Top Score (Pastel Green) */}
-                <div style={{
+                <div className="exam-metric-card" style={{
                     backgroundColor: '#f0fdf4',
-                    border: '1px solid #dcfce7',
-                    borderRadius: '16px',
-                    padding: '20px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 2px 8px rgba(34, 197, 94, 0.04)'
+                    border: '1px solid #dcfce7'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '4px', height: '16px', backgroundColor: '#16a34a', borderRadius: '2px' }} />
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#15803d' }}>
+                    <div className="exam-metric-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '3px', height: '14px', backgroundColor: '#16a34a', borderRadius: '2px' }} />
+                            <span className="exam-metric-title" style={{ color: '#15803d' }}>
                                 Top Score
                             </span>
                         </div>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                        <div className="exam-metric-icon-box" style={{ backgroundColor: '#dcfce7', color: '#16a34a' }}>
                             <Trophy size={20} />
                         </div>
                     </div>
                     <div>
-                        <div style={{ fontSize: '28px', fontWeight: '800', color: '#14532d', lineHeight: '1.2', marginBottom: '4px' }}>
+                        <div className="exam-metric-val" style={{ color: '#14532d' }}>
                             {metrics.topScore}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#16a34a', fontWeight: '500' }}>
+                        <div className="exam-metric-sub" style={{ color: '#16a34a' }}>
                             Last 10 exams
                         </div>
                     </div>
                 </div>
 
                 {/* 3. Average Score (Pastel Purple/Indigo) */}
-                <div style={{
+                <div className="exam-metric-card" style={{
                     backgroundColor: '#faf5ff',
-                    border: '1px solid #f3e8ff',
-                    borderRadius: '16px',
-                    padding: '20px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0 2px 8px rgba(168, 85, 247, 0.04)'
+                    border: '1px solid #f3e8ff'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '4px', height: '16px', backgroundColor: '#7c3aed', borderRadius: '2px' }} />
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#6d28d9' }}>
-                                Average Score
+                    <div className="exam-metric-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '3px', height: '14px', backgroundColor: '#7c3aed', borderRadius: '2px' }} />
+                            <span className="exam-metric-title" style={{ color: '#6d28d9' }}>
+                                Avg Score
                             </span>
                         </div>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7c3aed' }}>
+                        <div className="exam-metric-icon-box" style={{ backgroundColor: '#f3e8ff', color: '#7c3aed' }}>
                             <TrendingUp size={20} />
                         </div>
                     </div>
                     <div>
-                        <div style={{ fontSize: '28px', fontWeight: '800', color: '#4c1d95', lineHeight: '1.2', marginBottom: '4px' }}>
+                        <div className="exam-metric-val" style={{ color: '#4c1d95' }}>
                             {metrics.averageScore}
                         </div>
-                        <div style={{ fontSize: '13px', color: '#7c3aed', fontWeight: '500' }}>
+                        <div className="exam-metric-sub" style={{ color: '#7c3aed' }}>
                             Last 10 exams
                         </div>
                     </div>
@@ -640,15 +791,7 @@ const ExamPortal = () => {
                 overflow: 'hidden'
             }}>
                 {/* Horizontal Navigation Tabs */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    borderBottom: '1px solid #e2e8f0',
-                    padding: '0 20px',
-                    overflowX: 'auto',
-                    whiteSpace: 'nowrap'
-                }}>
+                <div className="exam-tabs-bar">
                     {[
                         { id: 'all', label: 'All' },
                         { id: 'not_attempted', label: 'Not Attempted' },
@@ -661,21 +804,15 @@ const ExamPortal = () => {
                         return (
                             <button
                                 key={tab.id}
+                                className="exam-tab-btn"
                                 onClick={() => {
                                     setActiveTab(tab.id);
                                     setCurrentPage(1);
                                 }}
                                 style={{
-                                    padding: '16px 18px',
-                                    border: 'none',
-                                    background: 'none',
-                                    fontSize: '14px',
                                     fontWeight: isActive ? '700' : '500',
                                     color: isActive ? '#059669' : '#64748b',
-                                    cursor: 'pointer',
-                                    borderBottom: isActive ? '2px solid #059669' : '2px solid transparent',
-                                    transition: 'all 0.2s ease',
-                                    position: 'relative'
+                                    borderBottom: isActive ? '2px solid #059669' : '2px solid transparent'
                                 }}
                             >
                                 {tab.label}
@@ -685,25 +822,13 @@ const ExamPortal = () => {
                 </div>
 
                 {/* Search & Action Controls Bar */}
-                <div style={{
-                    padding: '18px 24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '16px',
-                    flexWrap: 'wrap'
-                }}>
+                <div className="exam-controls-bar">
                     {/* Search Input Box */}
-                    <div style={{
-                        position: 'relative',
-                        flex: '1',
-                        minWidth: '240px',
-                        maxWidth: '480px'
-                    }}>
+                    <div className="exam-search-wrapper">
                         <Search
                             size={18}
                             color="#94a3b8"
-                            style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }}
+                            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}
                         />
                         <input
                             type="text"
@@ -715,11 +840,11 @@ const ExamPortal = () => {
                             }}
                             style={{
                                 width: '100%',
-                                padding: '10px 14px 10px 42px',
+                                padding: '9px 14px 9px 38px',
                                 backgroundColor: '#f8fafc',
                                 border: '1px solid #e2e8f0',
                                 borderRadius: '10px',
-                                fontSize: '14px',
+                                fontSize: '13px',
                                 color: '#1e293b',
                                 outline: 'none',
                                 boxSizing: 'border-box'
@@ -821,8 +946,8 @@ const ExamPortal = () => {
                     </div>
                 </div>
 
-                {/* Table Responsive Wrapper */}
-                <div style={{ overflowX: 'auto', width: '100%' }}>
+                {/* Table Responsive Wrapper (Desktop) */}
+                <div className="exam-desktop-table-view">
                     <table style={{
                         width: '100%',
                         borderCollapse: 'collapse',
@@ -1066,17 +1191,176 @@ const ExamPortal = () => {
                     </table>
                 </div>
 
+                {/* Mobile Cards View (Hidden on Desktop, Visible <= 768px) */}
+                <div className="exam-mobile-cards-view">
+                    {paginatedExams.length === 0 ? (
+                        <div style={{ padding: '36px 16px', textAlign: 'center', color: '#64748b' }}>
+                            <div style={{ fontSize: '15px', fontWeight: '600', marginBottom: '4px', color: '#334155' }}>
+                                No exams found
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                Try adjusting your search query or tab filter.
+                            </div>
+                        </div>
+                    ) : (
+                        paginatedExams.map((exam, idx) => {
+                            const numQuestions = exam.number_of_questions || '-';
+                            const durationStr = formatDuration(exam.duration_minutes);
+                            const maxMarksStr = exam.total_marks ? Number(exam.total_marks).toFixed(0) : '0';
+
+                            let statusSubtext = 'Not Attempted';
+                            let statusBg = '#f1f5f9';
+                            let statusColor = '#475569';
+                            if (exam.status === 'completed') {
+                                statusSubtext = 'Completed';
+                                statusBg = '#dcfce7';
+                                statusColor = '#15803d';
+                            } else if (exam.status === 'in_progress') {
+                                statusSubtext = 'In Progress';
+                                statusBg = '#eff6ff';
+                                statusColor = '#2563eb';
+                            } else if (exam.status === 'missed') {
+                                statusSubtext = 'Missed';
+                                statusBg = '#fee2e2';
+                                statusColor = '#dc2626';
+                            } else if (exam.status === 'upcoming') {
+                                statusSubtext = 'Upcoming';
+                                statusBg = '#fef3c7';
+                                statusColor = '#b45309';
+                            }
+
+                            return (
+                                <div
+                                    key={exam.id}
+                                    style={{
+                                        padding: '12px 14px',
+                                        borderBottom: idx === paginatedExams.length - 1 ? 'none' : '1px solid #f1f5f9',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                        <div style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b', lineHeight: '1.3' }}>
+                                            {exam.title}
+                                        </div>
+                                        <span style={{
+                                            fontSize: '11px',
+                                            fontWeight: '700',
+                                            padding: '2px 8px',
+                                            borderRadius: '12px',
+                                            backgroundColor: statusBg,
+                                            color: statusColor,
+                                            whiteSpace: 'nowrap',
+                                            flexShrink: 0
+                                        }}>
+                                            {statusSubtext}
+                                        </span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px 10px', fontSize: '12px', color: '#64748b' }}>
+                                        <span>{numQuestions} Questions</span>
+                                        <span>•</span>
+                                        <span>{durationStr}</span>
+                                        <span>•</span>
+                                        <span>{maxMarksStr} Marks</span>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2px' }}>
+                                        {exam.status === 'completed' ? (
+                                            <button
+                                                onClick={() => handleActionClick(exam)}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: 'white',
+                                                    color: '#2563eb',
+                                                    border: '1px solid #3b82f6',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                View Result
+                                            </button>
+                                        ) : exam.status === 'in_progress' ? (
+                                            <button
+                                                onClick={() => handleActionClick(exam)}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: '#2563eb',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Resume
+                                            </button>
+                                        ) : exam.status === 'missed' ? (
+                                            <button
+                                                disabled
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: '#f1f5f9',
+                                                    color: '#94a3b8',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '600',
+                                                    cursor: 'not-allowed'
+                                                }}
+                                            >
+                                                Missed
+                                            </button>
+                                        ) : exam.status === 'upcoming' ? (
+                                            <button
+                                                disabled
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: '#f8fafc',
+                                                    color: '#64748b',
+                                                    border: '1px solid #e2e8f0',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '600',
+                                                    cursor: 'default'
+                                                }}
+                                            >
+                                                Upcoming
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleActionClick(exam)}
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    backgroundColor: '#059669',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                            >
+                                                <Play size={12} fill="white" /> Start Exam
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
                 {/* Pagination Controls Footer */}
                 {totalPages > 1 && (
-                    <div style={{
-                        padding: '16px 24px',
-                        borderTop: '1px solid #f1f5f9',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '12px'
-                    }}>
+                    <div className="exam-pagination-footer">
                         <div style={{ fontSize: '13px', color: '#64748b' }}>
                             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredExams.length)} of {filteredExams.length} exams
                         </div>
