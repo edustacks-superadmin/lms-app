@@ -81,7 +81,37 @@ const PublicHeader = () => {
                     alignItems: 'center',
                     gap: '16px'
                 }} className="desktop-nav">
-                    <span style={{ color: '#6b7280', fontSize: '14px' }}>
+                    <button
+                        onClick={() => navigate('/posts')}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#4b5563',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '6px 10px',
+                            borderRadius: '6px'
+                        }}
+                    >
+                        Posts
+                    </button>
+                    <button
+                        onClick={() => navigate('/store')}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#4b5563',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '6px 10px',
+                            borderRadius: '6px'
+                        }}
+                    >
+                        Store
+                    </button>
+                    <span style={{ color: '#6b7280', fontSize: '14px', marginLeft: '8px' }}>
                         Don't have an account?
                     </span>
                     <button
@@ -142,6 +172,44 @@ const PublicHeader = () => {
                     borderTop: '1px solid #e5e7eb',
                     backgroundColor: 'white'
                 }}>
+                    <button
+                        onClick={() => {
+                            navigate('/posts');
+                            setMobileMenuOpen(false);
+                        }}
+                        style={{
+                            padding: '10px',
+                            background: 'none',
+                            border: '1px solid #e5e7eb',
+                            color: '#1f2937',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            textAlign: 'left'
+                        }}
+                    >
+                        Posts & Updates
+                    </button>
+                    <button
+                        onClick={() => {
+                            navigate('/store');
+                            setMobileMenuOpen(false);
+                        }}
+                        style={{
+                            padding: '10px',
+                            background: 'none',
+                            border: '1px solid #e5e7eb',
+                            color: '#1f2937',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            textAlign: 'left'
+                        }}
+                    >
+                        Store / Courses
+                    </button>
                     <button
                         onClick={() => {
                             navigate('/student/signup');

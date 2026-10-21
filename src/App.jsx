@@ -31,6 +31,7 @@ import EditCategory from './components/EditCategory';
 import DeleteCategory from './components/DeleteCategory';
 import CreatePost from './components/CreatePost';
 import PostDetail from './components/PostDetail';
+import PublicPosts from './components/PublicPosts';
 import PostsPageWrapper from './components/PostsPageWrapper';
 import ProductList from './components/ProductList';
 import StoreSidebar from './components/StoreSidebar';
@@ -608,8 +609,14 @@ function App() {
                                                     </AdminLayout>
                                                   } />
 
+                                                  {/* Public Posts Feed */}
+                                                  <Route path="/posts" element={
+                                                    <PublicLayout>
+                                                      <PublicPosts />
+                                                    </PublicLayout>
+                                                  } />
+
                                                   {/* Backward Compatibility Redirects */}
-                                                  <Route path="/posts" element={<Navigate to="/admin/posts" replace />} />
                                                   <Route path="/posts/deleted" element={<Navigate to="/admin/posts/deleted" replace />} />
                                                   <Route path="/posts/create" element={<Navigate to="/admin/posts/create" replace />} />
                                                   <Route path="/posts/categories" element={<Navigate to="/admin/posts/categories" replace />} />
