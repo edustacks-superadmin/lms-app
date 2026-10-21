@@ -246,6 +246,33 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+        // -------------------------------------------------------------
+    // Password Reset helpers
+    // -------------------------------------------------------------
+    const sendPasswordResetEmail = async (email) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) throw error;
+            return { error: null };
+        } catch (error) {
+            return { error };
+        }
+    };
+
+    const updateUserPassword = async (newPassword) => {
+        try {
+            const { error } = await supabase.auth.updateUser({
+                password: newPassword
+            });
+            if (error) throw error;
+            return { error: null };
+        } catch (error) {
+            return { error };
+        }
+    };
+
     const value = {
         user,
         role,

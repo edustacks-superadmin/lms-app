@@ -53,6 +53,8 @@ import ExamStatistics from './components/ExamStatistics';
 import VideoStatistics from './components/VideoStatistics';
 import ExamQuestions from './components/ExamQuestions';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import ProtectedLayout from './components/ProtectedLayout';
 import AdminLayout from './components/AdminLayout';
 import StudentLayout from './components/StudentLayout';
@@ -195,6 +197,16 @@ function App() {
                                                   <Route path="/student/signup" element={
                                                     <PublicLayout>
                                                       <StudentSignup />
+                                                    </PublicLayout>
+                                                  } />
+                                                  <Route path="/forgot-password" element={
+                                                    <PublicLayout>
+                                                      <ForgotPassword />
+                                                    </PublicLayout>
+                                                  } />
+                                                  <Route path="/reset-password" element={
+                                                    <PublicLayout>
+                                                      <ResetPassword />
                                                     </PublicLayout>
                                                   } />
                                                   <Route path="/home" element={

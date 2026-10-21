@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useInstitute } from '../context/InstituteContext';
 import { useCustomFields } from '../context/CustomFieldsContext';
-import { User, Mail, Lock, ArrowRight, Loader2, Upload, FileText, Phone, MapPin, Calendar } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Loader2, Upload, FileText, Phone, MapPin, Calendar, Eye, EyeOff } from 'lucide-react';
 
 const StudentSignup = () => {
     const navigate = useNavigate();
@@ -16,6 +16,8 @@ const StudentSignup = () => {
         confirmPassword: ''
     });
     const [photoFile, setPhotoFile] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');

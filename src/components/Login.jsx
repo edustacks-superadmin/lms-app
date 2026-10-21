@@ -4,11 +4,12 @@ import { useAuth } from '../context/AuthContext';
 import { useInstitute } from '../context/InstituteContext';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const { signIn } = useAuth();
     const { institute } = useInstitute();
@@ -175,9 +176,9 @@ const Login = () => {
                             }}>
                                 Password
                             </label>
-                            <a href="#" style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '500' }}>
+                            <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: '500' }}>
                                 Forgot password?
-                            </a>
+                            </Link>
                         </div>
                         <div style={{ position: 'relative' }}>
                             <div style={{
