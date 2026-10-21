@@ -97,20 +97,27 @@ const StudentDashboard = () => {
                 setTopStudents(leaderboardData.slice(0, 5));
             }
 
-            // Fetch Products (Courses) - Limit 4
-            const { data: productsData } = await supabase
-                .from('courses')
+            // Fetch Active Products (Courses) - Limit 4
+            let productsQuery = supabase
+                .from('products')
                 .select('*')
-                .eq('status', 'published')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true })
                 .limit(4);
 
+            if (institute?.id) {
+                productsQuery = productsQuery.eq('institute_id', institute.id);
+            }
+
+            const { data: productsData } = await productsQuery;
             if (productsData) setProducts(productsData);
 
             // Fetch Recent Posts - Limit 3
             let postsQuery = supabase
                 .from('posts')
-                .select('*, categories(name)')
+                .select('id, title, summary, description, content, cover_image, icon, created_at, publication_date, categories(name)')
                 .eq('is_deleted', false)
+                .eq('access_control', 'Public')
                 .order('created_at', { ascending: false })
                 .limit(3);
 
@@ -137,7 +144,8 @@ const StudentDashboard = () => {
                 .single();
 
             if (member) {
-                setStudentName(member.display_name);
+                const displayName = member.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Student';
+                setStudentName(displayName);
 
                 // Get active courses count
                 const { count: activeCount } = await supabase
@@ -254,7 +262,7 @@ const StudentDashboard = () => {
                         <img
                             src={currentBanner.image}
                             alt="Banner"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.5s ease-in-out' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', transition: 'opacity 0.5s ease-in-out' }}
                         />
                         {!currentBanner.hide_title && (
                             <div style={{
@@ -419,56 +427,62 @@ const StudentDashboard = () => {
                             </button>
                         </div>
                         <div className="products-grid">
-                            {products.map(product => (
-                                <div key={product.id} style={{
-                                    backgroundColor: 'white',
-                                    borderRadius: '16px',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                                    border: '1px solid #f0f0f0',
-                                    transition: 'transform 0.2s',
-                                    cursor: 'pointer'
-                                }}
-                                    onClick={() => navigate(`/student/store/product/${product.id}`)}
-                                >
-                                    <div style={{ height: '160px', backgroundColor: '#f1f5f9', position: 'relative' }}>
-                                        {product.image_url ? (
-                                            <img src={product.image_url} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <BookOpen size={40} />
+                            {products.map(product => {
+                                const prodImg = product.image || product.image_url;
+                                const prodLink = product.slug ? `/student/store/product/${product.slug}` : `/student/store/product/${product.id}`;
+                                const priceText = product.price ? `₹${product.price}` : 'Free';
+
+                                return (
+                                    <div key={product.id} style={{
+                                        backgroundColor: 'white',
+                                        borderRadius: '16px',
+                                        overflow: 'hidden',
+                                        boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                                        border: '1px solid #f0f0f0',
+                                        transition: 'transform 0.2s',
+                                        cursor: 'pointer'
+                                    }}
+                                        onClick={() => navigate(prodLink)}
+                                    >
+                                        <div style={{ height: '160px', backgroundColor: '#f1f5f9', position: 'relative' }}>
+                                            {prodImg ? (
+                                                <img src={prodImg} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                                                    <BookOpen size={40} />
+                                                </div>
+                                            )}
+                                            <div style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', color: '#2563eb' }}>
+                                                {priceText}
                                             </div>
-                                        )}
-                                        <div style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', color: '#2563eb' }}>
-                                            ${product.price || 'Free'}
+                                        </div>
+                                        <div style={{ padding: '16px' }}>
+                                            <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b', lineHeight: '1.4' }}>{product.title}</h4>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '13px', marginBottom: '12px' }}>
+                                                <Star size={14} fill="#f59e0b" />
+                                                <span style={{ fontWeight: '600' }}>4.8</span>
+                                                <span style={{ color: '#94a3b8' }}>(120 reviews)</span>
+                                            </div>
+                                            <button style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                backgroundColor: '#f8fafc',
+                                                border: '1px solid #e2e8f0',
+                                                borderRadius: '8px',
+                                                color: '#475569',
+                                                fontWeight: '600',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px'
+                                            }}>
+                                                <ShoppingCart size={16} /> View Details
+                                            </button>
                                         </div>
                                     </div>
-                                    <div style={{ padding: '16px' }}>
-                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b', lineHeight: '1.4' }}>{product.title}</h4>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '13px', marginBottom: '12px' }}>
-                                            <Star size={14} fill="#f59e0b" />
-                                            <span style={{ fontWeight: '600' }}>4.8</span>
-                                            <span style={{ color: '#94a3b8' }}>(120 reviews)</span>
-                                        </div>
-                                        <button style={{
-                                            width: '100%',
-                                            padding: '10px',
-                                            backgroundColor: '#f8fafc',
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: '8px',
-                                            color: '#475569',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px'
-                                        }}>
-                                            <ShoppingCart size={16} /> View Details
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -484,33 +498,66 @@ const StudentDashboard = () => {
                             </button>
                         </div>
                         <div className="recent-posts-list">
-                            {recentPosts.map(post => (
-                                <div key={post.id} className="recent-post-card" onClick={() => navigate(`/student/posts/${post.id}`)}>
-                                    <div className="recent-post-image">
-                                        {post.image_url ? (
-                                            <img src={post.image_url} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                <MessageSquare size={24} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                            <span style={{ fontSize: '12px', color: '#2563eb', fontWeight: '600', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
-                                                {post.categories?.name || 'General'}
-                                            </span>
-                                            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                                                {new Date(post.published_at).toLocaleDateString()}
-                                            </span>
+                            {recentPosts.map(post => {
+                                const postDate = post.publication_date || post.created_at;
+                                const formattedDate = postDate
+                                    ? new Date(postDate).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    })
+                                    : 'Recent';
+
+                                const snippet = (post.summary || post.description || post.content || '')
+                                    .replace(/<[^>]*>?/gm, '')
+                                    .replace(/&nbsp;/g, ' ')
+                                    .replace(/\u00a0/g, ' ')
+                                    .trim();
+
+                                const postImg = post.cover_image || post.image_url;
+
+                                return (
+                                    <div key={post.id} className="recent-post-card" onClick={() => navigate(`/student/posts/${post.id}`)} style={{ cursor: 'pointer', overflow: 'hidden' }}>
+                                        <div className="recent-post-image" style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {postImg ? (
+                                                <img src={postImg} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : post.icon ? (
+                                                <span style={{ fontSize: '26px' }}>{post.icon}</span>
+                                            ) : (
+                                                <MessageSquare size={22} color="#94a3b8" />
+                                            )}
                                         </div>
-                                        <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b' }}>{post.title}</h4>
-                                        <p style={{ fontSize: '14px', color: '#64748b', margin: 0, lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {post.content ? post.content.replace(/<[^>]*>?/gm, '') : 'No description available.'}
-                                        </p>
+                                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                                                    {post.categories?.name || 'General'}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                    {formattedDate}
+                                                </span>
+                                            </div>
+                                            <h4 style={{ fontSize: '15px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#1e293b', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                                {post.icon && !postImg && <span style={{ marginRight: '6px' }}>{post.icon}</span>}
+                                                {post.title}
+                                            </h4>
+                                            <p style={{
+                                                fontSize: '13px',
+                                                color: '#64748b',
+                                                margin: 0,
+                                                lineHeight: '1.5',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                wordBreak: 'break-word',
+                                                overflowWrap: 'break-word'
+                                            }}>
+                                                {snippet || 'Click to read full post...'}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
