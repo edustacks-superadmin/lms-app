@@ -6,7 +6,7 @@ import { usePosts } from '../context/PostContext';
 import { useCategories } from '../context/CategoryContext';
 import { useBatches } from '../context/BatchContext';
 import { useProducts } from '../context/ProductContext';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Code, Eye, Table, Sparkles } from 'lucide-react';
 
 const CreatePost = () => {
     const navigate = useNavigate();
@@ -32,6 +32,7 @@ const CreatePost = () => {
 
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(!!id);
+    const [isHtmlMode, setIsHtmlMode] = useState(false);
 
     useEffect(() => {
         fetchProducts();
@@ -84,6 +85,57 @@ const CreatePost = () => {
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+
+    const handleInsertTable = () => {
+        const tableTemplate = `
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #cbd5e1;">
+  <thead>
+    <tr style="background-color: #f1f5f9;">
+      <th style="border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-weight: bold;">Feature / Metric</th>
+      <th style="border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-weight: bold;">Column 1</th>
+      <th style="border: 1px solid #cbd5e1; padding: 10px 14px; text-align: left; font-weight: bold;">Column 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;"><strong>Point 1</strong></td>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;">Value A</td>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;">Value B</td>
+    </tr>
+    <tr>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;"><strong>Point 2</strong></td>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;">Value C</td>
+      <td style="border: 1px solid #cbd5e1; padding: 10px 14px;">Value D</td>
+    </tr>
+  </tbody>
+</table>
+<p><br></p>`;
+        setFormData(prev => ({
+            ...prev,
+            content: (prev.content || '') + tableTemplate
+        }));
+    };
+
+    const hasMergedHeader = formData.content && (
+        formData.content.includes('Feature CPM') ||
+        formData.content.includes('Feature&nbsp;CPM') ||
+        /Review Technique/i.test(formData.content)
+    );
+
+    const handleFixMergedHeader = () => {
+        let html = formData.content || '';
+        const fixedHeader = `<thead><tr>
+  <th style="border: 1px solid #cbd5e1; padding: 10px 14px; background: #f1f5f9; text-align: left; font-weight: 700;">Feature</th>
+  <th style="border: 1px solid #cbd5e1; padding: 10px 14px; background: #f1f5f9; text-align: left; font-weight: 700;">CPM (Critical Path Method)</th>
+  <th style="border: 1px solid #cbd5e1; padding: 10px 14px; background: #f1f5f9; text-align: left; font-weight: 700;">PERT (Program Evaluation and Review Technique)</th>
+</tr></thead>`;
+
+        const regex = new RegExp('<tr>\\s*<td[^>]*>Feature[\\s\\S]*?Review Technique[\\s\\S]*?<\\/td>\\s*<\\/tr>', 'i');
+        html = html.replace(regex, fixedHeader);
+        setFormData(prev => ({ ...prev, content: html }));
+        alert('Table header successfully split into 3 columns!');
     };
 
     const handleContentChange = (content) => {
@@ -242,26 +294,125 @@ const CreatePost = () => {
                     />
                 </div>
 
-                {/* Content (Rich Text) */}
+                {/* Content (Rich Text & HTML Code Editor) */}
                 <div style={{ marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>Content</label>
-                    <div style={{ height: '300px', marginBottom: '40px' }}> {/* Container for editor */}
-                        <ReactQuill
-                            theme="snow"
-                            value={formData.content}
-                            onChange={handleContentChange}
-                            style={{ height: '100%', borderRadius: '8px' }}
-                            modules={{
-                                toolbar: [
-                                    [{ 'header': [1, 2, false] }],
-                                    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-                                    ['link', 'image'],
-                                    ['clean']
-                                ],
-                            }}
-                        />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                        <label style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>
+                            Content {isHtmlMode ? '(HTML Source Mode)' : '(Visual Mode)'}
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            {hasMergedHeader && (
+                                <button
+                                    type="button"
+                                    onClick={handleFixMergedHeader}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '6px 12px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        color: '#065f46',
+                                        backgroundColor: '#d1fae5',
+                                        border: '1px solid #a7f3d0',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Split the first row into 3 header columns"
+                                >
+                                    <Sparkles size={14} color="#059669" />
+                                    Fix Table Header (Split into 3 Columns)
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={handleInsertTable}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '6px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    color: '#374151',
+                                    backgroundColor: '#f3f4f6',
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer'
+                                }}
+                                title="Insert a responsive 3-column table template"
+                            >
+                                <Table size={14} />
+                                + Insert Table (3 Columns)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsHtmlMode(!isHtmlMode)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '6px 14px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    color: isHtmlMode ? '#1d4ed8' : '#374151',
+                                    backgroundColor: isHtmlMode ? '#dbeafe' : '#f3f4f6',
+                                    border: `1px solid ${isHtmlMode ? '#93c5fd' : '#d1d5db'}`,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease'
+                                }}
+                            >
+                                {isHtmlMode ? <Eye size={14} /> : <Code size={14} />}
+                                {isHtmlMode ? 'Switch to Visual Editor' : '</> HTML Source Code'}
+                            </button>
+                        </div>
                     </div>
+
+                    {isHtmlMode ? (
+                        <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>
+                                💡 Tip: You can edit or add table headers (<code>&lt;th&gt;Title&lt;/th&gt;</code>) and table columns (<code>&lt;td&gt;Data&lt;/td&gt;</code>) directly here.
+                            </div>
+                            <textarea
+                                value={formData.content}
+                                onChange={(e) => handleContentChange(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    height: '380px',
+                                    padding: '14px',
+                                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                                    fontSize: '13px',
+                                    lineHeight: '1.6',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '8px',
+                                    backgroundColor: '#0f172a',
+                                    color: '#e2e8f0',
+                                    boxSizing: 'border-box',
+                                    resize: 'vertical'
+                                }}
+                                placeholder="Paste or edit HTML content directly..."
+                            />
+                        </div>
+                    ) : (
+                        <div style={{ height: '360px', marginBottom: '40px' }}>
+                            <ReactQuill
+                                theme="snow"
+                                value={formData.content}
+                                onChange={handleContentChange}
+                                style={{ height: '100%', borderRadius: '8px' }}
+                                modules={{
+                                    toolbar: [
+                                        [{ 'header': [1, 2, 3, false] }],
+                                        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                                        ['link', 'image'],
+                                        ['clean']
+                                    ],
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
