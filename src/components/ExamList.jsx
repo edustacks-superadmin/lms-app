@@ -12,6 +12,14 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, exam: null });
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [expandedDescriptions, setExpandedDescriptions] = useState({});
+
+    const toggleDescription = (examId) => {
+        setExpandedDescriptions(prev => ({
+            ...prev,
+            [examId]: !prev[examId]
+        }));
+    };
 
     const handleDeleteClick = (exam) => {
         setDeleteModal({ isOpen: true, exam });
@@ -157,7 +165,7 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
                                         : <span style={{ fontWeight: '500', color: 'var(--text-color)' }}>Not assigned to any course</span>}
                                 </div>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '40px', fontSize: '13px', color: 'var(--primary-color)', marginTop: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '24px', fontSize: '13px', marginTop: '8px', flexWrap: 'wrap' }}>
                                     <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <span style={{ color: 'var(--text-color)' }}>
                                             Start: {exam.start_date ? new Date(exam.start_date).toLocaleString('en-GB', {
@@ -170,7 +178,47 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
                                             }) : 'N/A'}
                                         </span>
                                     </span>
-                                    <span>{exam.description || 'No description'}</span>
+                                    {exam.description ? (
+                                        <div style={{ flex: 1, minWidth: '200px', maxWidth: '850px' }}>
+                                            <span
+                                                title={exam.description}
+                                                style={{
+                                                    color: 'var(--primary-color)',
+                                                    display: expandedDescriptions[exam.id] ? 'inline' : '-webkit-box',
+                                                    WebkitLineClamp: expandedDescriptions[exam.id] ? 'unset' : 1,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: expandedDescriptions[exam.id] ? 'visible' : 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    lineHeight: '1.5'
+                                                }}
+                                            >
+                                                {exam.description}
+                                            </span>
+                                            {exam.description.length > 80 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleDescription(exam.id);
+                                                    }}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        color: 'var(--primary-color)',
+                                                        fontWeight: '600',
+                                                        fontSize: '12px',
+                                                        cursor: 'pointer',
+                                                        padding: '0 0 0 6px',
+                                                        textDecoration: 'underline'
+                                                    }}
+                                                >
+                                                    {expandedDescriptions[exam.id] ? 'less' : 'more'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <span style={{ color: '#94a3b8' }}>No description</span>
+                                    )}
                                 </div>
                             </div>
 
