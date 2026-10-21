@@ -48,7 +48,7 @@ const PostsSidebar = ({ onFilterChange, activeStatus, onStatusChange, isStudent 
                         <button
                             className="btn"
                             style={{ justifyContent: 'center', width: '100%', marginBottom: '16px', backgroundColor: '#00bfa5', color: 'white', border: 'none', cursor: 'pointer' }}
-                            onClick={() => navigate('/posts/create')}
+                            onClick={() => navigate('/admin/posts/create')}
                         >
                             <List size={18} /> Create post
                         </button>
@@ -63,7 +63,7 @@ const PostsSidebar = ({ onFilterChange, activeStatus, onStatusChange, isStudent 
                                 border: 'none',
                                 cursor: 'pointer'
                             }}
-                            onClick={() => navigate('/posts')}
+                            onClick={() => navigate('/admin/posts')}
                         >
                             <CheckCircle size={16} /> Published
                         </button>
@@ -77,7 +77,7 @@ const PostsSidebar = ({ onFilterChange, activeStatus, onStatusChange, isStudent 
                                 border: 'none',
                                 cursor: 'pointer'
                             }}
-                            onClick={() => navigate('/posts/deleted')}
+                            onClick={() => navigate('/admin/posts/deleted')}
                         >
                             <Trash2 size={16} /> Deleted
                         </button>

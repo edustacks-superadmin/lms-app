@@ -15,7 +15,7 @@ const PostCategories = () => {
                 <button
                     className="btn"
                     style={{ backgroundColor: '#00bfa5', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
-                    onClick={() => navigate('/posts/categories/create')}
+                    onClick={() => navigate('/admin/posts/categories/create')}
                 >
                     <PlusCircle size={18} /> Create category
                 </button>
@@ -68,13 +68,13 @@ const PostCategories = () => {
                         <div style={{ display: 'flex', gap: '30px', marginRight: '20px' }}>
                             <button
                                 style={{ background: 'none', border: 'none', color: '#666', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px' }}
-                                onClick={() => navigate(`/posts/categories/edit/${category.id}`)}
+                                onClick={() => navigate(`/admin/posts/categories/edit/${category.id}`)}
                             >
                                 <Edit2 size={16} /> Edit
                             </button>
                             <button
                                 style={{ background: 'none', border: 'none', color: '#666', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '14px' }}
-                                onClick={() => navigate(`/posts/categories/delete/${category.id}`)}
+                                onClick={() => navigate(`/admin/posts/categories/delete/${category.id}`)}
                             >
                                 <Trash2 size={16} /> Delete
                             </button>

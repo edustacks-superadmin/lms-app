@@ -167,7 +167,7 @@ const CreatePost = () => {
             } else {
                 await addPost(postData);
             }
-            navigate('/posts');
+            navigate('/admin/posts');
         } catch (error) {
             console.error("Failed to save post", error);
             // Alert is handled in context
@@ -183,7 +183,7 @@ const CreatePost = () => {
     return (
         <div style={{ flex: 1, padding: '20px', marginTop: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-                <button onClick={() => navigate('/posts')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f0f0f0'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>
+                <button onClick={() => navigate('/admin/posts')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }} onMouseOver={(e) => e.currentTarget.style.background = '#f0f0f0'} onMouseOut={(e) => e.currentTarget.style.background = 'none'}>
                     <ArrowLeft size={24} color="#333" />
                 </button>
                 <h1 style={{ fontSize: '24px', fontWeight: '400', margin: 0, color: '#1a1a1a' }}>{id ? 'Edit Post' : 'Create post'}</h1>
@@ -448,7 +448,7 @@ const CreatePost = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => navigate('/posts')}
+                        onClick={() => navigate('/admin/posts')}
                         style={{
                             backgroundColor: 'white',
                             color: '#4b5563',

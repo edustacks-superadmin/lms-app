@@ -15,7 +15,7 @@ const PostsPageWrapper = () => {
 
     // Set status based on URL
     useEffect(() => {
-        if (location.pathname === '/posts/deleted') {
+        if (location.pathname === '/admin/posts/deleted' || location.pathname === '/posts/deleted') {
             setActiveStatus('deleted');
         } else {
             setActiveStatus('published');

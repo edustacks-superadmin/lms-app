@@ -24,7 +24,7 @@ const CreateCategory = () => {
     const handleCreate = () => {
         if (!category.name) return; // Basic validation
         addCategory(category);
-        navigate('/posts/categories');
+        navigate('/admin/posts/categories');
     };
 
     return (
@@ -100,7 +100,7 @@ const CreateCategory = () => {
                     <button
                         className="btn"
                         style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none' }}
-                        onClick={() => navigate('/posts/categories')}
+                        onClick={() => navigate('/admin/posts/categories')}
                     >
                         Cancel
                     </button>

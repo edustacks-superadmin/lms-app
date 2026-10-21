@@ -541,17 +541,17 @@ function App() {
                                                   } />
 
                                                   {/* Post Routes */}
-                                                  <Route path="/posts" element={
+                                                  <Route path="/admin/posts" element={
                                                     <AdminLayout>
                                                       <PostsPageWrapper />
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/deleted" element={
+                                                  <Route path="/admin/posts/deleted" element={
                                                     <AdminLayout>
                                                       <PostsPageWrapper />
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/create" element={
+                                                  <Route path="/admin/posts/create" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -559,7 +559,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/categories" element={
+                                                  <Route path="/admin/posts/categories" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -567,7 +567,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/categories/create" element={
+                                                  <Route path="/admin/posts/categories/create" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -575,7 +575,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/categories/edit/:id" element={
+                                                  <Route path="/admin/posts/categories/edit/:id" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -583,7 +583,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/categories/delete/:id" element={
+                                                  <Route path="/admin/posts/categories/delete/:id" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -591,7 +591,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/edit/:id" element={
+                                                  <Route path="/admin/posts/edit/:id" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -599,7 +599,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
-                                                  <Route path="/posts/:id" element={
+                                                  <Route path="/admin/posts/:id" element={
                                                     <AdminLayout>
                                                       <PostsSidebar />
                                                       <div className="content-area">
@@ -607,6 +607,16 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
+
+                                                  {/* Backward Compatibility Redirects */}
+                                                  <Route path="/posts" element={<Navigate to="/admin/posts" replace />} />
+                                                  <Route path="/posts/deleted" element={<Navigate to="/admin/posts/deleted" replace />} />
+                                                  <Route path="/posts/create" element={<Navigate to="/admin/posts/create" replace />} />
+                                                  <Route path="/posts/categories" element={<Navigate to="/admin/posts/categories" replace />} />
+                                                  <Route path="/posts/categories/create" element={<Navigate to="/admin/posts/categories/create" replace />} />
+                                                  <Route path="/posts/categories/edit/:id" element={<Navigate to="/admin/posts/categories" replace />} />
+                                                  <Route path="/posts/categories/delete/:id" element={<Navigate to="/admin/posts/categories" replace />} />
+                                                  <Route path="/posts/edit/:id" element={<Navigate to="/admin/posts" replace />} />
 
                                                   {/* Settings Routes */}
                                                   <Route path="/settings/home" element={

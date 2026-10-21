@@ -209,7 +209,7 @@ const PostDetail = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     {isAdmin && (
                         <button
-                            onClick={() => navigate(`/posts/edit/${post.id}`)}
+                            onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',

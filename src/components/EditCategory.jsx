@@ -34,7 +34,7 @@ const EditCategory = () => {
 
     const handleUpdate = () => {
         updateCategory(id, category);
-        navigate('/posts/categories');
+        navigate('/admin/posts/categories');
     };
 
     if (loading) return <div>Loading...</div>;
@@ -113,7 +113,7 @@ const EditCategory = () => {
                     <button
                         className="btn"
                         style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none' }}
-                        onClick={() => navigate('/posts/categories')}
+                        onClick={() => navigate('/admin/posts/categories')}
                     >
                         Cancel
                     </button>

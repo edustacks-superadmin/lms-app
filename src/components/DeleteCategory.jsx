@@ -17,13 +17,13 @@ const DeleteCategory = () => {
             setCategory(data);
         } else {
             // Handle case where category is not found (e.g., invalid ID)
-            navigate('/posts/categories');
+            navigate('/admin/posts/categories');
         }
     }, [id, getCategory, navigate, loading]);
 
     const handleDelete = () => {
         deleteCategory(id);
-        navigate('/posts/categories');
+        navigate('/admin/posts/categories');
     };
 
     if (!category) return <div>Loading...</div>;
@@ -46,7 +46,7 @@ const DeleteCategory = () => {
                     <button
                         className="btn"
                         style={{ backgroundColor: '#e0e0e0', color: '#333', border: '1px solid #ccc' }}
-                        onClick={() => navigate('/posts/categories')}
+                        onClick={() => navigate('/admin/posts/categories')}
                     >
                         Cancel
                     </button>

@@ -161,7 +161,7 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                         <button
                             className="btn btn-outline"
                             style={{ background: '#f5f5f5', border: '1px solid #ddd', color: '#333', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
-                            onClick={() => navigate('/posts/categories')}
+                            onClick={() => navigate('/admin/posts/categories')}
                         >
                             <Tag size={16} /> Categories
                         </button>
@@ -267,7 +267,7 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                                         <>
                                             <span
                                                 style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                                                onClick={() => navigate(`/posts/edit/${post.id}`)}
+                                                onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
                                             >
                                                 Edit
                                             </span>

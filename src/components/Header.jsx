@@ -161,7 +161,7 @@ const Header = () => {
                             </div>
                         )}
                     </div>
-                    <NavLink to="/posts" style={getLinkStyle}>
+                    <NavLink to="/admin/posts" style={getLinkStyle}>
                         <PenTool size={18} /> Posts
                     </NavLink>
 
