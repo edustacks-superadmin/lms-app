@@ -201,34 +201,46 @@ const StudentStore = () => {
                     )}
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '24px'
+                }}>
                     {filteredProducts.map((product) => (
                         <div
                             key={product.id}
                             style={{
                                 backgroundColor: 'white',
-                                borderRadius: '12px',
+                                borderRadius: '16px',
                                 overflow: 'hidden',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
                                 border: '1px solid #e5e7eb',
-                                transition: 'all 0.2s ease',
+                                transition: 'all 0.25s ease',
                                 cursor: 'pointer',
                                 display: 'flex',
-                                flexDirection: 'row',
-                                height: '100px'
+                                flexDirection: 'column',
+                                position: 'relative'
                             }}
                             onClick={() => navigate(`/student/store/product/${product.id}`)}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.12)';
-                                e.currentTarget.style.transform = 'translateY(-2px)';
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.12)';
+                                e.currentTarget.style.transform = 'translateY(-4px)';
+                                e.currentTarget.style.borderColor = '#cbd5e1';
                             }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
                                 e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.borderColor = '#e5e7eb';
                             }}
                         >
-                            {/* Image */}
-                            <div style={{ aspectRatio: '16/9', height: '100%', overflow: 'hidden', backgroundColor: '#f3f4f6', position: 'relative' }}>
+                            {/* Image Header */}
+                            <div style={{
+                                width: '100%',
+                                aspectRatio: '16/9',
+                                overflow: 'hidden',
+                                backgroundColor: '#f3f4f6',
+                                position: 'relative'
+                            }}>
                                 {product.image ? (
                                     <img
                                         src={product.image}
@@ -237,68 +249,153 @@ const StudentStore = () => {
                                     />
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
-                                        <ShoppingCart size={32} />
+                                        <ShoppingCart size={36} />
                                     </div>
                                 )}
+
+                                {/* Category Badge */}
                                 {product.category && (
                                     <div style={{
                                         position: 'absolute',
-                                        top: '8px',
-                                        left: '8px',
-                                        backgroundColor: 'rgba(255,255,255,0.9)',
-                                        padding: '2px 6px',
-                                        borderRadius: '4px',
-                                        fontSize: '10px',
+                                        top: '10px',
+                                        left: '10px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(4px)',
+                                        padding: '4px 10px',
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
                                         fontWeight: '600',
-                                        color: '#374151',
+                                        color: '#334155',
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '4px'
+                                        gap: '4px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
                                     }}>
-                                        <Tag size={10} /> {product.category}
+                                        <Tag size={12} /> {product.category}
                                     </div>
                                 )}
+
+                                {/* Price Badge on Image */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '10px',
+                                    right: '10px',
+                                    backgroundColor: '#2563eb',
+                                    color: 'white',
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.35)'
+                                }}>
+                                    {product.price > 0 ? `₹${product.price}` : 'Free'}
+                                </div>
                             </div>
 
-                            {/* Content */}
-                            <div style={{ padding: '10px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                            {/* Content Body */}
+                            <div style={{
+                                padding: '16px',
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between'
+                            }}>
                                 <div>
                                     <h3 style={{
-                                        fontSize: '15px',
-                                        fontWeight: '600',
-                                        marginBottom: '4px',
-                                        color: '#1a1a1a',
-                                        lineHeight: '1.3',
+                                        fontSize: '16px',
+                                        fontWeight: '700',
+                                        marginBottom: '6px',
+                                        color: '#0f172a',
+                                        lineHeight: '1.4',
                                         display: '-webkit-box',
                                         WebkitLineClamp: 2,
                                         WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden'
+                                        overflow: 'hidden',
+                                        minHeight: '44px'
                                     }}>
                                         {product.title}
                                     </h3>
-                                    <p style={{
-                                        fontSize: '12px',
-                                        color: '#6b7280',
-                                        marginBottom: '4px',
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 1,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden'
-                                    }}>
-                                        {product.short_description}
-                                    </p>
+                                    {product.short_description ? (
+                                        <p style={{
+                                            fontSize: '13px',
+                                            color: '#64748b',
+                                            lineHeight: '1.4',
+                                            marginBottom: '12px',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}>
+                                            {product.short_description}
+                                        </p>
+                                    ) : (
+                                        <div style={{ height: '8px' }} />
+                                    )}
                                 </div>
 
-                                {/* Price */}
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    {product.strikethrough_price && (
-                                        <span style={{ fontSize: '12px', color: '#9ca3af', textDecoration: 'line-through', marginRight: '6px' }}>
-                                            ₹{product.strikethrough_price}
+                                <div>
+                                    {/* Price & Discounts */}
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'baseline',
+                                        gap: '8px',
+                                        marginBottom: '14px',
+                                        paddingTop: '8px',
+                                        borderTop: '1px solid #f1f5f9'
+                                    }}>
+                                        <span style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a' }}>
+                                            {product.price > 0 ? `₹${product.price}` : 'Free'}
                                         </span>
-                                    )}
-                                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1a1a1a' }}>
-                                        {product.price > 0 ? `₹${product.price}` : 'Free'}
-                                    </span>
+                                        {product.strikethrough_price && (
+                                            <span style={{ fontSize: '13px', color: '#94a3b8', textDecoration: 'line-through' }}>
+                                                ₹{product.strikethrough_price}
+                                            </span>
+                                        )}
+                                        {product.strikethrough_price && product.price > 0 && product.strikethrough_price > product.price && (
+                                            <span style={{
+                                                fontSize: '11px',
+                                                fontWeight: '700',
+                                                color: '#16a34a',
+                                                backgroundColor: '#dcfce7',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px'
+                                            }}>
+                                                {Math.round(((product.strikethrough_price - product.price) / product.strikethrough_price) * 100)}% off
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <button
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px 14px',
+                                            backgroundColor: '#f8fafc',
+                                            border: '1px solid #e2e8f0',
+                                            borderRadius: '8px',
+                                            color: '#2563eb',
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#2563eb';
+                                            e.currentTarget.style.borderColor = '#2563eb';
+                                            e.currentTarget.style.color = '#ffffff';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.backgroundColor = '#f8fafc';
+                                            e.currentTarget.style.borderColor = '#e2e8f0';
+                                            e.currentTarget.style.color = '#2563eb';
+                                        }}
+                                    >
+                                        <ShoppingCart size={15} /> View Details
+                                    </button>
                                 </div>
                             </div>
                         </div>
