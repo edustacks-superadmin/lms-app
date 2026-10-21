@@ -3,6 +3,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useChapters } from '../context/ChapterContext';
 import { PlayCircle, FileText, CheckCircle, Lock, ChevronDown, ChevronRight, Menu, ArrowRight, Clock, Eye, FileQuestion, Folder, Award, AlertCircle, HelpCircle } from 'lucide-react';
 import PDFViewer from './PDFViewer';
+import ForbiddenView from './ForbiddenView';
+import { checkPlatformAccess } from '../utils/platformAccess';
 
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -96,6 +98,31 @@ const CoursePlayer = () => {
     const [examAttempts, setExamAttempts] = useState({});
     const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     const [examDetails, setExamDetails] = useState(null);
+    const [platformRestricted, setPlatformRestricted] = useState(null);
+
+    // Check course platform availability
+    useEffect(() => {
+        if (!id) return;
+        const checkCoursePlatform = async () => {
+            try {
+                const { data: courseData } = await supabase
+                    .from('courses')
+                    .select('id, title, platform_availability, allowed_platforms')
+                    .eq('id', id)
+                    .maybeSingle();
+
+                if (courseData) {
+                    const access = checkPlatformAccess(courseData);
+                    if (!access.allowed) {
+                        setPlatformRestricted(access);
+                    }
+                }
+            } catch (err) {
+                console.error('Error checking course platform access:', err);
+            }
+        };
+        checkCoursePlatform();
+    }, [id]);
 
     // Fetch full exam details when activeContent is an exam
     useEffect(() => {
@@ -406,6 +433,10 @@ const CoursePlayer = () => {
         }
         return contentProgress[contentId] === true;
     };
+
+    if (platformRestricted) {
+        return <ForbiddenView message={platformRestricted.message} />;
+    }
 
     if (loading) {
         return <div style={{ padding: '40px', textAlign: 'center' }}>Loading course content...</div>;

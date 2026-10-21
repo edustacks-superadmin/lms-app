@@ -48,6 +48,7 @@ import FolderQuestions from './components/FolderQuestions';
 import BulkUploadQuestions from './components/BulkUploadQuestions';
 import CreateExam from './components/CreateExam';
 import ReportedQuestions from './components/ReportedQuestions';
+import ForbiddenView from './components/ForbiddenView';
 import ExamsSidebar from './components/ExamsSidebar';
 import ExamList from './components/ExamList';
 import ExamsPage from './components/ExamsPage';
@@ -250,6 +251,8 @@ function App() {
                                                       <ShippingPolicy />
                                                     </PublicLayout>
                                                   } />
+                                                  <Route path="/forbidden" element={<ForbiddenView />} />
+                                                  <Route path="/403" element={<ForbiddenView />} />
 
                                                   {/* Protected Routes */}
                                                   <Route path="/" element={<Navigate to="/home" replace />} />

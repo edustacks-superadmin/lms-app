@@ -14,6 +14,7 @@ import { initializeRazorpayCheckout } from '../utils/razorpay';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../supabaseClient';
 import PDFViewer from './PDFViewer';
+import { checkPlatformAccess } from '../utils/platformAccess';
 
 const StudentProductDetail = () => {
     const { id } = useParams();
@@ -45,7 +46,13 @@ const StudentProductDetail = () => {
     const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
     const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
 
-    const handlePreviewContent = (item) => {
+    const handlePreviewContent = (item, course = currentCourse) => {
+        const access = checkPlatformAccess(course);
+        if (!access.allowed) {
+            navigate(`/forbidden?message=${encodeURIComponent(access.message)}`);
+            return;
+        }
+
         if (!item.free_preview) return;
         const targetUrl = item.url || item.content_url;
         if (item.type === 'pdf' || item.type === 'document' || item.type === 'notes' || item.type === 'file') {
@@ -64,6 +71,17 @@ const StudentProductDetail = () => {
             navigate(`/student/exam/${item.exam_id || targetUrl}/take`);
         } else if (targetUrl) {
             window.open(targetUrl, '_blank');
+        }
+    };
+
+    const handleItemClick = (item, course = currentCourse) => {
+        const access = checkPlatformAccess(course);
+        if (!access.allowed) {
+            navigate(`/forbidden?message=${encodeURIComponent(access.message)}`);
+            return;
+        }
+        if (item.free_preview) {
+            handlePreviewContent(item, course);
         }
     };
 
@@ -88,7 +106,7 @@ const StudentProductDetail = () => {
             // Fetch courses
             const { data: allCourses, error: courseErr } = await supabase
                 .from('courses')
-                .select('id, title, description, allowed_products, institute_id')
+                .select('id, title, description, allowed_products, institute_id, platform_availability, allowed_platforms')
                 .or('is_archived.is.null,is_archived.eq.false');
 
             if (courseErr) throw courseErr;
@@ -742,7 +760,7 @@ const StudentProductDetail = () => {
                                                                             {sub.contents.map((item) => (
                                                                                 <div
                                                                                     key={item.id}
-                                                                                    onClick={() => item.free_preview && handlePreviewContent(item)}
+                                                                                    onClick={() => handleItemClick(item, currentCourse)}
                                                                                     style={{
                                                                                         display: 'flex',
                                                                                         alignItems: 'center',
@@ -799,7 +817,7 @@ const StudentProductDetail = () => {
                                                             {chapter.contents.map((item) => (
                                                                 <div
                                                                     key={item.id}
-                                                                    onClick={() => item.free_preview && handlePreviewContent(item)}
+                                                                    onClick={() => handleItemClick(item, currentCourse)}
                                                                     style={{
                                                                         display: 'flex',
                                                                         alignItems: 'center',
