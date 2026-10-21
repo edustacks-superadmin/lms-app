@@ -95,11 +95,15 @@ const ExamPortal = () => {
             let memberAttempts = [];
             if (member) {
                 // 2. Get member's attempts
-                const { data: attData } = await supabase
+                const { data: attData, error: attError } = await supabase
                     .from('exam_attempts')
                     .select('id, exam_id, score, total_marks, started_at, submitted_at, status')
                     .eq('member_id', member.id)
-                    .order('created_at', { ascending: false });
+                    .order('started_at', { ascending: false });
+
+                if (attError) {
+                    console.warn('Attempts fetch warning:', attError);
+                }
 
                 memberAttempts = attData || [];
                 setAttempts(memberAttempts);
