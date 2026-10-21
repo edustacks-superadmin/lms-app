@@ -49,7 +49,6 @@ const PublicPosts = () => {
                     cover_image,
                     icon,
                     created_at,
-                    published_at,
                     publication_date,
                     access_control,
                     category_id,
@@ -292,7 +291,7 @@ const PublicPosts = () => {
                         gap: '24px'
                     }}>
                         {filteredPosts.map(post => {
-                            const dateStr = new Date(post.publication_date || post.published_at || post.created_at).toLocaleDateString('en-US', {
+                            const dateStr = new Date(post.publication_date || post.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric'
