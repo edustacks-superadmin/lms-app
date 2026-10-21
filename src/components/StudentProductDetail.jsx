@@ -40,6 +40,15 @@ const StudentProductDetail = () => {
     const [chapterSearch, setChapterSearch] = useState('');
     const [activeCourseIndex, setActiveCourseIndex] = useState(0);
 
+    const isManualPaymentEnabled = institute?.feature_flags?.manualPaymentEnabled !== false;
+
+    // Reset to razorpay if manual payments are disabled
+    useEffect(() => {
+        if (!isManualPaymentEnabled && paymentMethod === 'upi') {
+            setPaymentMethod('razorpay');
+        }
+    }, [isManualPaymentEnabled, paymentMethod]);
+
     const UPI_ID = institute?.upi_id || "example@upi";
 
     useEffect(() => {
@@ -982,51 +991,74 @@ const StudentProductDetail = () => {
                         ) : (
                             <div style={{ marginBottom: '20px' }}>
                                 {/* Payment Method Selection */}
-                                <div style={{ marginBottom: '20px' }}>
-                                    <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>Select Payment Method</h4>
-                                    <div style={{ display: 'flex', gap: '12px' }}>
-                                        <button
-                                            onClick={() => setPaymentMethod('razorpay')}
-                                            style={{
-                                                flex: 1,
-                                                padding: '16px',
-                                                backgroundColor: paymentMethod === 'razorpay' ? '#ecfdf5' : 'white',
-                                                border: paymentMethod === 'razorpay' ? '2px solid var(--primary-color)' : '1px solid #d1d5db',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <CreditCard size={24} color={paymentMethod === 'razorpay' ? 'var(--primary-color)' : '#6b7280'} />
-                                            <span style={{ fontSize: '14px', fontWeight: '500' }}>Online Payment</span>
-                                            <span style={{ fontSize: '11px', color: '#6b7280', textAlign: 'center' }}>GPay, PhonePe, Paytm, Cards</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setPaymentMethod('upi')}
-                                            style={{
-                                                flex: 1,
-                                                padding: '16px',
-                                                backgroundColor: paymentMethod === 'upi' ? '#ecfdf5' : 'white',
-                                                border: paymentMethod === 'upi' ? '2px solid var(--primary-color)' : '1px solid #d1d5db',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <Smartphone size={24} color={paymentMethod === 'upi' ? 'var(--primary-color)' : '#6b7280'} />
-                                            <span style={{ fontSize: '14px', fontWeight: '500' }}>UPI/Manual</span>
-                                            <span style={{ fontSize: '11px', color: '#6b7280' }}>Admin Approval</span>
-                                        </button>
+                                {isManualPaymentEnabled ? (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>Select Payment Method</h4>
+                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMethod('razorpay')}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '16px',
+                                                    backgroundColor: paymentMethod === 'razorpay' ? '#ecfdf5' : 'white',
+                                                    border: paymentMethod === 'razorpay' ? '2px solid var(--primary-color)' : '1px solid #d1d5db',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <CreditCard size={24} color={paymentMethod === 'razorpay' ? 'var(--primary-color)' : '#6b7280'} />
+                                                <span style={{ fontSize: '14px', fontWeight: '500' }}>Online Payment</span>
+                                                <span style={{ fontSize: '11px', color: '#6b7280', textAlign: 'center' }}>GPay, PhonePe, Paytm, Cards</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMethod('upi')}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '16px',
+                                                    backgroundColor: paymentMethod === 'upi' ? '#ecfdf5' : 'white',
+                                                    border: paymentMethod === 'upi' ? '2px solid var(--primary-color)' : '1px solid #d1d5db',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <Smartphone size={24} color={paymentMethod === 'upi' ? 'var(--primary-color)' : '#6b7280'} />
+                                                <span style={{ fontSize: '14px', fontWeight: '500' }}>UPI/Manual</span>
+                                                <span style={{ fontSize: '11px', color: '#6b7280' }}>Admin Approval</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div style={{ marginBottom: '16px' }}>
+                                        <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px', color: '#1f2937' }}>Payment Method</h4>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '12px 14px',
+                                            backgroundColor: '#eff6ff',
+                                            border: '1.5px solid #bfdbfe',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <CreditCard size={22} color="var(--primary-color)" />
+                                            <div>
+                                                <span style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>Online Payment (Razorpay)</span>
+                                                <p style={{ fontSize: '12px', color: '#64748b', margin: '2px 0 0 0' }}>UPI, Cards & NetBanking with Instant Activation</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Razorpay Payment */}
                                 {paymentMethod === 'razorpay' && (
@@ -1067,7 +1099,7 @@ const StudentProductDetail = () => {
                                 )}
 
                                 {/* UPI Payment */}
-                                {paymentMethod === 'upi' && (
+                                {isManualPaymentEnabled && paymentMethod === 'upi' && (
                                     <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                                         <h4 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#1f2937' }}>UPI Payment Details</h4>
 

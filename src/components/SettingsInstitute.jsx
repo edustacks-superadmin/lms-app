@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, Image as ImageIcon, Globe, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Save, Upload, Image as ImageIcon, Globe, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube, Smartphone } from 'lucide-react';
 import { useInstitute } from '../context/InstituteContext';
 import { supabase } from '../supabaseClient';
 
@@ -29,7 +29,8 @@ const SettingsInstitute = () => {
         arattai_url: '',
         upi_id: '',
         upi_qr_url: '',
-        mission_text: ''
+        mission_text: '',
+        manualPaymentEnabled: true
     });
 
     const [logoPreview, setLogoPreview] = useState(null);
@@ -63,7 +64,8 @@ const SettingsInstitute = () => {
                 arattai_url: institute.arattai_url || '',
                 upi_id: institute.upi_id || '',
                 upi_qr_url: institute.upi_qr_url || '',
-                mission_text: institute.mission_text || ''
+                mission_text: institute.mission_text || '',
+                manualPaymentEnabled: institute.feature_flags?.manualPaymentEnabled !== false
             }));
             setLogoPreview(institute.logo_url);
             setFaviconPreview(institute.favicon_url);
@@ -131,7 +133,16 @@ const SettingsInstitute = () => {
         e.preventDefault();
         setLoading(true);
 
-        const result = await updateInstituteSettings(formData);
+        const { manualPaymentEnabled, ...rest } = formData;
+        const payload = {
+            ...rest,
+            feature_flags: {
+                ...(institute?.feature_flags || {}),
+                manualPaymentEnabled: Boolean(manualPaymentEnabled)
+            }
+        };
+
+        const result = await updateInstituteSettings(payload);
 
         setLoading(false);
         if (result.success) {
@@ -344,7 +355,94 @@ const SettingsInstitute = () => {
                 {/* Payment Information */}
                 <div style={sectionStyle}>
                     <h3 style={sectionTitleStyle}>Payment Information</h3>
-                    <div style={rowStyle}>
+
+                    {/* Manual Payment Mode Toggle */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px 20px',
+                        backgroundColor: formData.manualPaymentEnabled ? '#f0fdf4' : '#f8fafc',
+                        border: `1.5px solid ${formData.manualPaymentEnabled ? '#86efac' : '#e2e8f0'}`,
+                        borderRadius: '10px',
+                        marginBottom: '20px',
+                        transition: 'all 0.2s ease'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                            <div style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '8px',
+                                backgroundColor: formData.manualPaymentEnabled ? '#dcfce7' : '#e2e8f0',
+                                color: formData.manualPaymentEnabled ? '#15803d' : '#64748b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                            }}>
+                                <Smartphone size={20} />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>
+                                        Enable Manual UPI Payments
+                                    </span>
+                                    <span style={{
+                                        fontSize: '11px',
+                                        fontWeight: '700',
+                                        padding: '2px 8px',
+                                        borderRadius: '12px',
+                                        backgroundColor: formData.manualPaymentEnabled ? '#dcfce7' : '#f1f5f9',
+                                        color: formData.manualPaymentEnabled ? '#15803d' : '#64748b'
+                                    }}>
+                                        {formData.manualPaymentEnabled ? 'ACTIVE' : 'DISABLED'}
+                                    </span>
+                                </div>
+                                <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0', lineHeight: '1.4' }}>
+                                    {formData.manualPaymentEnabled
+                                        ? 'Students can choose to pay via UPI ID / QR Code and submit their Transaction UTR for admin approval.'
+                                        : 'Manual UPI transfer option is disabled at checkout. Students will only see Online Payment (Razorpay).'}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Toggle Switch */}
+                        <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '26px', cursor: 'pointer', flexShrink: 0 }}>
+                            <input
+                                type="checkbox"
+                                name="manualPaymentEnabled"
+                                checked={!!formData.manualPaymentEnabled}
+                                onChange={(e) => setFormData(prev => ({ ...prev, manualPaymentEnabled: e.target.checked }))}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                                position: 'absolute',
+                                cursor: 'pointer',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                backgroundColor: formData.manualPaymentEnabled ? '#16a34a' : '#cbd5e1',
+                                transition: '0.2s',
+                                borderRadius: '34px'
+                            }}>
+                                <span style={{
+                                    position: 'absolute',
+                                    height: '20px',
+                                    width: '20px',
+                                    left: formData.manualPaymentEnabled ? '24px' : '4px',
+                                    bottom: '3px',
+                                    backgroundColor: 'white',
+                                    transition: '0.2s',
+                                    borderRadius: '50%',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }} />
+                            </span>
+                        </label>
+                    </div>
+
+                    <div style={{
+                        ...rowStyle,
+                        opacity: formData.manualPaymentEnabled ? 1 : 0.6,
+                        transition: 'opacity 0.2s ease'
+                    }}>
                         <div style={colStyle}>
                             <label style={labelStyle}>UPI ID (for Manual Payments)</label>
                             <input

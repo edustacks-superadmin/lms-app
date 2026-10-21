@@ -19,6 +19,15 @@ const CartDrawer = () => {
     const [utr, setUtr] = useState('');
     const [processingPayment, setProcessingPayment] = useState(false);
 
+    const isManualPaymentEnabled = institute?.feature_flags?.manualPaymentEnabled !== false;
+
+    // Reset to razorpay if manual payments are disabled
+    useEffect(() => {
+        if (!isManualPaymentEnabled && paymentMethod === 'upi') {
+            setPaymentMethod('razorpay');
+        }
+    }, [isManualPaymentEnabled, paymentMethod]);
+
     if (!isCartOpen) return null;
 
     const totalSavings = cartItems.reduce((acc, item) => {
@@ -310,30 +319,32 @@ const CartDrawer = () => {
                                     </div>
                                 </label>
 
-                                <label style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: '12px 14px',
-                                    borderRadius: '10px',
-                                    border: `1.5px solid ${paymentMethod === 'upi' ? '#2563eb' : '#e2e8f0'}`,
-                                    backgroundColor: paymentMethod === 'upi' ? '#f0f7ff' : 'white',
-                                    cursor: 'pointer'
-                                }}>
-                                    <input
-                                        type="radio"
-                                        name="paymentMethod"
-                                        checked={paymentMethod === 'upi'}
-                                        onChange={() => setPaymentMethod('upi')}
-                                    />
-                                    <Smartphone size={18} color="#059669" />
-                                    <div>
-                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>
-                                            Manual UPI Transfer
+                                {isManualPaymentEnabled && (
+                                    <label style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '12px 14px',
+                                        borderRadius: '10px',
+                                        border: `1.5px solid ${paymentMethod === 'upi' ? '#2563eb' : '#e2e8f0'}`,
+                                        backgroundColor: paymentMethod === 'upi' ? '#f0f7ff' : 'white',
+                                        cursor: 'pointer'
+                                    }}>
+                                        <input
+                                            type="radio"
+                                            name="paymentMethod"
+                                            checked={paymentMethod === 'upi'}
+                                            onChange={() => setPaymentMethod('upi')}
+                                        />
+                                        <Smartphone size={18} color="#059669" />
+                                        <div>
+                                            <div style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>
+                                                Manual UPI Transfer
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#64748b' }}>Pay to UPI ID and submit UTR</div>
                                         </div>
-                                        <div style={{ fontSize: '12px', color: '#64748b' }}>Pay to UPI ID and submit UTR</div>
-                                    </div>
-                                </label>
+                                    </label>
+                                )}
                             </div>
 
                             {paymentMethod === 'upi' && (

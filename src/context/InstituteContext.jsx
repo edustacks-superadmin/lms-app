@@ -77,16 +77,14 @@ export const InstituteProvider = ({ children }) => {
             console.log('Data to save (excluding id):', dataToSave);
 
             let result;
-            if (existingData && existingData.length > 0) {
-                // Update the first record found
-                const recordId = existingData[0].id;
-                console.log('Updating existing record with ID:', recordId);
+            const targetId = institute?.id || (existingData && existingData.length > 0 ? existingData[0].id : null);
+            if (targetId) {
+                console.log('Updating existing record with ID:', targetId);
                 result = await supabase
                     .from('institute_settings')
                     .update(dataToSave)
-                    .eq('id', recordId);
+                    .eq('id', targetId);
             } else {
-                // Insert
                 console.log('No existing record found. Inserting new record.');
                 result = await supabase
                     .from('institute_settings')
