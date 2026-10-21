@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useInstitute } from '../context/InstituteContext';
 import { supabase } from '../supabaseClient';
 import { BookOpen, CheckCircle, Clock, Award, PlayCircle, Trophy, ShoppingCart, MessageSquare, ArrowRight, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const StudentDashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { institute } = useInstitute();
     const [stats, setStats] = useState({
         activeCourses: 0,
         completedExams: 0,
@@ -105,12 +107,18 @@ const StudentDashboard = () => {
             if (productsData) setProducts(productsData);
 
             // Fetch Recent Posts - Limit 3
-            const { data: postsData } = await supabase
+            let postsQuery = supabase
                 .from('posts')
                 .select('*, categories(name)')
-                .eq('status', 'published')
-                .order('published_at', { ascending: false })
+                .eq('is_deleted', false)
+                .order('created_at', { ascending: false })
                 .limit(3);
+
+            if (institute?.id) {
+                postsQuery = postsQuery.eq('institute_id', institute.id);
+            }
+
+            const { data: postsData } = await postsQuery;
 
             if (postsData) setRecentPosts(postsData);
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePosts } from '../context/PostContext';
+import { useInstitute } from '../context/InstituteContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
@@ -11,6 +12,7 @@ const PostDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { getPostById } = usePosts();
+    const { institute } = useInstitute();
     const { user, role } = useAuth();
     const { showToast } = useToast();
 
@@ -36,6 +38,13 @@ const PostDetail = () => {
                 return;
             }
 
+            if (institute?.id && data.institute_id && data.institute_id !== institute.id) {
+                setPost(null);
+                setHasAccess(false);
+                setAccessReason('This post is not available for this academy.');
+                setLoading(false);
+                return;
+            }
             setPost(data);
 
             // Check access if not admin

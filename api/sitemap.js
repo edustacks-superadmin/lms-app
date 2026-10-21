@@ -36,10 +36,35 @@ export default async function handler(req, res) {
         const proto = req.headers['x-forwarded-proto'] || 'https';
         const baseUrl = `${proto}://${host}`;
 
+        // Resolve institute ID based on subdomain
+        let instituteId = null;
+        try {
+            let slug = 'maheshiesacademy';
+            const parts = host.split('.');
+            if (parts.length > 2) {
+                slug = parts[0].toLowerCase();
+            }
+            const { data: inst } = await supabase
+                .from('institute_settings')
+                .select('id')
+                .eq('slug', slug)
+                .maybeSingle();
+
+            if (inst?.id) {
+                instituteId = inst.id;
+            } else {
+                instituteId = 10;
+            }
+        } catch (e) {
+            console.warn('Error resolving institute for sitemap:', e.message);
+            instituteId = 10;
+        }
+
         // 1. Static Public Pages
         const staticPages = [
             { path: '/', priority: '1.0', changefreq: 'daily' },
             { path: '/home', priority: '0.9', changefreq: 'daily' },
+            { path: '/posts', priority: '0.9', changefreq: 'daily' },
             { path: '/store', priority: '0.9', changefreq: 'daily' },
             { path: '/contact-us', priority: '0.7', changefreq: 'monthly' },
             { path: '/login', priority: '0.6', changefreq: 'monthly' },
@@ -50,30 +75,43 @@ export default async function handler(req, res) {
             { path: '/shipping-policy', priority: '0.5', changefreq: 'yearly' }
         ];
 
-        // 2. Fetch Active Products
+        // 2. Fetch Active Products filtered by instituteId
         let products = [];
         try {
-            const { data } = await supabase
+            let prodQuery = supabase
                 .from('products')
                 .select('id, slug, updated_at, created_at')
                 .eq('is_active', true)
                 .order('created_at', { ascending: false })
                 .limit(500);
+
+            if (instituteId) {
+                prodQuery = prodQuery.eq('institute_id', instituteId);
+            }
+
+            const { data } = await prodQuery;
             products = data || [];
         } catch (e) {
             console.warn('Error fetching products for sitemap:', e.message);
         }
 
-        // 3. Fetch Public Posts
+        // 3. Fetch Public Posts filtered by instituteId
         let posts = [];
         try {
-            const { data } = await supabase
+            let postsQuery = supabase
                 .from('posts')
-                .select('id, slug, updated_at, created_at')
+                .select('id, slug, publication_date, created_at')
                 .eq('is_deleted', false)
                 .eq('access_control', 'Public')
                 .order('created_at', { ascending: false })
                 .limit(500);
+
+            if (instituteId) {
+                postsQuery = postsQuery.eq('institute_id', instituteId);
+            }
+
+            const { data, error } = await postsQuery;
+            if (error) throw error;
             posts = data || [];
         } catch (e) {
             console.warn('Error fetching posts for sitemap:', e.message);
@@ -96,11 +134,14 @@ export default async function handler(req, res) {
 
         // Add products
         for (const prod of products) {
-            const prodUrl = `${baseUrl}/store/product/${prod.id}`;
-            const lastMod = formatDate(prod.updated_at || prod.created_at || today);
+            const lastmod = formatDate(prod.updated_at || prod.created_at || today);
+            const prodUrl = prod.slug
+                ? `${baseUrl}/student/store/product/${prod.slug}`
+                : `${baseUrl}/student/store/product/${prod.id}`;
+
             xml += `  <url>\n`;
             xml += `    <loc>${escapeXml(prodUrl)}</loc>\n`;
-            xml += `    <lastmod>${lastMod}</lastmod>\n`;
+            xml += `    <lastmod>${lastmod}</lastmod>\n`;
             xml += `    <changefreq>weekly</changefreq>\n`;
             xml += `    <priority>0.8</priority>\n`;
             xml += `  </url>\n`;
@@ -108,11 +149,14 @@ export default async function handler(req, res) {
 
         // Add posts
         for (const post of posts) {
-            const postUrl = `${baseUrl}/post/${post.id}`;
-            const lastMod = formatDate(post.updated_at || post.created_at || today);
+            const lastmod = formatDate(post.publication_date || post.created_at || today);
+            const postUrl = post.slug
+                ? `${baseUrl}/post/${post.slug}`
+                : `${baseUrl}/post/${post.id}`;
+
             xml += `  <url>\n`;
             xml += `    <loc>${escapeXml(postUrl)}</loc>\n`;
-            xml += `    <lastmod>${lastMod}</lastmod>\n`;
+            xml += `    <lastmod>${lastmod}</lastmod>\n`;
             xml += `    <changefreq>weekly</changefreq>\n`;
             xml += `    <priority>0.7</priority>\n`;
             xml += `  </url>\n`;
@@ -121,10 +165,11 @@ export default async function handler(req, res) {
         xml += `</urlset>`;
 
         res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=14400');
+        res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=43200');
         return res.status(200).send(xml);
-    } catch (err) {
-        console.error('Sitemap error:', err);
-        return res.status(500).json({ error: 'Failed to generate sitemap' });
+
+    } catch (error) {
+        console.error('Error generating sitemap:', error);
+        return res.status(500).send('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
     }
 }

@@ -15,28 +15,34 @@ export const InstituteProvider = ({ children }) => {
         try {
             // 1. Get Subdomain
             const hostname = window.location.hostname;
-            let currentSlug = 'demo'; // Default for localhost or main domain
+            let currentSlug = 'maheshiesacademy'; // Default for localhost or main domain
 
             if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                currentSlug = 'demo';
+                currentSlug = 'maheshiesacademy';
             } else {
                 // e.g. "school1.myapp.com" -> parts[0] = "school1"
                 const parts = hostname.split('.');
                 if (parts.length > 2) {
-                    currentSlug = parts[0];
+                    currentSlug = parts[0].toLowerCase();
                 }
             }
 
             console.log('Resolving Institute for Slug:', currentSlug);
 
-            const { data, error } = await supabase
+            let { data, error } = await supabase
                 .from('institute_settings')
                 .select('*')
                 .eq('slug', currentSlug)
-                .single();
+                .maybeSingle();
 
-            if (error) {
-                throw error;
+            if (!data) {
+                console.warn(`Institute for slug "${currentSlug}" not found, falling back to maheshiesacademy`);
+                const { data: fallbackData } = await supabase
+                    .from('institute_settings')
+                    .select('*')
+                    .eq('slug', 'maheshiesacademy')
+                    .maybeSingle();
+                data = fallbackData;
             }
 
             console.log('Fetched institute settings:', data);

@@ -20,26 +20,53 @@ const PublicPosts = () => {
     const [copiedPostId, setCopiedPostId] = useState(null);
 
     useEffect(() => {
-        fetchPublicPosts();
-        fetchCategories();
-    }, []);
+        fetchPublicPosts(institute?.id);
+        fetchCategories(institute?.id);
+    }, [institute?.id]);
 
-    const fetchCategories = async () => {
+    const resolveInstituteId = async (providedId) => {
+        if (providedId) return providedId;
+        if (institute?.id) return institute.id;
         try {
+            const hostname = window.location.hostname;
+            const parts = hostname.split('.');
+            const slug = parts.length > 2 ? parts[0].toLowerCase() : 'maheshiesacademy';
             const { data } = await supabase
+                .from('institute_settings')
+                .select('id')
+                .eq('slug', slug)
+                .maybeSingle();
+            if (data?.id) return data.id;
+        } catch (e) {
+            console.warn('Error resolving institute id:', e);
+        }
+        return 10;
+    };
+
+    const fetchCategories = async (targetInstId) => {
+        try {
+            const instId = await resolveInstituteId(targetInstId);
+            let query = supabase
                 .from('categories')
                 .select('*')
                 .order('name');
+
+            if (instId) {
+                query = query.eq('institute_id', instId);
+            }
+
+            const { data } = await query;
             setCategories(data || []);
         } catch (e) {
             console.warn('Error fetching categories:', e);
         }
     };
 
-    const fetchPublicPosts = async () => {
+    const fetchPublicPosts = async (targetInstId) => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            const instId = await resolveInstituteId(targetInstId);
+            let query = supabase
                 .from('posts')
                 .select(`
                     id,
@@ -61,6 +88,12 @@ const PublicPosts = () => {
                 .eq('is_deleted', false)
                 .eq('access_control', 'Public')
                 .order('created_at', { ascending: false });
+
+            if (instId) {
+                query = query.eq('institute_id', instId);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setPosts(data || []);

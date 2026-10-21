@@ -184,7 +184,8 @@ function App() {
   return (
 
     <HelmetProvider>
-      <AuthProvider>
+      <InstituteProvider>
+        <AuthProvider>
         <UserProvider>
           <BatchProvider>
             <CourseProvider>
@@ -197,7 +198,6 @@ function App() {
                           <QuestionFolderProvider>
                             <ExamProvider>
                               <ChapterProvider>
-                                <InstituteProvider>
                                   <HomeSettingsProvider>
                                     <CustomFieldsProvider>
                                       <TagProvider>
@@ -970,7 +970,6 @@ function App() {
                                       </TagProvider>
                                     </CustomFieldsProvider>
                                   </HomeSettingsProvider>
-                                </InstituteProvider>
                               </ChapterProvider>
                             </ExamProvider>
                           </QuestionFolderProvider>
@@ -983,7 +982,8 @@ function App() {
             </CourseProvider>
           </BatchProvider>
         </UserProvider>
-      </AuthProvider >
+        </AuthProvider >
+      </InstituteProvider>
     </HelmetProvider>
   );
 }

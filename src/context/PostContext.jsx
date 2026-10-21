@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from './InstituteContext';
 
 const PostContext = createContext();
 
@@ -14,14 +15,37 @@ export const usePosts = () => {
 export const PostProvider = ({ children }) => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { institute } = useInstitute();
 
     useEffect(() => {
-        fetchPosts();
-    }, []);
+        fetchPosts(institute?.id);
+    }, [institute?.id]);
 
-    const fetchPosts = async () => {
+    const resolveInstituteId = async (providedId) => {
+        if (providedId) return providedId;
+        if (institute?.id) return institute.id;
         try {
-            let { data, error } = await supabase
+            const hostname = window.location.hostname;
+            const parts = hostname.split('.');
+            const slug = parts.length > 2 ? parts[0].toLowerCase() : 'maheshiesacademy';
+            const { data } = await supabase
+                .from('institute_settings')
+                .select('id')
+                .eq('slug', slug)
+                .maybeSingle();
+            if (data?.id) return data.id;
+        } catch (e) {
+            console.warn('Error resolving institute id:', e);
+        }
+        return 10; // Default to Mahesh IES Academy
+    };
+
+    const fetchPosts = async (targetInstituteId) => {
+        setLoading(true);
+        try {
+            const instId = await resolveInstituteId(targetInstituteId);
+
+            let query = supabase
                 .from('posts')
                 .select(`
                     *,
@@ -35,18 +59,28 @@ export const PostProvider = ({ children }) => {
                 `)
                 .order('created_at', { ascending: false });
 
+            if (instId) {
+                query = query.eq('institute_id', instId);
+            }
+
+            let { data, error } = await query;
+
             if (error) {
                 console.warn('Full join failed, attempting fallback query:', error.message);
-                const { data: fallbackData, error: fallbackError } = await supabase
+                let fallbackQuery = supabase
                     .from('posts')
                     .select('*')
                     .order('created_at', { ascending: false });
+                if (instId) {
+                    fallbackQuery = fallbackQuery.eq('institute_id', instId);
+                }
+                const { data: fallbackData, error: fallbackError } = await fallbackQuery;
                 if (fallbackError) throw fallbackError;
                 data = fallbackData || [];
             }
 
             // Transform data to match UI requirements
-            const formattedPosts = data.map(post => ({
+            const formattedPosts = (data || []).map(post => ({
                 ...post,
                 tag: post.categories?.name || 'Uncategorized',
                 tagColor: post.categories?.color || '#999',
@@ -71,6 +105,8 @@ export const PostProvider = ({ children }) => {
 
     const addPost = async (postData) => {
         try {
+            const instId = await resolveInstituteId(postData.instituteId);
+
             const newPost = {
                 title: postData.title,
                 description: postData.description, // keeping description for backward compatibility or list view
@@ -83,7 +119,8 @@ export const PostProvider = ({ children }) => {
                 publication_date: postData.publicationDate,
                 icon: postData.icon,
                 category_id: postData.categoryId,
-                allowed_products: postData.allowedProducts || []
+                allowed_products: postData.allowedProducts || [],
+                institute_id: instId
             };
 
             // 1. Insert Post
@@ -289,7 +326,7 @@ export const PostProvider = ({ children }) => {
     };
 
     return (
-        <PostContext.Provider value={{ posts, loading, addPost, deletePost, restorePost, getPostById, updatePost }}>
+        <PostContext.Provider value={{ posts, loading, fetchPosts, addPost, deletePost, restorePost, getPostById, updatePost }}>
             {children}
         </PostContext.Provider>
     );

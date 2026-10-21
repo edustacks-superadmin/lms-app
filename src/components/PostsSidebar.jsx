@@ -19,10 +19,25 @@ const PostsSidebar = ({ onFilterChange, activeStatus, onStatusChange, isStudent 
 
     const fetchCategories = async () => {
         try {
-            const { data, error } = await supabase
+            const hostname = window.location.hostname;
+            const parts = hostname.split('.');
+            const slug = parts.length > 2 ? parts[0].toLowerCase() : 'maheshiesacademy';
+            const { data: instData } = await supabase
+                .from('institute_settings')
+                .select('id')
+                .eq('slug', slug)
+                .maybeSingle();
+
+            let query = supabase
                 .from('categories')
                 .select('id, name')
                 .order('name');
+
+            if (instData?.id) {
+                query = query.eq('institute_id', instData.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setCategories(data || []);
