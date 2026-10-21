@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, BookOpen, ShoppingCart, LayoutDashboard, Trophy, Menu } from 'lucide-react';
+import { LogOut, User, BookOpen, ShoppingCart, LayoutDashboard, Trophy, Menu, FileText } from 'lucide-react';
 import { useInstitute } from '../context/InstituteContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -14,7 +14,12 @@ const StudentHeader = () => {
     const location = useLocation();
     const [currentUser, setCurrentUser] = useState(null);
 
-    const isActive = (path) => location.pathname === path;
+    const isActive = (path) => {
+        if (path === '/student/exams') {
+            return location.pathname === '/student/exams' || location.pathname.startsWith('/student/exam/');
+        }
+        return location.pathname === path;
+    };
 
     useEffect(() => {
         const fetchCurrentUser = async () => {
@@ -198,6 +203,36 @@ const StudentHeader = () => {
                     >
                         <BookOpen size={18} />
                         My Courses
+                    </Link>
+
+                    <Link
+                        to="/student/exams"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            textDecoration: 'none',
+                            color: isActive('/student/exams') ? '#2563eb' : '#4b5563',
+                            backgroundColor: isActive('/student/exams') ? '#eff6ff' : 'transparent',
+                            fontWeight: '500',
+                            fontSize: '14px',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isActive('/student/exams')) {
+                                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isActive('/student/exams')) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                        }}
+                    >
+                        <FileText size={18} />
+                        Exams
                     </Link>
 
                     <Link
