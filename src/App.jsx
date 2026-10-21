@@ -160,7 +160,18 @@ function App() {
   }, [navigate, location]);
 
   useEffect(() => {
-    // If arriving with Supabase password recovery token in URL hash
+    // If arriving on root domain edustacks.co.in during password recovery, redirect to academy subdomain
+    const isRootDomain = window.location.hostname === 'edustacks.co.in' || window.location.hostname === 'www.edustacks.co.in';
+    const isRecovery = (window.location.hash && window.location.hash.includes('type=recovery')) ||
+                       (window.location.search && window.location.search.includes('type=recovery')) ||
+                       location.pathname === '/reset-password';
+
+    if (isRootDomain && isRecovery) {
+      window.location.href = `https://maheshiesacademy.edustacks.co.in/reset-password${window.location.search}${window.location.hash}`;
+      return;
+    }
+
+    // If arriving with Supabase password recovery token in URL hash on subdomain
     if (window.location.hash && window.location.hash.includes('type=recovery')) {
       if (location.pathname !== '/reset-password') {
         navigate('/reset-password' + window.location.hash, { replace: true });

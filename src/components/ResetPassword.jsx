@@ -11,6 +11,7 @@ const ResetPassword = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [verifying, setVerifying] = useState(true);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState(null);
     const { institute } = useInstitute();
@@ -18,16 +19,68 @@ const ResetPassword = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check if there is an active session or recovery hash from Supabase email link
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!session) {
-                // If not yet loaded or hash is in URL, let Supabase parse it
+        let isMounted = true;
+
+        const checkAuthAndToken = async () => {
+            try {
+                // 1. Check if token_hash is in URL search parameters (?token_hash=...&type=recovery)
+                const searchParams = new URLSearchParams(window.location.search);
+                const tokenHash = searchParams.get('token_hash') || searchParams.get('token');
+                const type = searchParams.get('type') || 'recovery';
+
+                if (tokenHash) {
+                    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type: type
+                    });
+
+                    if (!isMounted) return;
+
+                    if (verifyError) {
+                        console.error('OTP verification error:', verifyError);
+                        setError(verifyError.message || 'Invalid or expired reset link. Please request a new one.');
+                        setVerifying(false);
+                        return;
+                    }
+
+                    // Successfully verified! Clean up query params from URL bar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    setVerifying(false);
+                    return;
+                }
+
+                // 2. Check if hash contains access_token from Supabase redirect
                 const hash = window.location.hash;
-                if (!hash || !hash.includes('access_token')) {
+                if (hash && hash.includes('access_token')) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!isMounted) return;
+                    if (session) {
+                        setVerifying(false);
+                        return;
+                    }
+                }
+
+                // 3. Check existing active session
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!isMounted) return;
+
+                if (!session) {
                     setError('Invalid or expired reset link. Please request a new password reset link.');
                 }
+                setVerifying(false);
+            } catch (err) {
+                if (!isMounted) return;
+                console.error('Reset verification error:', err);
+                setError('Failed to verify reset link. Please try again.');
+                setVerifying(false);
             }
-        });
+        };
+
+        checkAuthAndToken();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleSubmit = async (e) => {
@@ -156,7 +209,16 @@ const ResetPassword = () => {
                     </div>
                 )}
 
-                {success ? (
+                {verifying ? (
+                    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+                            <Loader2 className="animate-spin" size={36} color="var(--primary-color, #2563eb)" />
+                        </div>
+                        <p style={{ fontSize: '15px', color: '#6b7280', margin: 0 }}>
+                            Verifying your reset link...
+                        </p>
+                    </div>
+                ) : success ? (
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
                             <CheckCircle2 size={56} color="#10b981" />

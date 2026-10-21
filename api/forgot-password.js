@@ -32,7 +32,24 @@ export default async function handler(req, res) {
         }
 
         const cleanEmail = email.trim().toLowerCase();
-        const siteOrigin = origin || 'https://maheshiesacademy.edustacks.co.in';
+        
+        // Ensure siteOrigin points to the tenant's full subdomain
+        let siteOrigin = origin;
+        if (!siteOrigin || siteOrigin === 'https://edustacks.co.in' || siteOrigin.includes('localhost')) {
+            const referer = req.headers.referer || req.headers.origin;
+            if (referer && !referer.includes('localhost')) {
+                try {
+                    const parsed = new URL(referer).origin;
+                    if (parsed && parsed !== 'https://edustacks.co.in') {
+                        siteOrigin = parsed;
+                    }
+                } catch (e) {}
+            }
+        }
+        if (!siteOrigin || siteOrigin === 'https://edustacks.co.in' || siteOrigin.includes('localhost')) {
+            siteOrigin = 'https://maheshiesacademy.edustacks.co.in';
+        }
+
         const redirectUrl = `${siteOrigin}/reset-password`;
 
         // 1. Check if user exists in auth.users or members
@@ -83,9 +100,15 @@ export default async function handler(req, res) {
         }
 
         actionLink = recoveryRes.data?.properties?.action_link;
-        if (!actionLink) {
+        const tokenHash = recoveryRes.data?.properties?.hashed_token;
+        if (!actionLink && !tokenHash) {
             return res.status(500).json({ error: 'Failed to generate password recovery link' });
         }
+
+        // Direct reset URL pointing straight to the academy subdomain
+        const resetUrl = tokenHash
+            ? `${siteOrigin}/reset-password?token_hash=${tokenHash}&type=recovery`
+            : actionLink;
 
         // 3. Fetch Institute Details for Branding
         let instituteName = 'Mahesh IES Academy';
@@ -144,7 +167,7 @@ export default async function handler(req, res) {
         We received a request to reset the password for your account (<strong>${cleanEmail}</strong>). Click the button below to choose a new password:
       </p>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${actionLink}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px; display: inline-block;">
+        <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px; display: inline-block;">
           Reset Password
         </a>
       </div>
@@ -154,7 +177,7 @@ export default async function handler(req, res) {
       <hr style="border: none; border-top: 1px solid #f3f4f6; margin: 24px 0;" />
       <p style="color: #9ca3af; font-size: 11px; word-break: break-all; margin: 0;">
         If the button doesn't work, copy and paste this link into your browser:<br>
-        <a href="${actionLink}" style="color: #2563eb;">${actionLink}</a>
+        <a href="${resetUrl}" style="color: #2563eb;">${resetUrl}</a>
       </p>
     </div>
   </div>
