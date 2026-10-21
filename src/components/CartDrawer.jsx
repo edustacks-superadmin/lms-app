@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, X, Trash2, ArrowRight, ShieldCheck, CreditCard, Smartphone, CheckCircle, Copy } from 'lucide-react';
 import { useCart } from '../context/CartContext';
