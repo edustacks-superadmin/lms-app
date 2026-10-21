@@ -110,8 +110,8 @@ const PublicPosts = () => {
     const isAdmin = role === 'admin' || role === 'superadmin' || role === 'teacher';
 
     return (
-        <div style={{ backgroundColor: '#f9fafb', minHeight: '80vh', padding: '40px 20px 80px' }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ backgroundColor: '#f9fafb', minHeight: '80vh', padding: '20px 20px 60px' }}>
+            <div style={{ maxWidth: '1150px', margin: '0 auto' }}>
 
                 {/* Admin Quick Jump Banner */}
                 {isAdmin && (
@@ -121,144 +121,127 @@ const PublicPosts = () => {
                         justifyContent: 'space-between',
                         backgroundColor: '#eff6ff',
                         border: '1px solid #bfdbfe',
-                        padding: '12px 18px',
-                        borderRadius: '10px',
-                        marginBottom: '28px',
-                        fontSize: '14px',
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                        fontSize: '13px',
                         color: '#1e40af'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Shield size={18} />
-                            <span>You are viewing the <strong>Public Posts Feed</strong>. To create or manage posts, go to the Admin Manager.</span>
+                            <Shield size={16} />
+                            <span>Viewing <strong>Public Feed</strong>. To create or edit posts, open the Admin Manager.</span>
                         </div>
                         <Link
                             to="/admin/posts"
                             style={{
                                 backgroundColor: '#2563eb',
                                 color: 'white',
-                                padding: '6px 14px',
+                                padding: '5px 12px',
                                 borderRadius: '6px',
                                 textDecoration: 'none',
                                 fontWeight: '600',
-                                fontSize: '13px'
+                                fontSize: '12px'
                             }}
                         >
-                            Open Admin Posts
+                            Admin Manager
                         </Link>
                     </div>
                 )}
 
-                {/* Hero Header */}
-                <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-                    <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        backgroundColor: '#eff6ff',
-                        color: 'var(--primary-color, #2563eb)',
-                        padding: '6px 14px',
-                        borderRadius: '20px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        marginBottom: '12px'
-                    }}>
-                        <Sparkles size={14} />
-                        <span>Latest Articles & Announcements</span>
-                    </div>
-                    <h1 style={{
-                        fontSize: '32px',
-                        fontWeight: '800',
-                        color: '#111827',
-                        margin: '0 0 10px',
-                        letterSpacing: '-0.5px'
-                    }}>
-                        {institute?.name ? `${institute.name} Posts` : 'Academy Posts & Updates'}
-                    </h1>
-                    <p style={{ fontSize: '16px', color: '#6b7280', margin: '0 auto', maxWidth: '600px' }}>
-                        Stay informed with the latest exam strategies, subject guides, announcements, and preparation insights.
-                    </p>
-                </div>
-
-                {/* Search & Category Filter Controls */}
+                {/* Compact Single-Line Top Bar */}
                 <div style={{
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                    marginBottom: '32px'
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    marginBottom: '20px',
+                    backgroundColor: 'white',
+                    padding: '12px 18px',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
                 }}>
-                    {/* Search Bar */}
-                    <div style={{ position: 'relative', maxWidth: '520px', margin: '0 auto', width: '100%' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-                        <input
-                            type="text"
-                            placeholder="Search posts by title or keyword..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '12px 16px 12px 42px',
-                                borderRadius: '10px',
-                                border: '1px solid #e5e7eb',
-                                fontSize: '14px',
-                                outline: 'none',
-                                backgroundColor: 'white',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-                            }}
-                        />
+                    {/* Left: Title + Count */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h1 style={{
+                            fontSize: '20px',
+                            fontWeight: '700',
+                            color: '#111827',
+                            margin: 0,
+                            letterSpacing: '-0.3px',
+                            whiteSpace: 'nowrap'
+                        }}>
+                            Posts
+                        </h1>
+                        <span style={{
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            color: '#6b7280',
+                            backgroundColor: '#f3f4f6',
+                            padding: '2px 8px',
+                            borderRadius: '12px'
+                        }}>
+                            {filteredPosts.length}
+                        </span>
                     </div>
 
-                    {/* Category Filter Pills */}
-                    {categories.length > 0 && (
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            flexWrap: 'wrap',
-                            marginTop: '8px'
-                        }}>
-                            <button
-                                onClick={() => setSelectedCategory('')}
+                    {/* Right: Search Input + Category Select in one line */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        flex: '1',
+                        maxWidth: '560px',
+                        justifyContent: 'flex-end',
+                        minWidth: '280px'
+                    }}>
+                        {/* Search Input */}
+                        <div style={{ position: 'relative', flex: '1', minWidth: '160px' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+                            <input
+                                type="text"
+                                placeholder="Search posts..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 style={{
-                                    padding: '6px 14px',
-                                    borderRadius: '20px',
-                                    border: '1px solid',
-                                    borderColor: selectedCategory === '' ? 'var(--primary-color, #2563eb)' : '#e5e7eb',
-                                    backgroundColor: selectedCategory === '' ? 'var(--primary-color, #2563eb)' : 'white',
-                                    color: selectedCategory === '' ? 'white' : '#4b5563',
+                                    width: '100%',
+                                    padding: '8px 12px 8px 32px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
                                     fontSize: '13px',
-                                    fontWeight: '600',
+                                    outline: 'none',
+                                    backgroundColor: '#f9fafb'
+                                }}
+                            />
+                        </div>
+
+                        {/* Category Dropdown */}
+                        {categories.length > 0 && (
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e5e7eb',
+                                    fontSize: '13px',
+                                    outline: 'none',
+                                    backgroundColor: '#f9fafb',
+                                    color: '#374151',
                                     cursor: 'pointer',
-                                    transition: 'all 0.2s'
+                                    minWidth: '150px'
                                 }}
                             >
-                                All Posts ({posts.length})
-                            </button>
-                            {categories.map(cat => {
-                                const isSelected = String(selectedCategory) === String(cat.id);
-                                return (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => setSelectedCategory(isSelected ? '' : cat.id)}
-                                        style={{
-                                            padding: '6px 14px',
-                                            borderRadius: '20px',
-                                            border: '1px solid',
-                                            borderColor: isSelected ? (cat.color || 'var(--primary-color)') : '#e5e7eb',
-                                            backgroundColor: isSelected ? (cat.color || 'var(--primary-color)') : 'white',
-                                            color: isSelected ? 'white' : '#4b5563',
-                                            fontSize: '13px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
+                                <option value="">All Categories ({posts.length})</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>
                                         {cat.name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
                 </div>
 
                 {/* Posts Grid */}
