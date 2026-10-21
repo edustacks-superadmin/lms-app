@@ -8,6 +8,12 @@ import { supabase } from '../supabaseClient';
 import { ArrowLeft, Tag, Calendar, Share2, Check, MessageSquare, Edit2, Lock, Loader2 } from 'lucide-react';
 import CommentSection from './CommentSection';
 
+const formatPostContent = (html) => {
+    if (!html) return '<p style="color: #6b7280;">No additional content in this post.</p>';
+    // Replace non-breaking spaces with standard space so text wraps naturally across all viewports
+    return html.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ');
+};
+
 const PostDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -180,8 +186,10 @@ const PostDetail = () => {
     return (
         <div style={{
             maxWidth: '900px',
+            width: '100%',
             margin: '0 auto',
-            padding: '24px 20px 60px'
+            padding: '24px 20px 60px',
+            boxSizing: 'border-box'
         }}>
             {/* Top Navigation & Action Bar */}
             <div style={{
@@ -269,7 +277,9 @@ const PostDetail = () => {
                 border: '1px solid #e5e7eb',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
                 overflow: 'hidden',
-                padding: '32px'
+                padding: '32px',
+                maxWidth: '100%',
+                boxSizing: 'border-box'
             }}>
                 {/* Meta details: Category tag & Date */}
                 <div style={{
@@ -319,10 +329,12 @@ const PostDetail = () => {
                     color: '#111827',
                     lineHeight: '1.3',
                     marginBottom: '18px',
-                    letterSpacing: '-0.5px'
+                    letterSpacing: '-0.5px',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word'
                 }}>
                     {post.icon && <span style={{ marginRight: '8px' }}>{post.icon}</span>}
-                    {post.title}
+                    {post.title ? post.title.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ') : ''}
                 </h1>
 
                 {/* Summary / Subtitle if available */}
@@ -334,9 +346,11 @@ const PostDetail = () => {
                         marginBottom: '24px',
                         fontStyle: 'italic',
                         borderLeft: '3px solid var(--primary-color, #2563eb)',
-                        paddingLeft: '14px'
+                        paddingLeft: '14px',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word'
                     }}>
-                        {post.summary || post.description}
+                        {(post.summary || post.description).replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ')}
                     </p>
                 )}
 
@@ -399,9 +413,13 @@ const PostDetail = () => {
                             fontSize: '16px',
                             color: '#1f2937',
                             lineHeight: '1.8',
-                            marginTop: '20px'
+                            marginTop: '20px',
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            maxWidth: '100%',
+                            boxSizing: 'border-box'
                         }}
-                        dangerouslySetInnerHTML={{ __html: post.content || '<p style="color: #6b7280;">No additional content in this post.</p>' }}
+                        dangerouslySetInnerHTML={{ __html: formatPostContent(post.content) }}
                     />
                 )}
             </div>

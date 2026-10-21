@@ -150,7 +150,7 @@ const CreatePost = () => {
                 title: formData.title,
                 description: formData.summary, // Mapping summary to description for list view
                 summary: formData.summary,
-                content: formData.content,
+                content: formData.content ? formData.content.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ') : '',
                 coverImage: formData.coverImage,
                 productName: formData.productName,
                 accessControl: formData.accessControl,

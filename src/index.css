@@ -1394,3 +1394,58 @@ textarea.form-input {
     /* Reduced left padding for mobile */
   }
 }
+/* Post Detail Rich Text Content Responsive & Wrapping Styles */
+.post-body-content {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.post-body-content * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.post-body-content p,
+.post-body-content li,
+.post-body-content h1,
+.post-body-content h2,
+.post-body-content h3,
+.post-body-content h4,
+.post-body-content h5,
+.post-body-content h6,
+.post-body-content blockquote {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.post-body-content table {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 16px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.post-body-content th,
+.post-body-content td {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  word-break: normal;
+}
+
+.post-body-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+  display: block;
+}
+
+.post-body-content pre,
+.post-body-content code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
