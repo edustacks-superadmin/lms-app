@@ -523,9 +523,6 @@ const StudentDashboard = () => {
                                                     <BookOpen size={40} />
                                                 </div>
                                             )}
-                                            <div style={{ position: 'absolute', top: '12px', right: '12px', backgroundColor: 'white', padding: '4px 8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', color: '#2563eb' }}>
-                                                {priceText}
-                                            </div>
                                         </div>
                                         <div style={{ padding: '16px' }}>
                                             <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b', lineHeight: '1.4' }}>{product.title}</h4>

@@ -304,22 +304,6 @@ const StudentStore = () => {
                                         <Tag size={12} /> {product.category}
                                     </div>
                                 )}
-
-                                {/* Price Badge on Image */}
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    backgroundColor: '#2563eb',
-                                    color: 'white',
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    boxShadow: '0 2px 6px rgba(37, 99, 235, 0.35)'
-                                }}>
-                                    {product.price > 0 ? `₹${product.price}` : 'Free'}
-                                </div>
                             </div>
 
                             {/* Content Body */}
