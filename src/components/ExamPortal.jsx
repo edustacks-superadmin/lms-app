@@ -77,13 +77,20 @@ const ExamPortal = () => {
             const instId = await resolveInstituteId();
 
             // 1. Get member record
-            const { data: member, error: memberError } = await supabase
-                .from('members')
-                .select('id, name')
-                .eq('email', user.email)
-                .maybeSingle();
+            let member = null;
+            if (user?.email) {
+                const { data: memberData, error: memberError } = await supabase
+                    .from('members')
+                    .select('id')
+                    .ilike('email', user.email)
+                    .maybeSingle();
 
-            if (memberError) throw memberError;
+                if (memberError) {
+                    console.warn('Member fetch error (non-fatal):', memberError);
+                } else {
+                    member = memberData;
+                }
+            }
 
             let memberAttempts = [];
             if (member) {
