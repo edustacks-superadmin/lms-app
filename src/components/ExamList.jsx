@@ -91,10 +91,6 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
         return { running, upcoming, completed };
     }, [exams, searchQuery, selectedCourses, selectedTags]);
 
-    if (loading) {
-        return <div style={{ padding: '20px' }}>Loading exams...</div>;
-    }
-
     const currentExams = categorizedExams[activeTab] || [];
 
     useEffect(() => {
@@ -105,6 +101,10 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
         const startIndex = (currentPage - 1) * itemsPerPage;
         return currentExams.slice(startIndex, startIndex + itemsPerPage);
     }, [currentExams, currentPage, itemsPerPage]);
+
+    if (loading) {
+        return <div style={{ padding: '20px' }}>Loading exams...</div>;
+    }
 
     return (
         <div style={{ flex: 1 }}>

@@ -24,7 +24,9 @@ export const HomeSettingsProvider = ({ children }) => {
             const { data, error } = await supabase
                 .from('home_settings')
                 .select('*')
-                .single();
+                .order('id', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
             if (error) throw error;
             setSettings(data);
