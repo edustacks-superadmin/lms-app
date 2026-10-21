@@ -209,18 +209,13 @@ const StudentDashboard = () => {
                     console.warn('Error fetching batch courses:', batchErr);
                 }
 
-                // 3. Public courses for the institute
+                // 3. Public courses (matching MyCourses.jsx 1:1)
                 try {
-                    let pubQuery = supabase
+                    const { data: publicCourseData } = await supabase
                         .from('courses')
                         .select('id')
                         .eq('is_public', true);
 
-                    if (institute?.id) {
-                        pubQuery = pubQuery.eq('institute_id', institute.id);
-                    }
-
-                    const { data: publicCourseData } = await pubQuery;
                     (publicCourseData || []).forEach(c => {
                         if (c.id) enrolledCourseIds.add(c.id);
                     });

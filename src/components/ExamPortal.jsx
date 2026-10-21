@@ -167,18 +167,13 @@ const ExamPortal = () => {
                 }
             }
 
-            // 3c. Public courses for the institute
+            // 3c. Public courses (matching MyCourses.jsx 1:1)
             try {
-                let pubQuery = supabase
+                const { data: publicCourseData } = await supabase
                     .from('courses')
                     .select('id')
                     .eq('is_public', true);
 
-                if (instId) {
-                    pubQuery = pubQuery.eq('institute_id', instId);
-                }
-
-                const { data: publicCourseData } = await pubQuery;
                 (publicCourseData || []).forEach(c => {
                     if (c.id) enrolledCourseIds.add(c.id);
                 });
