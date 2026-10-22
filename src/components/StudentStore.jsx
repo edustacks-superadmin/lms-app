@@ -231,158 +231,69 @@ const StudentStore = () => {
                     )}
                 </div>
             ) : (
-                <div className="student-store-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '24px'
-                }}>
+                <div className="student-store-grid">
                     {filteredProducts.map((product) => (
                         <div
                             key={product.id}
                             className="student-store-card"
-                            style={{
-                                backgroundColor: 'white',
-                                borderRadius: '16px',
-                                overflow: 'hidden',
-                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
-                                border: '1px solid #e5e7eb',
-                                transition: 'all 0.25s ease',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                position: 'relative'
-                            }}
                             onClick={() => navigate(`/student/store/product/${product.id}`)}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.12)';
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.borderColor = '#cbd5e1';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.borderColor = '#e5e7eb';
-                            }}
                         >
-                            {/* Image Header */}
-                            <div style={{
-                                width: '100%',
-                                aspectRatio: '16/9',
-                                overflow: 'hidden',
-                                backgroundColor: '#f3f4f6',
-                                position: 'relative'
-                            }}>
+                            {/* Image Header / Thumbnail */}
+                            <div className="student-store-thumb">
                                 {product.image ? (
                                     <img
                                         src={product.image}
                                         alt={product.title}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
-                                        <ShoppingCart size={36} />
+                                    <div className="student-store-thumb-placeholder">
+                                        <ShoppingCart size={32} />
                                     </div>
                                 )}
 
                                 {/* Category Badge */}
                                 {product.category && (
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '10px',
-                                        left: '10px',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        backdropFilter: 'blur(4px)',
-                                        padding: '4px 10px',
-                                        borderRadius: '6px',
-                                        fontSize: '11px',
-                                        fontWeight: '600',
-                                        color: '#334155',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '4px',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
-                                    }}>
-                                        <Tag size={12} /> {product.category}
+                                    <div className="student-store-category-badge">
+                                        <Tag size={11} /> {product.category}
                                     </div>
                                 )}
                             </div>
 
                             {/* Content Body */}
-                            <div style={{
-                                padding: '16px',
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'space-between'
-                            }}>
+                            <div className="student-store-body">
                                 <div>
-                                    <h3 style={{
-                                        fontSize: '16px',
-                                        fontWeight: '700',
-                                        marginBottom: '6px',
-                                        color: '#0f172a',
-                                        lineHeight: '1.4',
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden',
-                                        minHeight: '44px'
-                                    }}>
+                                    <h3 className="student-store-title">
                                         {product.title}
                                     </h3>
                                     {product.short_description ? (
-                                        <p style={{
-                                            fontSize: '13px',
-                                            color: '#64748b',
-                                            lineHeight: '1.4',
-                                            marginBottom: '12px',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                            overflow: 'hidden'
-                                        }}>
+                                        <p className="student-store-desc">
                                             {product.short_description}
                                         </p>
-                                    ) : (
-                                        <div style={{ height: '8px' }} />
-                                    )}
+                                    ) : null}
                                 </div>
 
-                                <div>
+                                <div className="student-store-footer">
                                     {/* Price & Discounts */}
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'baseline',
-                                        gap: '8px',
-                                        marginBottom: '14px',
-                                        paddingTop: '8px',
-                                        borderTop: '1px solid #f1f5f9'
-                                    }}>
-                                        <span style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a' }}>
+                                    <div className="student-store-price-box">
+                                        <span className="student-store-price">
                                             {product.price > 0 ? `₹${product.price}` : 'Free'}
                                         </span>
                                         {product.strikethrough_price && (
-                                            <span style={{ fontSize: '13px', color: '#94a3b8', textDecoration: 'line-through' }}>
+                                            <span className="student-store-strike">
                                                 ₹{product.strikethrough_price}
                                             </span>
                                         )}
                                         {product.strikethrough_price && product.price > 0 && product.strikethrough_price > product.price && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                fontWeight: '700',
-                                                color: '#16a34a',
-                                                backgroundColor: '#dcfce7',
-                                                padding: '2px 6px',
-                                                borderRadius: '4px'
-                                            }}>
+                                            <span className="student-store-discount">
                                                 {Math.round(((product.strikethrough_price - product.price) / product.strikethrough_price) * 100)}% off
                                             </span>
                                         )}
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    <div className="student-store-actions">
                                         <button
+                                            className={`student-store-btn-cart ${isInCart(product.id) ? 'in-cart' : ''}`}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (isInCart(product.id)) {
@@ -391,55 +302,19 @@ const StudentStore = () => {
                                                     addToCart(product);
                                                 }
                                             }}
-                                            style={{
-                                                padding: '9px 8px',
-                                                backgroundColor: isInCart(product.id) ? '#ecfdf5' : '#eff6ff',
-                                                border: `1px solid ${isInCart(product.id) ? '#10b981' : '#bfdbfe'}`,
-                                                borderRadius: '8px',
-                                                color: isInCart(product.id) ? '#059669' : '#2563eb',
-                                                fontSize: '12px',
-                                                fontWeight: '700',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '5px',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.15s ease'
-                                            }}
                                         >
                                             {isInCart(product.id) ? <Check size={14} /> : <ShoppingCart size={14} />}
-                                            {isInCart(product.id) ? 'In Cart' : 'Add to Cart'}
+                                            <span>{isInCart(product.id) ? 'In Cart' : 'Add to Cart'}</span>
                                         </button>
 
                                         <button
+                                            className="student-store-btn-details"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 navigate(`/student/store/product/${product.id}`);
                                             }}
-                                            style={{
-                                                padding: '9px 8px',
-                                                backgroundColor: '#f8fafc',
-                                                border: '1px solid #e2e8f0',
-                                                borderRadius: '8px',
-                                                color: '#334155',
-                                                fontSize: '12px',
-                                                fontWeight: '600',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.15s ease'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#f1f5f9';
-                                                e.currentTarget.style.color = '#0f172a';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#f8fafc';
-                                                e.currentTarget.style.color = '#334155';
-                                            }}
                                         >
-                                            View Details
+                                            <span>View Details</span>
                                         </button>
                                     </div>
                                 </div>
