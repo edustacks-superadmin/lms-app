@@ -59,28 +59,28 @@ const StudentRanking = () => {
 
     return (
         <div className="leaderboard-container">
-            <div style={{ marginBottom: '30px' }}>
-                <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#1a1a1a', marginBottom: '8px' }}>Leaderboard</h1>
-                <p style={{ color: '#666' }}>See how you stack up against other students based on exam performance.</p>
+            <div className="leaderboard-header">
+                <h1 className="leaderboard-title">Leaderboard</h1>
+                <p className="leaderboard-subtitle">See how you stack up against other students based on exam performance.</p>
             </div>
 
             {/* Stats Cards */}
             <div className="leaderboard-stats-grid">
-                <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                    <div style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>Your Rank</div>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                <div className="leaderboard-stat-card">
+                    <div className="leaderboard-stat-label">Your Rank</div>
+                    <div className="leaderboard-stat-value" style={{ color: 'var(--primary-color)' }}>
                         {userRank ? `#${userRank.rank}` : '-'}
                     </div>
                 </div>
-                <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                    <div style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>Total Score</div>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#10b981' }}>
+                <div className="leaderboard-stat-card">
+                    <div className="leaderboard-stat-label">Total Score</div>
+                    <div className="leaderboard-stat-value" style={{ color: '#10b981' }}>
                         {userRank ? userRank.totalScore : 0}
                     </div>
                 </div>
-                <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #eee' }}>
-                    <div style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>Exams Taken</div>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#6366f1' }}>
+                <div className="leaderboard-stat-card">
+                    <div className="leaderboard-stat-label">Exams Taken</div>
+                    <div className="leaderboard-stat-value" style={{ color: '#6366f1' }}>
                         {userRank ? userRank.examsTaken : 0}
                     </div>
                 </div>
@@ -122,11 +122,11 @@ const StudentRanking = () => {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading rankings...</td>
+                                <td colSpan="4" className="leaderboard-empty-cell">Loading rankings...</td>
                             </tr>
                         ) : rankings.length === 0 ? (
                             <tr>
-                                <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>No rankings available yet.</td>
+                                <td colSpan="4" className="leaderboard-empty-cell">No rankings available yet.</td>
                             </tr>
                         ) : (
                             rankings.map((rank) => (

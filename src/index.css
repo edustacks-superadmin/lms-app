@@ -1073,11 +1073,55 @@ textarea.form-input {
   font-family: 'Inter', sans-serif;
 }
 
+.leaderboard-header {
+  margin-bottom: 24px;
+}
+
+.leaderboard-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.leaderboard-subtitle {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
 .leaderboard-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.leaderboard-stat-card {
+  background-color: white;
+  padding: 18px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.leaderboard-stat-label {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.leaderboard-stat-value {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.leaderboard-empty-cell {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
 }
 
 .leaderboard-filters {
@@ -1540,35 +1584,90 @@ textarea.form-input {
   }
 
 
-  @media (max-width: 768px) {
-    .leaderboard-container {
-      padding: 20px 16px 80px;
-    }
+  /* Leaderboard: compact layout on mobile */
+  .leaderboard-container {
+    padding: 16px 16px 80px !important;
+  }
 
-    .leaderboard-stats-grid {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
+  .leaderboard-header {
+    margin-bottom: 14px !important;
+  }
 
-    .leaderboard-filters {
-      justify-content: center;
-    }
+  .leaderboard-title {
+    font-size: 20px !important;
+    margin: 0 0 4px 0 !important;
+  }
 
-    .leaderboard-table th:nth-child(3),
-    .leaderboard-table td:nth-child(3) {
-      display: none;
-      /* Hide Exams column on mobile */
-    }
+  .leaderboard-subtitle {
+    font-size: 12.5px !important;
+    color: #64748b !important;
+    margin: 0 !important;
+  }
 
-    .leaderboard-table th,
-    .leaderboard-table td {
-      padding: 12px 8px;
-      font-size: 13px;
-    }
+  .leaderboard-stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
 
-    .leaderboard-student-cell {
-      gap: 8px;
-    }
+  .leaderboard-stat-card {
+    padding: 10px 6px !important;
+    border-radius: 10px !important;
+    text-align: center !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .leaderboard-stat-label {
+    font-size: 11px !important;
+    margin-bottom: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    color: #64748b !important;
+  }
+
+  .leaderboard-stat-value {
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+  }
+
+  .leaderboard-filters {
+    justify-content: center !important;
+    margin-bottom: 14px !important;
+    gap: 6px !important;
+  }
+
+  .leaderboard-filter-btn {
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  .leaderboard-table-container {
+    border-radius: 12px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .leaderboard-table th:nth-child(3),
+  .leaderboard-table td:nth-child(3) {
+    display: none !important;
+    /* Hide Exams column on mobile */
+  }
+
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+  }
+
+  .leaderboard-empty-cell {
+    padding: 24px 16px !important;
+    font-size: 13px !important;
+  }
+
+  .leaderboard-student-cell {
+    gap: 8px !important;
   }
 }
 
