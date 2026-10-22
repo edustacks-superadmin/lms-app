@@ -91,7 +91,7 @@ const StudentDashboard = () => {
 
             // Fetch Leaderboard (Top 5)
             const { data: leaderboardData, error: leaderboardError } = await supabase
-                .rpc('get_leaderboard', { time_filter: 'month' });
+                .rpc('get_leaderboard', { p_limit: 5, p_time_filter: 'all' });
 
             if (!leaderboardError && leaderboardData) {
                 setTopStudents(leaderboardData.slice(0, 5));
