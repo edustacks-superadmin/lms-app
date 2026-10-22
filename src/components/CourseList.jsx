@@ -43,11 +43,13 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
     const sortBy = propSortBy;
 
     // Filter and sort courses
+    const isArchivedTab = (searchParams.get('status') === 'archived') || activeTab === 'archived';
+
     const filteredCourses = useMemo(() => {
         let result = courses;
 
         // Filter by published vs archived status
-        if (activeTab === 'archived') {
+        if (isArchivedTab) {
             result = result.filter(course => course.is_archived === true);
         } else {
             result = result.filter(course => !course.is_archived);
@@ -92,7 +94,7 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
         }
 
         return result;
-    }, [courses, searchQuery, selectedTags, sortBy]);
+    }, [courses, searchQuery, selectedTags, sortBy, isArchivedTab]);
 
     useEffect(() => {
         if (searchParams.get('page') && searchParams.get('page') !== '1') {
@@ -100,7 +102,7 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
             nextParams.set('page', '1');
             setSearchParams(nextParams);
         }
-    }, [searchQuery, selectedTags, sortBy]);
+    }, [searchQuery, selectedTags, sortBy, isArchivedTab]);
 
     const paginatedCourses = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -299,7 +301,7 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
             {/* Top Controls */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: '400' }}>
-                    {activeTab === 'archived' ? 'Archived Courses' : 'Courses'} <span style={{ fontSize: '16px', color: '#666', marginLeft: '8px' }}>({filteredCourses.length})</span>
+                    {isArchivedTab ? 'Archived Courses' : 'Courses'} <span style={{ fontSize: '16px', color: '#666', marginLeft: '8px' }}>({filteredCourses.length})</span>
                 </h2>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <div className="input-group" style={{ width: '250px', maxWidth: '100%' }}>
@@ -318,6 +320,25 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
             </div>
 
             {/* Course Items */}
+            {filteredCourses.length === 0 ? (
+                <div style={{
+                    textAlign: 'center',
+                    padding: '60px 20px',
+                    backgroundColor: 'white',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    marginTop: '20px'
+                }}>
+                    <p style={{ fontSize: '16px', fontWeight: '600', color: '#1e293b', marginBottom: '6px' }}>
+                        {isArchivedTab ? 'No archived courses yet' : 'No courses found'}
+                    </p>
+                    <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                        {isArchivedTab
+                            ? 'When you archive courses from the Published list, they will appear here.'
+                            : 'Create a new course or clear filters to see courses.'}
+                    </p>
+                </div>
+            ) : (
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="courses">
                     {(provided) => (
@@ -444,8 +465,10 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
                     )}
                 </Droppable>
             </DragDropContext>
+            )}
 
             {/* Pagination */}
+            {filteredCourses.length > 0 && (
             <Pagination
                 currentPage={currentPage}
                 totalItems={filteredCourses.length}
@@ -455,6 +478,7 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
                 itemsPerPageOptions={[10, 20, 50, 100]}
                 itemName="courses"
             />
+            )}
 
             {/* Clone Course Modal */}
             {cloneModalOpen && (
