@@ -592,41 +592,34 @@ const StudentDashboard = () => {
                                 const postImg = post.cover_image || post.image_url;
 
                                 return (
-                                    <div key={post.id} className="recent-post-card" onClick={() => navigate(`/student/posts/${post.id}`)} style={{ cursor: 'pointer', overflow: 'hidden' }}>
-                                        <div className="recent-post-image" style={{ width: '128px', aspectRatio: '16 / 9', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div
+                                        key={post.id}
+                                        className="recent-post-card"
+                                        onClick={() => navigate(`/student/posts/${post.id}`)}
+                                    >
+                                        <div className="recent-post-image">
                                             {postImg ? (
-                                                <img src={postImg} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <img src={postImg} alt={post.title} />
                                             ) : post.icon ? (
                                                 <span style={{ fontSize: '26px' }}>{post.icon}</span>
                                             ) : (
                                                 <MessageSquare size={22} color="#94a3b8" />
                                             )}
                                         </div>
-                                        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
-                                                <span style={{ fontSize: '11px', color: '#2563eb', fontWeight: '700', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                                        <div className="recent-post-body">
+                                            <div className="recent-post-meta">
+                                                <span className="recent-post-category">
                                                     {post.categories?.name || 'General'}
                                                 </span>
-                                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                <span className="recent-post-date">
                                                     {formattedDate}
                                                 </span>
                                             </div>
-                                            <h4 style={{ fontSize: '15px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#1e293b', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                            <h4 className="recent-post-title">
                                                 {post.icon && !postImg && <span style={{ marginRight: '6px' }}>{post.icon}</span>}
                                                 {post.title}
                                             </h4>
-                                            <p style={{
-                                                fontSize: '13px',
-                                                color: '#64748b',
-                                                margin: 0,
-                                                lineHeight: '1.5',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden',
-                                                wordBreak: 'break-word',
-                                                overflowWrap: 'break-word'
-                                            }}>
+                                            <p className="recent-post-snippet">
                                                 {snippet || 'Click to read full post...'}
                                             </p>
                                         </div>

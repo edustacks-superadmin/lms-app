@@ -759,6 +759,13 @@ textarea.form-input {
   display: flex;
   gap: 20px;
   cursor: pointer;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.recent-post-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .recent-post-image {
@@ -768,6 +775,65 @@ textarea.form-input {
   background-color: #f1f5f9;
   overflow: hidden;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recent-post-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent-post-body {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.recent-post-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.recent-post-category {
+  font-size: 11px;
+  color: #2563eb;
+  font-weight: 700;
+  background-color: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.recent-post-date {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.recent-post-title {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0 0 6px 0;
+  color: #1e293b;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.recent-post-snippet {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .products-grid {
@@ -1138,9 +1204,71 @@ textarea.form-input {
     height: 160px;
   }
 
+  /* Latest Updates: compact horizontal layout on mobile */
+  .recent-posts-list {
+    gap: 12px !important;
+  }
+
   .recent-post-card {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    gap: 12px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .recent-post-image {
+    width: 115px !important;
+    height: 76px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .recent-post-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .recent-post-body {
+    padding: 0 !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .recent-post-meta {
+    margin-bottom: 3px !important;
+    gap: 6px !important;
+  }
+
+  .recent-post-category {
+    font-size: 10.5px !important;
+    padding: 1px 6px !important;
+  }
+
+  .recent-post-date {
+    font-size: 11px !important;
+  }
+
+  .recent-post-title {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    margin: 0 0 3px 0 !important;
+    line-height: 1.3 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .recent-post-snippet {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 1 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
   }
 
   /* Featured Courses: compact horizontal layout on mobile */
@@ -1227,11 +1355,13 @@ textarea.form-input {
   }
 
   @media (max-width: 380px) {
-    .dashboard-product-thumb {
+    .dashboard-product-thumb,
+    .recent-post-image {
       width: 95px !important;
       height: 64px !important;
     }
-    .dashboard-product-title {
+    .dashboard-product-title,
+    .recent-post-title {
       font-size: 12.5px !important;
     }
     .dashboard-product-btn span {
