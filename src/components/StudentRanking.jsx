@@ -125,6 +125,7 @@ const StudentRanking = () => {
 
     return (
         <div className="leaderboard-container">
+            <div className="leaderboard-header-section">
             <div className="leaderboard-header">
                 <h1 className="leaderboard-title">Leaderboard</h1>
                 <p className="leaderboard-subtitle">See how you stack up against other students based on exam performance.</p>
@@ -172,6 +173,8 @@ const StudentRanking = () => {
                 >
                     This Week
                 </button>
+            </div>
+
             </div>
 
             {/* Ranking Table */}

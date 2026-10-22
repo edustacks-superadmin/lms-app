@@ -1586,7 +1586,11 @@ textarea.form-input {
 
   /* Leaderboard: compact layout on mobile */
   .leaderboard-container {
-    padding: 16px 16px 80px !important;
+    padding: 0 0 80px 0 !important;
+  }
+
+  .leaderboard-header-section {
+    padding: 16px 16px 0 16px !important;
   }
 
   .leaderboard-header {
@@ -1645,8 +1649,11 @@ textarea.form-input {
   }
 
   .leaderboard-table-container {
-    border-radius: 12px !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
   }
 
   .leaderboard-table th:nth-child(3),
@@ -1659,6 +1666,16 @@ textarea.form-input {
   .leaderboard-table td {
     padding: 10px 8px !important;
     font-size: 13px !important;
+  }
+
+  .leaderboard-table th:first-child,
+  .leaderboard-table td:first-child {
+    padding-left: 16px !important;
+  }
+
+  .leaderboard-table th:last-child,
+  .leaderboard-table td:last-child {
+    padding-right: 16px !important;
   }
 
   .leaderboard-empty-cell {
