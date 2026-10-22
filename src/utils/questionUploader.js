@@ -95,6 +95,21 @@ export const uploadQuestions = async (questions, folderId, onProgress) => {
         errors: []
     };
 
+    // Preload subjects to resolve row.Subject by name
+    const subjectMap = new Map();
+    try {
+        const { data: dbSubjects } = await supabase.from('subjects').select('id, name');
+        if (dbSubjects) {
+            dbSubjects.forEach(s => {
+                if (s.name) {
+                    subjectMap.set(s.name.trim().toLowerCase(), s.id);
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Could not preload subjects:', e);
+    }
+
     for (let i = 0; i < questions.length; i++) {
         const row = questions[i];
         const rowNum = i + 2;
@@ -109,6 +124,18 @@ export const uploadQuestions = async (questions, folderId, onProgress) => {
                 });
             }
 
+            // Determine subject_id
+            let subjectId = null;
+            const subjectInput = row.Subject || row.subject || row['Subject Name'] || row['subject_name'];
+            if (subjectInput) {
+                const cleanSub = String(subjectInput).trim().toLowerCase();
+                if (subjectMap.has(cleanSub)) {
+                    subjectId = subjectMap.get(cleanSub);
+                } else if (!isNaN(parseInt(subjectInput, 10))) {
+                    subjectId = parseInt(subjectInput, 10);
+                }
+            }
+
             // 1. Insert Question
             const { data: question, error: questionError } = await supabase
                 .from('questions')
@@ -117,11 +144,9 @@ export const uploadQuestions = async (questions, folderId, onProgress) => {
                     marks: parseInt(row.Marks) || 1,
                     difficulty: (row.Difficulty || 'medium').toLowerCase(),
                     explanation: row.Explanation || null,
-                    folder_id: folderId,
-                    explanation: row.Explanation || null,
-                    folder_id: folderId,
-                    question_type: 'MCQ, Single Correct Question', // Fixed: Match manual creation type
-                    subject: row.Subject || null
+                    folder_id: folderId || null,
+                    question_type: 'MCQ, Single Correct Question',
+                    subject_id: subjectId
                 })
                 .select()
                 .single();
