@@ -586,7 +586,7 @@ const StudentDashboard = () => {
 
                                 return (
                                     <div key={post.id} className="recent-post-card" onClick={() => navigate(`/student/posts/${post.id}`)} style={{ cursor: 'pointer', overflow: 'hidden' }}>
-                                        <div className="recent-post-image" style={{ width: '60px', height: '60px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div className="recent-post-image" style={{ width: '128px', aspectRatio: '16 / 9', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {postImg ? (
                                                 <img src={postImg} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             ) : post.icon ? (
