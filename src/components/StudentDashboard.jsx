@@ -97,13 +97,13 @@ const StudentDashboard = () => {
                 setTopStudents(leaderboardData.slice(0, 5));
             }
 
-            // Fetch Active Products (Courses) - Limit 4
+            // Fetch Active Products (Courses) - Limit 3
             let productsQuery = supabase
                 .from('products')
                 .select('*')
                 .eq('is_active', true)
                 .order('display_order', { ascending: true })
-                .limit(4);
+                .limit(3);
 
             if (institute?.id) {
                 productsQuery = productsQuery.eq('institute_id', institute.id);
@@ -483,7 +483,7 @@ const StudentDashboard = () => {
                             </button>
                         </div>
                         <div className="products-grid">
-                            {products.map(product => {
+                            {products.slice(0, 3).map(product => {
                                 const prodImg = product.image || product.image_url;
                                 const prodLink = `/student/store/product/${product.id}`;
                                 const isFree = !product.price || Number(product.price) === 0;
