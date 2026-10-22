@@ -1455,8 +1455,8 @@ textarea.form-input {
   }
 
   .student-store-thumb {
-    width: 115px !important;
-    height: 86px !important;
+    width: 138px !important;
+    height: 78px !important;
     aspect-ratio: auto !important;
     border-radius: 8px !important;
     align-self: center !important;
@@ -1545,8 +1545,8 @@ textarea.form-input {
 
   @media (max-width: 380px) {
     .student-store-thumb {
-      width: 95px !important;
-      height: 78px !important;
+      width: 110px !important;
+      height: 62px !important;
     }
 
     .student-store-title {
@@ -1636,8 +1636,8 @@ textarea.form-input {
   }
 
   .resume-course-image {
-    width: 115px !important;
-    height: 76px !important;
+    width: 138px !important;
+    height: 78px !important;
     border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
@@ -1729,8 +1729,8 @@ textarea.form-input {
   }
 
   .recent-post-image {
-    width: 115px !important;
-    height: 76px !important;
+    width: 138px !important;
+    height: 78px !important;
     border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
@@ -1798,8 +1798,8 @@ textarea.form-input {
   }
 
   .dashboard-product-thumb {
-    width: 115px !important;
-    height: 76px !important;
+    width: 138px !important;
+    height: 78px !important;
     border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
@@ -1868,8 +1868,8 @@ textarea.form-input {
     .dashboard-product-thumb,
     .recent-post-image,
     .resume-course-image {
-      width: 95px !important;
-      height: 64px !important;
+      width: 110px !important;
+      height: 62px !important;
     }
     .dashboard-product-title,
     .recent-post-title,
