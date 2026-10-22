@@ -887,6 +887,25 @@ textarea.form-input {
   font-weight: bold;
 }
 
+/* My Courses & Student Store Responsive Styles */
+.my-courses-container,
+.student-store-container {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .my-courses-container,
+  .student-store-container {
+    padding: 16px 16px 24px !important;
+  }
+
+  .my-courses-search-wrap {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+}
+
 /* Course Player Responsive Styles */
 .course-player-container {
   width: 100%;

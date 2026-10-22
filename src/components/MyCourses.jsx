@@ -421,7 +421,7 @@ const MyCourses = () => {
     }
 
     return (
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="my-courses-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header */}
             <div style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
@@ -435,7 +435,7 @@ const MyCourses = () => {
                     </div>
 
                     {/* Search Bar */}
-                    <div style={{ position: 'relative', minWidth: '300px' }}>
+                    <div className="my-courses-search-wrap" style={{ position: 'relative', minWidth: '300px' }}>
                         <input
                             type="text"
                             placeholder="Search courses..."

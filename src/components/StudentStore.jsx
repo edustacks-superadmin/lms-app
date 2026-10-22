@@ -47,7 +47,7 @@ const StudentStore = () => {
     }
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="student-store-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
                     <div>
