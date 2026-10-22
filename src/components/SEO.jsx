@@ -6,7 +6,7 @@ const SEO = ({ title, description, keywords, name, type }) => {
     const { institute } = useInstitute();
 
     // Fallback to institute settings if props are not provided
-    const siteTitle = title || institute?.seo_title || institute?.name || 'Edustacks';
+    const siteTitle = title || institute?.seo_title || institute?.name || 'MAHESH IES ACADEMY';
     const metaDescription = description || institute?.meta_description || 'Online Learning Management System';
     const metaKeywords = keywords || institute?.keywords || 'education, lms, online learning';
     const robotsFollow = institute?.meta_robots_follow || 'Follow';

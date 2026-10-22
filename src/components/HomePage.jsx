@@ -100,7 +100,7 @@ const HomePage = () => {
                             marginBottom: '24px',
                             lineHeight: '1.2'
                         }}>
-                            {settings?.hero_title || 'Welcome to Edustacks'}
+                            {settings?.hero_title || (institute?.name ? `Welcome to ${institute.name}` : '')}
                         </h1>
                         <p style={{
                             fontSize: '20px',

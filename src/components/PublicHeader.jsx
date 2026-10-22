@@ -38,7 +38,7 @@ const PublicHeader = () => {
                             alt="Logo"
                             style={{ height: '40px', width: 'auto' }}
                         />
-                    ) : (
+                    ) : institute?.name ? (
                         <div style={{
                             width: '40px',
                             height: '40px',
@@ -51,8 +51,15 @@ const PublicHeader = () => {
                             fontWeight: 'bold',
                             fontSize: '20px'
                         }}>
-                            {(institute?.name || 'Edustacks').charAt(0)}
+                            {institute.name.charAt(0)}
                         </div>
+                    ) : (
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            backgroundColor: '#f1f5f9'
+                        }} />
                     )}
                     <div>
                         <h1 style={{
@@ -61,7 +68,7 @@ const PublicHeader = () => {
                             margin: 0,
                             color: '#1a1a1a'
                         }}>
-                            {institute?.name || 'Edustacks'}
+                            {institute?.name || ''}
                         </h1>
                         {institute?.slogan && (
                             <p style={{

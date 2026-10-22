@@ -5,27 +5,47 @@ const InstituteContext = createContext();
 
 export const useInstitute = () => useContext(InstituteContext);
 
+export const getSubdomainSlug = () => {
+    if (typeof window === 'undefined') return 'maheshiesacademy';
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'maheshiesacademy';
+    }
+    const parts = hostname.split('.');
+    if (parts.length > 2) {
+        return parts[0].toLowerCase();
+    }
+    return 'maheshiesacademy';
+};
+
+const getCachedInstitute = () => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const slug = getSubdomainSlug();
+        const cached = localStorage.getItem(`edustacks_institute_${slug}`);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object' && parsed.name) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Error reading cached institute from localStorage:', e);
+    }
+    return null;
+};
+
 export const InstituteProvider = ({ children }) => {
-    const [institute, setInstitute] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [institute, setInstitute] = useState(getCachedInstitute);
+    const [loading, setLoading] = useState(() => !getCachedInstitute());
     const [error, setError] = useState(null);
 
     const fetchInstitute = async () => {
-        setLoading(true);
+        if (!institute) {
+            setLoading(true);
+        }
         try {
-            // 1. Get Subdomain
-            const hostname = window.location.hostname;
-            let currentSlug = 'maheshiesacademy'; // Default for localhost or main domain
-
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-                currentSlug = 'maheshiesacademy';
-            } else {
-                // e.g. "school1.myapp.com" -> parts[0] = "school1"
-                const parts = hostname.split('.');
-                if (parts.length > 2) {
-                    currentSlug = parts[0].toLowerCase();
-                }
-            }
+            const currentSlug = getSubdomainSlug();
 
             console.log('Resolving Institute for Slug:', currentSlug);
 
@@ -47,7 +67,16 @@ export const InstituteProvider = ({ children }) => {
 
             console.log('Fetched institute settings:', data);
 
-            setInstitute(data || {});
+            if (data) {
+                setInstitute(data);
+                try {
+                    localStorage.setItem(`edustacks_institute_${currentSlug}`, JSON.stringify(data));
+                } catch (e) {
+                    console.warn('Error saving institute to localStorage:', e);
+                }
+            } else {
+                setInstitute({});
+            }
         } catch (err) {
             console.error('Error fetching institute settings:', err);
             setError(err.message);

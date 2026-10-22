@@ -49,7 +49,7 @@ const PublicFooter = () => {
                         color: '#d1d5db',
                         marginBottom: '12px'
                     }}>
-                        {institute?.description || 'Edustacks is dedicated to providing quality education and training to help students achieve their goals.'}
+                        {institute?.description || (institute?.name ? `${institute.name} is dedicated to providing quality education and training to help students achieve their goals.` : '')}
                     </p>
                     {institute?.mission_text && (
                         <p style={{
@@ -232,7 +232,7 @@ const PublicFooter = () => {
                         color: '#9ca3af',
                         margin: 0
                     }}>
-                        {settings?.copyright_text || '© 2025 Edustacks. All rights reserved.'}
+                        {settings?.copyright_text || `© ${new Date().getFullYear()} ${institute?.name || ''}. All rights reserved.`}
                     </p>
                     <div style={{
                         display: 'flex',
