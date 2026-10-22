@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tag, Edit2, MessageSquare, HelpCircle, Trash2, Loader, RotateCcw, Share2, Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePosts } from '../context/PostContext';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
@@ -16,8 +16,28 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, post: null });
     const [expandedComments, setExpandedComments] = useState({});
     const [copiedPostId, setCopiedPostId] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Read page & per_page from URL
+    const pageFromUrl = parseInt(searchParams.get('page'), 10);
+    const currentPage = isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl;
+
+    const perPageFromUrl = parseInt(searchParams.get('per_page') || searchParams.get('page_size'), 10);
+    const itemsPerPage = isNaN(perPageFromUrl) || perPageFromUrl < 1 ? 10 : perPageFromUrl;
+
+    const handlePageChange = (newPage) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', newPage.toString());
+        setSearchParams(nextParams);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleItemsPerPageChange = (newSize) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', '1');
+        nextParams.set('per_page', newSize.toString());
+        setSearchParams(nextParams);
+    };
 
     const toggleComments = (postId) => {
         setExpandedComments(prev => ({
@@ -99,7 +119,11 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
     };
 
     useEffect(() => {
-        setCurrentPage(1);
+        if (searchParams.get('page') && searchParams.get('page') !== '1') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('page', '1');
+            setSearchParams(nextParams);
+        }
     }, [activeStatus, filters, userAccess]);
 
     const paginatedPosts = useMemo(() => {
@@ -341,8 +365,8 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                 currentPage={currentPage}
                 totalItems={filteredPosts.length}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={setItemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
                 itemsPerPageOptions={[5, 10, 20, 50]}
                 itemName="posts"
             />

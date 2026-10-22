@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Pagination from './Pagination';
 import { Search, Clock, Info, Edit, Trash2, BarChart3, FileQuestion } from 'lucide-react';
 import { useExams } from '../context/ExamContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = [] }) => {
@@ -10,8 +10,28 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, exam: null });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Read page & per_page from URL
+    const pageFromUrl = parseInt(searchParams.get('page'), 10);
+    const currentPage = isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl;
+
+    const perPageFromUrl = parseInt(searchParams.get('per_page') || searchParams.get('page_size'), 10);
+    const itemsPerPage = isNaN(perPageFromUrl) || perPageFromUrl < 1 ? 20 : perPageFromUrl;
+
+    const handlePageChange = (newPage) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', newPage.toString());
+        setSearchParams(nextParams);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleItemsPerPageChange = (newSize) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', '1');
+        nextParams.set('per_page', newSize.toString());
+        setSearchParams(nextParams);
+    };
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
     const toggleDescription = (examId) => {
@@ -94,7 +114,11 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
     const currentExams = categorizedExams[activeTab] || [];
 
     useEffect(() => {
-        setCurrentPage(1);
+        if (searchParams.get('page') && searchParams.get('page') !== '1') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('page', '1');
+            setSearchParams(nextParams);
+        }
     }, [activeTab, searchQuery, selectedCourses, selectedTags]);
 
     const paginatedExams = useMemo(() => {
@@ -278,8 +302,8 @@ const ExamList = ({ activeTab = 'running', selectedCourses = [], selectedTags = 
                 currentPage={currentPage}
                 totalItems={currentExams.length}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={setItemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
                 itemsPerPageOptions={[10, 20, 50, 100]}
                 itemName="exams"
             />

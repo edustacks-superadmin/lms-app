@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Menu, Book, Copy } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '../context/CourseContext';
 import { supabase } from '../supabaseClient';
 import Pagination from './Pagination';
@@ -15,8 +15,28 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
     const [courseToClone, setCourseToClone] = useState(null);
     const [cloneName, setCloneName] = useState('');
     const [cloning, setCloning] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Read page & per_page from URL
+    const pageFromUrl = parseInt(searchParams.get('page'), 10);
+    const currentPage = isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl;
+
+    const perPageFromUrl = parseInt(searchParams.get('per_page') || searchParams.get('page_size'), 10);
+    const itemsPerPage = isNaN(perPageFromUrl) || perPageFromUrl < 1 ? 20 : perPageFromUrl;
+
+    const handlePageChange = (newPage) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', newPage.toString());
+        setSearchParams(nextParams);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleItemsPerPageChange = (newSize) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('page', '1');
+        nextParams.set('per_page', newSize.toString());
+        setSearchParams(nextParams);
+    };
 
     // Use props if provided, otherwise use local state (for standalone usage)
     const selectedTags = propTags;
@@ -68,7 +88,11 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
     }, [courses, searchQuery, selectedTags, sortBy]);
 
     useEffect(() => {
-        setCurrentPage(1);
+        if (searchParams.get('page') && searchParams.get('page') !== '1') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('page', '1');
+            setSearchParams(nextParams);
+        }
     }, [searchQuery, selectedTags, sortBy]);
 
     const paginatedCourses = useMemo(() => {
@@ -390,8 +414,8 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                 currentPage={currentPage}
                 totalItems={filteredCourses.length}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setCurrentPage}
-                onItemsPerPageChange={setItemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
                 itemsPerPageOptions={[10, 20, 50, 100]}
                 itemName="courses"
             />
