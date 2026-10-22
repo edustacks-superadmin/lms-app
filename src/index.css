@@ -995,6 +995,100 @@ textarea.form-input {
 }
 
 /* Posts Page Responsive Styles */
+.student-posts-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.student-posts-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.student-posts-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.student-posts-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.student-posts-filters-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-select-icon {
+  position: absolute;
+  left: 12px;
+  pointer-events: none;
+  color: #64748b;
+}
+
+.filter-select-input {
+  padding: 8px 12px 8px 36px !important;
+  border-radius: 8px !important;
+  border: 1px solid #d1d5db !important;
+  font-size: 14px !important;
+  background-color: white !important;
+  color: #1e293b !important;
+  cursor: pointer;
+  min-width: 160px;
+  height: 38px;
+}
+
+.filter-select-input:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
+}
+
+.filter-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: pointer;
+  height: 38px;
+  transition: all 0.2s ease;
+}
+
+.filter-reset-btn:hover {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
 .student-posts-container {
   display: flex;
   width: 100%;
@@ -1047,6 +1141,84 @@ textarea.form-input {
   background-color: #f9fafb;
 }
 
+/* Post Item Layout with 16:9 Thumbnail */
+.post-item-main {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.post-thumbnail-container {
+  width: 220px;
+  max-width: 35%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.post-thumbnail-container:hover .post-thumbnail-img {
+  transform: scale(1.03);
+}
+
+.post-thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.post-info-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-item-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #1f2937;
+  transition: color 0.2s;
+  word-break: break-word;
+}
+
+.post-item-title:hover {
+  color: var(--primary-color);
+}
+
+.post-item-desc {
+  color: #555;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+  line-height: 1.5;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .post-meta {
   display: flex;
   align-items: center;
@@ -1057,6 +1229,29 @@ textarea.form-input {
 }
 
 @media (max-width: 768px) {
+  .student-posts-page {
+    padding: 16px 12px;
+  }
+
+  .student-posts-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .student-posts-filters-group {
+    width: 100%;
+  }
+
+  .filter-select-wrapper {
+    flex: 1;
+  }
+
+  .filter-select-input {
+    width: 100%;
+    min-width: 0;
+  }
+
   .student-posts-container {
     flex-direction: column;
   }
@@ -1068,6 +1263,29 @@ textarea.form-input {
     border-bottom: 1px solid #eee;
     padding-bottom: 20px;
   }
+
+  .post-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .post-meta {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .post-item-main {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .post-thumbnail-container {
+    width: 100%;
+    max-width: 100%;
+  }
+}
 
   /* PDF Viewer Styles - Vertical Scrolling & Floating Controls */
   .pdf-viewer-overlay {
@@ -1165,19 +1383,6 @@ textarea.form-input {
       right: 16px;
     }
   }
-
-  .post-list-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-
-
-  .post-meta {
-    gap: 8px;
-  }
-}
 
 /* Course List View Styles - Global */
 .course-list-container {

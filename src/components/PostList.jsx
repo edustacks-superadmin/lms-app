@@ -8,7 +8,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import CommentSection from './CommentSection';
 import Pagination from './Pagination';
 
-const PostList = ({ activeStatus = 'published', filters, readOnly = false, userAccess = null }) => {
+const PostList = ({ activeStatus = 'published', filters, readOnly = false, userAccess = null, hideHeaderTitle = false }) => {
     const navigate = useNavigate();
     const { posts, loading, deletePost, restorePost } = usePosts();
     const { showToast } = useToast();
@@ -176,7 +176,6 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
         }
     };
 
-
     if (loading || (readOnly && userAccess?.loading)) {
         return (
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -188,22 +187,24 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
     return (
         <div style={{ flex: 1 }}>
             {/* Top Controls */}
-            <div className="post-list-header">
-                <h2 style={{ fontSize: '24px', fontWeight: '400', margin: 0 }}>
-                    Posts {activeStatus === 'deleted' && '- Deleted'}
-                </h2>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    {!readOnly && (
-                        <button
-                            className="btn btn-outline"
-                            style={{ background: '#f5f5f5', border: '1px solid #ddd', color: '#333', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
-                            onClick={() => navigate('/admin/posts/categories')}
-                        >
-                            <Tag size={16} /> Categories
-                        </button>
-                    )}
+            {!hideHeaderTitle && (
+                <div className="post-list-header">
+                    <h2 style={{ fontSize: '24px', fontWeight: '400', margin: 0 }}>
+                        Posts {activeStatus === 'deleted' && '- Deleted'}
+                    </h2>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        {!readOnly && (
+                            <button
+                                className="btn btn-outline"
+                                style={{ background: '#f5f5f5', border: '1px solid #ddd', color: '#333', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
+                                onClick={() => navigate('/admin/posts/categories')}
+                            >
+                                <Tag size={16} /> Categories
+                            </button>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Post List */}
             <div className="post-list-container">
@@ -212,151 +213,201 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                         {activeStatus === 'deleted' ? 'No deleted posts found.' : 'No posts found.'}
                     </div>
                 ) : (
-                    paginatedPosts.map((post) => (
-                        <div key={post.id} className="post-item">
-                            <h3
-                                style={{
-                                    fontSize: '18px',
-                                    fontWeight: '600',
-                                    marginBottom: '8px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    cursor: 'pointer',
-                                    color: '#1f2937',
-                                    transition: 'color 0.2s'
-                                }}
-                                onClick={() => navigate(`/post/${post.id}`)}
-                                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary-color)'}
-                                onMouseLeave={(e) => e.currentTarget.style.color = '#1f2937'}
-                                title="Click to open full post"
-                            >
-                                {post.icon && <span>{post.icon}</span>}
-                                {post.title}
-                            </h3>
-                            <p style={{ color: '#555', fontSize: '14px', marginBottom: '12px', lineHeight: '1.5' }}>
-                                {post.description || post.summary}
-                            </p>
+                    paginatedPosts.map((post) => {
+                        const postImg = post.cover_image || post.image_url;
+                        const postLink = readOnly ? `/student/posts/${post.id}` : `/post/${post.id}`;
+                        const categoryName = post.categories?.name;
+                        const categoryColor = post.categories?.color || '#2563eb';
 
-                            <div className="post-meta">
-                                <span>Written {post.date || new Date(post.created_at).toLocaleDateString()}</span>
-                                <span>•</span>
-                                {post.tag && (
-                                    <>
-                                        <span style={{
-                                            backgroundColor: post.tagColor || '#000',
-                                            color: 'white',
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '11px',
-                                            fontWeight: 'bold',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px'
-                                        }}>
-                                            <Tag size={10} fill="white" /> {post.tag}
-                                        </span>
-                                        <span>•</span>
-                                    </>
-                                )}
-                                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', color: 'var(--primary-color)' }}>
-                                    <span
-                                        style={{
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            color: expandedComments[post.id] ? 'var(--primary-color)' : '#666'
-                                        }}
-                                        onClick={() => toggleComments(post.id)}
+                        return (
+                            <div key={post.id} className="post-item">
+                                <div className="post-item-main">
+                                    {/* 16:9 Thumbnail container */}
+                                    <div
+                                        className="post-thumbnail-container"
+                                        onClick={() => navigate(postLink)}
+                                        title={post.title}
                                     >
-                                        <MessageSquare size={16} />
-                                        {expandedComments[post.id] ? 'Hide Comments' : 'Comments'}
-                                    </span>
-
-                                    <span
-                                        style={{
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            color: copiedPostId === post.id ? '#10b981' : '#4b5563',
-                                            fontWeight: copiedPostId === post.id ? '600' : 'normal'
-                                        }}
-                                        onClick={() => handleCopyLink(post)}
-                                        title="Copy link to this post"
-                                    >
-                                        {copiedPostId === post.id ? (
-                                            <>
-                                                <Check size={16} color="#10b981" />
-                                                <span style={{ color: '#10b981' }}>Copied!</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Share2 size={16} />
-                                                <span>Copy Link</span>
-                                            </>
-                                        )}
-                                    </span>
-
-                                    {!readOnly && activeStatus !== 'deleted' && (
-                                        <>
-                                            <span
-                                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                                                onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
-                                            >
-                                                Edit
-                                            </span>
-                                            <span
-                                                style={{
-                                                    cursor: 'not-allowed',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '4px',
-                                                    color: '#999',
-                                                    position: 'relative'
+                                        {postImg ? (
+                                            <img
+                                                src={postImg}
+                                                alt={post.title}
+                                                className="post-thumbnail-img"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                    const placeholder = e.currentTarget.parentElement?.querySelector('.post-thumbnail-placeholder');
+                                                    if (placeholder) placeholder.style.display = 'flex';
                                                 }}
-                                                title="Coming Soon"
-                                            >
-                                                View Questions
-                                                <span style={{
-                                                    fontSize: '9px',
-                                                    backgroundColor: '#ffa726',
-                                                    color: 'white',
-                                                    padding: '2px 6px',
-                                                    borderRadius: '10px',
-                                                    fontWeight: 'bold',
-                                                    marginLeft: '4px'
-                                                }}>
-                                                    SOON
-                                                </span>
-                                            </span>
-                                            <span
-                                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#ff4d4f' }}
-                                                onClick={() => handleDeleteClick(post)}
-                                            >
-                                                Delete
-                                            </span>
-                                        </>
-                                    )}
-                                    {!readOnly && activeStatus === 'deleted' && (
-                                        <span
-                                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#00bfa5' }}
-                                            onClick={() => handleRestore(post.id)}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="post-thumbnail-placeholder"
+                                            style={{ display: postImg ? 'none' : 'flex' }}
                                         >
-                                            <RotateCcw size={14} /> Restore
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                                            {post.icon ? (
+                                                <span style={{ fontSize: '32px' }}>{post.icon}</span>
+                                            ) : (
+                                                <MessageSquare size={28} color="#94a3b8" />
+                                            )}
+                                        </div>
+                                    </div>
 
-                            {
-                                expandedComments[post.id] && (
-                                    <CommentSection postId={post.id} />
-                                )
-                            }
-                        </div>
-                    ))
+                                    {/* Post info & details */}
+                                    <div className="post-info-container">
+                                        {categoryName && (
+                                            <div style={{ marginBottom: '6px' }}>
+                                                <span style={{
+                                                    backgroundColor: '#eff6ff',
+                                                    color: categoryColor,
+                                                    border: `1px solid ${categoryColor}22`,
+                                                    padding: '2px 8px',
+                                                    borderRadius: '4px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '700',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}>
+                                                    <Tag size={10} color={categoryColor} /> {categoryName}
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <h3
+                                            className="post-item-title"
+                                            onClick={() => navigate(postLink)}
+                                            title="Click to open full post"
+                                        >
+                                            {post.icon && !postImg && <span style={{ marginRight: '6px' }}>{post.icon}</span>}
+                                            {post.title}
+                                        </h3>
+
+                                        <p className="post-item-desc">
+                                            {post.description || post.summary}
+                                        </p>
+
+                                        <div className="post-meta">
+                                            <span>Written {post.date || new Date(post.created_at).toLocaleDateString()}</span>
+                                            <span>•</span>
+                                            {post.tag && (
+                                                <>
+                                                    <span style={{
+                                                        backgroundColor: post.tagColor || '#000',
+                                                        color: 'white',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '11px',
+                                                        fontWeight: 'bold',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px'
+                                                    }}>
+                                                        <Tag size={10} fill="white" /> {post.tag}
+                                                    </span>
+                                                    <span>•</span>
+                                                </>
+                                            )}
+                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center', color: 'var(--primary-color)' }}>
+                                                <span
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        color: expandedComments[post.id] ? 'var(--primary-color)' : '#666'
+                                                    }}
+                                                    onClick={() => toggleComments(post.id)}
+                                                >
+                                                    <MessageSquare size={16} />
+                                                    {expandedComments[post.id] ? 'Hide Comments' : 'Comments'}
+                                                </span>
+
+                                                <span
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        color: copiedPostId === post.id ? '#10b981' : '#4b5563',
+                                                        fontWeight: copiedPostId === post.id ? '600' : 'normal'
+                                                    }}
+                                                    onClick={() => handleCopyLink(post)}
+                                                    title="Copy link to this post"
+                                                >
+                                                    {copiedPostId === post.id ? (
+                                                        <>
+                                                            <Check size={16} color="#10b981" />
+                                                            <span style={{ color: '#10b981' }}>Copied!</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Share2 size={16} />
+                                                            <span>Copy Link</span>
+                                                        </>
+                                                    )}
+                                                </span>
+
+                                                {!readOnly && activeStatus !== 'deleted' && (
+                                                    <>
+                                                        <span
+                                                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                            onClick={() => navigate(`/admin/posts/edit/${post.id}`)}
+                                                        >
+                                                            Edit
+                                                        </span>
+                                                        <span
+                                                            style={{
+                                                                cursor: 'not-allowed',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '4px',
+                                                                color: '#999',
+                                                                position: 'relative'
+                                                            }}
+                                                            title="Coming Soon"
+                                                        >
+                                                            View Questions
+                                                            <span style={{
+                                                                fontSize: '9px',
+                                                                backgroundColor: '#ffa726',
+                                                                color: 'white',
+                                                                padding: '2px 6px',
+                                                                borderRadius: '10px',
+                                                                fontWeight: 'bold',
+                                                                marginLeft: '4px'
+                                                            }}>
+                                                                SOON
+                                                            </span>
+                                                        </span>
+                                                        <span
+                                                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#ff4d4f' }}
+                                                            onClick={() => handleDeleteClick(post)}
+                                                        >
+                                                            Delete
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {!readOnly && activeStatus === 'deleted' && (
+                                                    <span
+                                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#00bfa5' }}
+                                                        onClick={() => handleRestore(post.id)}
+                                                    >
+                                                        <RotateCcw size={14} /> Restore
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {expandedComments[post.id] && (
+                                    <div style={{ marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                                        <CommentSection postId={post.id} />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })
                 )}
             </div>
 
@@ -381,7 +432,7 @@ const PostList = ({ activeStatus = 'published', filters, readOnly = false, userA
                 itemName={deleteModal.post?.title}
                 confirmText="Delete Post"
             />
-        </div >
+        </div>
     );
 };
 
