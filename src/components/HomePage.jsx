@@ -17,15 +17,23 @@ const HomePage = () => {
     const [bannersLoading, setBannersLoading] = useState(true);
 
     useEffect(() => {
-        fetchProducts();
-        fetchBanners();
-    }, []);
+        if (institute?.id) {
+            fetchProducts(institute.id);
+            fetchBanners();
+        }
+    }, [institute?.id]);
 
     const fetchBanners = async () => {
+        if (!institute?.id) {
+            setBanners([]);
+            setBannersLoading(false);
+            return;
+        }
         try {
             const { data, error } = await supabase
                 .from('banner_ads')
                 .select('*')
+                .eq('institute_id', institute.id)
                 .eq('status', 'Active')
                 .order('created_at', { ascending: false });
 

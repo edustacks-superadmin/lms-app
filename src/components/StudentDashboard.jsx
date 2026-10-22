@@ -71,11 +71,17 @@ const StudentDashboard = () => {
     const fetchDashboardContent = async () => {
         try {
             // Fetch Banners
-            const { data: bannerData } = await supabase
+            let bannerQuery = supabase
                 .from('banner_ads')
                 .select('*')
                 .eq('status', 'Active')
                 .order('created_at', { ascending: false });
+
+            if (institute?.id) {
+                bannerQuery = bannerQuery.eq('institute_id', institute.id);
+            }
+
+            const { data: bannerData } = await bannerQuery;
 
             if (bannerData && bannerData.length > 0) {
                 setBanners(bannerData.map(b => ({

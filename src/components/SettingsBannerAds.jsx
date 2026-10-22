@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Image as ImageIcon, Save, X, EyeOff } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from '../context/InstituteContext';
 
 const SettingsBannerAds = () => {
+    const { institute } = useInstitute();
     const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -20,16 +22,24 @@ const SettingsBannerAds = () => {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        fetchBanners();
-    }, []);
+        if (institute?.id) {
+            fetchBanners();
+        }
+    }, [institute?.id]);
 
     const fetchBanners = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('banner_ads')
                 .select('*')
                 .order('created_at', { ascending: false });
+
+            if (institute?.id) {
+                query = query.eq('institute_id', institute.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setBanners(data || []);
@@ -93,6 +103,7 @@ const SettingsBannerAds = () => {
         setUploading(true);
         try {
             const payload = {
+                institute_id: institute?.id || null,
                 title: formData.title,
                 link_url: formData.link_url,
                 image_url: formData.image_url,

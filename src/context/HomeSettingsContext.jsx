@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from './InstituteContext';
 
 const HomeSettingsContext = createContext();
 
@@ -12,18 +13,22 @@ export const useHomeSettings = () => {
 };
 
 export const HomeSettingsProvider = ({ children }) => {
+    const { institute } = useInstitute();
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchHomeSettings();
-    }, []);
-
-    const fetchHomeSettings = async () => {
+    const fetchHomeSettings = async (instId) => {
         try {
-            const { data, error } = await supabase
+            const targetId = instId !== undefined ? instId : institute?.id;
+            let query = supabase
                 .from('home_settings')
-                .select('*')
+                .select('*');
+
+            if (targetId) {
+                query = query.eq('institute_id', targetId);
+            }
+
+            const { data, error } = await query
                 .order('id', { ascending: false })
                 .limit(1)
                 .maybeSingle();
@@ -36,6 +41,12 @@ export const HomeSettingsProvider = ({ children }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (institute?.id) {
+            fetchHomeSettings(institute.id);
+        }
+    }, [institute?.id]);
 
     const uploadImage = async (file, folder = 'home-images') => {
         try {
@@ -80,6 +91,7 @@ export const HomeSettingsProvider = ({ children }) => {
             }
 
             const dataToUpdate = {
+                institute_id: institute?.id || null,
                 ...updatedData,
                 institute_logo_url: logoUrl,
                 hero_banner_image: bannerUrl,

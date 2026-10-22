@@ -1,23 +1,32 @@
 import React, { createContext, useContext, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from './InstituteContext';
 
 const ProductContext = createContext();
 
 export const useProducts = () => useContext(ProductContext);
 
 export const ProductProvider = ({ children }) => {
+    const { institute } = useInstitute();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [products, setProducts] = useState([]);
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (instId) => {
         setLoading(true);
         setError(null);
         try {
-            const { data, error } = await supabase
+            const targetId = instId !== undefined ? instId : institute?.id;
+            let query = supabase
                 .from('products')
                 .select('*')
                 .order('display_order', { ascending: true });
+
+            if (targetId) {
+                query = query.eq('institute_id', targetId);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setProducts(data || []);
@@ -28,6 +37,12 @@ export const ProductProvider = ({ children }) => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (institute?.id) {
+            fetchProducts(institute.id);
+        }
+    }, [institute?.id]);
 
     const uploadProductImage = async (file) => {
         try {
@@ -81,6 +96,7 @@ export const ProductProvider = ({ children }) => {
 
             // Map frontend camelCase to backend snake_case
             const dbData = {
+                institute_id: institute?.id || null,
                 title: productData.title,
                 slug: productData.slug,
                 strikethrough_price: productData.strikethroughPrice || null,

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Image as ImageIcon, Save, X, Star } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from '../context/InstituteContext';
 
 const SettingsTestimonials = () => {
+    const { institute } = useInstitute();
     const [testimonials, setTestimonials] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isCreating, setIsCreating] = useState(false);
@@ -21,16 +23,24 @@ const SettingsTestimonials = () => {
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        fetchTestimonials();
-    }, []);
+        if (institute?.id) {
+            fetchTestimonials();
+        }
+    }, [institute?.id]);
 
     const fetchTestimonials = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('testimonials')
                 .select('*')
                 .order('created_at', { ascending: false });
+
+            if (institute?.id) {
+                query = query.eq('institute_id', institute.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setTestimonials(data || []);
@@ -101,7 +111,7 @@ const SettingsTestimonials = () => {
                 // Create
                 const { error } = await supabase
                     .from('testimonials')
-                    .insert([formData]);
+                    .insert([{ ...formData, institute_id: institute?.id || null }]);
                 if (error) throw error;
             }
 

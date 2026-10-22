@@ -1,23 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Star, Quote } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { useInstitute } from '../context/InstituteContext';
 
 const TestimonialsSection = () => {
+    const { institute } = useInstitute();
     const [testimonials, setTestimonials] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchTestimonials();
-    }, []);
+        if (institute?.id) {
+            fetchTestimonials();
+        } else {
+            setTestimonials([]);
+            setLoading(false);
+        }
+    }, [institute?.id]);
 
     const fetchTestimonials = async () => {
+        if (!institute?.id) {
+            setTestimonials([]);
+            setLoading(false);
+            return;
+        }
         try {
             const { data, error } = await supabase
                 .from('testimonials')
                 .select('*')
+                .eq('institute_id', institute.id)
                 .eq('status', 'Active')
                 .order('created_at', { ascending: false })
-                .limit(10); // Fetch more for rolling effect
+                .limit(10);
 
             if (error) throw error;
             setTestimonials(data || []);
