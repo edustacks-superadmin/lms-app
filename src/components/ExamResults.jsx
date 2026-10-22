@@ -452,7 +452,7 @@ const ExamResults = () => {
         questionItem: { backgroundColor: 'white', padding: '20px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '16px', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' },
         qText: { fontSize: '14px', color: '#333', marginBottom: '12px', fontWeight: 'bold', wordBreak: 'break-word' },
         optionList: { listStyle: 'none', padding: 0, margin: 0 },
-        optionItem: { padding: '8px 12px', marginBottom: '8px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid transparent', maxWidth: '100%', overflowX: 'auto' },
+        optionItem: { padding: '8px 12px', marginBottom: '8px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid transparent', maxWidth: '100%', overflowX: 'hidden' },
         optionBadge: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#555', flexShrink: 0 },
         correctOption: { backgroundColor: '#e8f5e9', borderColor: '#c8e6c9' },
         wrongOption: { backgroundColor: '#ffebee', borderColor: '#ffcdd2' },
@@ -620,7 +620,7 @@ const ExamResults = () => {
                                     <div style={{ fontSize: '12px', fontWeight: '600', color: '#1976d2', marginBottom: '6px' }}>
                                         Explanation:
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6', maxWidth: '100%', overflowX: 'auto' }} className="explanation-content">
+                                    <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6', maxWidth: '100%', overflowX: 'hidden' }} className="explanation-content">
                                         <MathText>{q.explanation}</MathText>
                                     </div>
                                 </div>
