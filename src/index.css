@@ -1661,35 +1661,54 @@ textarea.form-input {
   word-break: break-all;
 }
 
-/* KaTeX & Math Formulas - Stay Contained Without Local Scrollbars */
+/* Automatic KaTeX Math Formula Line-Wrapping */
+.katex {
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+.katex-html {
+  white-space: normal !important;
+  display: inline !important;
+  max-width: 100% !important;
+}
+
+.katex-html > .base {
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
 .katex-display {
   display: block !important;
   max-width: 100% !important;
-  overflow: hidden !important;
-  padding: 4px 0 !important;
+  text-align: left !important;
   margin: 0.8em 0 !important;
+  padding: 4px 0 !important;
+  overflow: visible !important;
 }
 
 .katex-display > .katex {
-  max-width: 100% !important;
+  display: inline-block !important;
+  white-space: normal !important;
   text-align: left !important;
+  max-width: 100% !important;
 }
 
 .katex-container {
-  display: inline-block !important;
+  display: inline !important;
   max-width: 100% !important;
-  overflow: hidden !important;
+  white-space: normal !important;
   vertical-align: middle !important;
-}
-
-.katex {
-  max-width: 100% !important;
 }
 
 .math-text-content {
   display: inline-block;
   max-width: 100% !important;
-  overflow: hidden !important;
+  white-space: normal !important;
   vertical-align: middle;
   word-break: break-word;
 }
@@ -1703,16 +1722,22 @@ textarea.form-input {
 .math-text-content li {
   max-width: 100% !important;
   word-break: break-word;
+  white-space: normal !important;
 }
 
 .explanation-container {
   max-width: 100% !important;
-  overflow: hidden !important;
   box-sizing: border-box !important;
 }
 
 .explanation-content {
   max-width: 100% !important;
-  overflow: hidden !important;
   word-break: break-word;
+  white-space: normal !important;
+}
+
+@media (max-width: 640px) {
+  .katex {
+    font-size: 0.95em;
+  }
 }
