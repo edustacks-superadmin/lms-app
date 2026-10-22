@@ -352,7 +352,7 @@ export const CourseProvider = ({ children }) => {
     }, [courses]);
 
     return (
-        <CourseContext.Provider value={{ courses, loading, addCourse, updateCourse, deleteCourse, archiveCourse, unarchiveCourse, reorderCourses, getCourse }}>
+        <CourseContext.Provider value={{ courses, loading, fetchCourses, addCourse, updateCourse, deleteCourse, archiveCourse, unarchiveCourse, reorderCourses, getCourse }}>
             {children}
         </CourseContext.Provider>
     );

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Plus, Menu, Book, Copy } from 'lucide-react';
+import { Search, Plus, Menu, Book, Copy, RotateCw } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCourses } from '../context/CourseContext';
 import { supabase } from '../supabaseClient';
@@ -9,7 +9,17 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sortBy: propSortBy = '' }) => {
     const navigate = useNavigate();
-    const { courses, reorderCourses, archiveCourse, unarchiveCourse } = useCourses();
+    const { courses, loading, fetchCourses, reorderCourses, archiveCourse, unarchiveCourse } = useCourses();
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            await fetchCourses();
+        } finally {
+            setTimeout(() => setIsRefreshing(false), 450);
+        }
+    };
     const [searchQuery, setSearchQuery] = useState('');
     const [cloneModalOpen, setCloneModalOpen] = useState(false);
     const [courseToClone, setCourseToClone] = useState(null);
@@ -313,6 +323,45 @@ const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sort
                         />
                         <button><Search size={18} /></button>
                     </div>
+                    <button
+                        className="btn"
+                        onClick={handleRefresh}
+                        disabled={isRefreshing || loading}
+                        title="Refresh courses"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '9px 12px',
+                            backgroundColor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            color: '#475569',
+                            cursor: isRefreshing || loading ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isRefreshing && !loading) {
+                                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                e.currentTarget.style.color = '#0f172a';
+                                e.currentTarget.style.borderColor = '#cbd5e1';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#f8fafc';
+                            e.currentTarget.style.color = '#475569';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                        }}
+                    >
+                        <RotateCw
+                            size={16}
+                            style={{
+                                animation: isRefreshing ? 'spin 0.75s linear infinite' : 'none',
+                                transition: 'transform 0.2s'
+                            }}
+                        />
+                    </button>
                     <button className="btn btn-success" onClick={() => navigate('/courses/create')} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
                         <Plus size={18} /> Create course
                     </button>
