@@ -895,14 +895,19 @@ textarea.form-input {
 }
 
 @media (max-width: 768px) {
-  .my-courses-container,
-  .student-store-container {
-    padding: 16px 16px 24px !important;
+  .my-courses-header {
+    padding: 16px 16px 0 16px !important;
   }
 
   .my-courses-search-wrap {
     min-width: 0 !important;
     width: 100% !important;
+  }
+
+  .course-list-container {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
   }
 }
 

@@ -423,7 +423,7 @@ const MyCourses = () => {
     return (
         <div className="my-courses-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header */}
-            <div style={{ marginBottom: '32px' }}>
+            <div className="my-courses-header" style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
                     <div>
                         <h2 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
