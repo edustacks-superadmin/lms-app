@@ -632,16 +632,18 @@ const ExamPortal = () => {
 
                 @media (max-width: 768px) {
                     .exam-portal-container {
-                        padding: 10px 8px 40px !important;
+                        padding: 0 0 60px 0 !important;
                     }
                     .exam-portal-title {
-                        font-size: 19px !important;
-                        margin: 0 0 10px 0 !important;
+                        font-size: 20px !important;
+                        padding: 16px 16px 0 16px !important;
+                        margin: 0 0 12px 0 !important;
                     }
                     .exam-metric-grid {
                         grid-template-columns: repeat(3, 1fr) !important;
-                        gap: 6px !important;
-                        margin-bottom: 12px !important;
+                        gap: 8px !important;
+                        padding: 0 16px !important;
+                        margin-bottom: 16px !important;
                     }
                     .exam-metric-card {
                         padding: 10px 8px !important;
@@ -692,6 +694,11 @@ const ExamPortal = () => {
                     }
                     .exam-pagination-footer {
                         padding: 12px 14px !important;
+                    }
+                    .exam-portal-main-card {
+                        border-radius: 0 !important;
+                        border-left: none !important;
+                        border-right: none !important;
                     }
                 }
             `}</style>
@@ -783,7 +790,7 @@ const ExamPortal = () => {
             </div>
 
             {/* Main Content Card: Tabs + Search + Table */}
-            <div style={{
+            <div className="exam-portal-main-card" style={{
                 backgroundColor: 'white',
                 borderRadius: '16px',
                 border: '1px solid #e2e8f0',

@@ -48,7 +48,7 @@ const StudentStore = () => {
 
     return (
         <div className="student-store-container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '32px' }}>
+            <div className="student-store-header" style={{ marginBottom: '32px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
                     <div>
                         <h2 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 6px 0', color: '#1a1a1a' }}>
@@ -87,7 +87,7 @@ const StudentStore = () => {
                 {/* Search and Filter Section */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {/* Search Bar */}
-                    <div style={{ position: 'relative', maxWidth: '500px' }}>
+                    <div className="student-store-search-wrap" style={{ position: 'relative', maxWidth: '500px' }}>
                         <div style={{
                             position: 'absolute',
                             left: '12px',
@@ -202,7 +202,7 @@ const StudentStore = () => {
             </div>
 
             {filteredProducts.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
+                <div className="student-store-empty" style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: '#f9fafb', borderRadius: '12px' }}>
                     <ShoppingCart size={48} color="#cbd5e1" style={{ marginBottom: '16px' }} />
                     <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#374151' }}>No products found</h3>
                     <p style={{ color: '#6b7280' }}>
@@ -231,7 +231,7 @@ const StudentStore = () => {
                     )}
                 </div>
             ) : (
-                <div style={{
+                <div className="student-store-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                     gap: '24px'
@@ -239,6 +239,7 @@ const StudentStore = () => {
                     {filteredProducts.map((product) => (
                         <div
                             key={product.id}
+                            className="student-store-card"
                             style={{
                                 backgroundColor: 'white',
                                 borderRadius: '16px',

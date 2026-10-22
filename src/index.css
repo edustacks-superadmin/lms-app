@@ -909,6 +909,33 @@ textarea.form-input {
     border-left: none !important;
     border-right: none !important;
   }
+
+  .student-store-header {
+    padding: 16px 16px 0 16px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .student-store-search-wrap {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .student-store-grid {
+    gap: 14px !important;
+  }
+
+  .student-store-card {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
+
+  .student-store-empty {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
 }
 
 /* Course Player Responsive Styles */
