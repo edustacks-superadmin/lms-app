@@ -436,11 +436,11 @@ const ExamResults = () => {
     });
 
     const styles = {
-        container: { padding: '0', fontFamily: 'Arial, sans-serif', backgroundColor: '#f9f9f9', userSelect: 'none' },
-        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+        container: { padding: '0', fontFamily: 'Arial, sans-serif', backgroundColor: '#f9f9f9', userSelect: 'none', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' },
+        header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' },
         title: { fontSize: '24px', color: '#333', margin: 0 },
         backBtn: { color: '#007bff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', border: 'none', background: 'none', marginBottom: '8px' },
-        card: { backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', padding: '0', marginBottom: '20px', maxWidth: '800px' },
+        card: { backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '4px', padding: '0', marginBottom: '20px', maxWidth: '800px', width: '100%', overflowX: 'auto' },
         table: { width: '100%', borderCollapse: 'collapse' },
         th: { textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #eee', color: '#333', fontWeight: 'bold', width: '40%', fontSize: '14px' },
         td: { textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #eee', color: '#555', fontSize: '14px' },
@@ -449,11 +449,11 @@ const ExamResults = () => {
         filterBar: { display: 'flex', gap: '8px', marginBottom: '20px', justifyContent: 'flex-end', flexWrap: 'wrap' },
         filterBtn: { padding: '6px 12px', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#f5f5f5', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: '#333' },
         activeFilter: { backgroundColor: '#e0e0e0', borderColor: '#bbb' },
-        questionItem: { backgroundColor: 'white', padding: '20px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '16px' },
-        qText: { fontSize: '14px', color: '#333', marginBottom: '12px', fontWeight: 'bold' },
+        questionItem: { backgroundColor: 'white', padding: '20px', border: '1px solid #ddd', borderRadius: '4px', marginBottom: '16px', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' },
+        qText: { fontSize: '14px', color: '#333', marginBottom: '12px', fontWeight: 'bold', wordBreak: 'break-word' },
         optionList: { listStyle: 'none', padding: 0, margin: 0 },
-        optionItem: { padding: '8px 12px', marginBottom: '8px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid transparent' },
-        optionBadge: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#555' },
+        optionItem: { padding: '8px 12px', marginBottom: '8px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid transparent', maxWidth: '100%', overflowX: 'auto' },
+        optionBadge: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold', color: '#555', flexShrink: 0 },
         correctOption: { backgroundColor: '#e8f5e9', borderColor: '#c8e6c9' },
         wrongOption: { backgroundColor: '#ffebee', borderColor: '#ffcdd2' },
         userSelected: { fontWeight: 'bold' }
@@ -594,7 +594,7 @@ const ExamResults = () => {
                                         }}>
                                             {String.fromCharCode(97 + i)}
                                         </span>
-                                        <span style={isSelected ? styles.userSelected : {}}>
+                                        <span style={{ ...(isSelected ? styles.userSelected : {}), flex: 1, minWidth: 0, wordBreak: "break-word" }}>
                                             <MathText>{opt}</MathText>
                                         </span>
                                         {isSelected && <span style={{ fontSize: '10px', marginLeft: 'auto', color: isCorrect ? '#4caf50' : '#f44336' }}>(Your Answer)</span>}
@@ -616,11 +616,11 @@ const ExamResults = () => {
                         {/* Explanation */}
                         {
                             q.explanation && (
-                                <div className="explanation-container" style={{ marginTop: '16px', padding: '14px 20px', backgroundColor: '#f5f9ff', borderLeft: '4px solid #2196f3', borderRadius: '4px' }}>
+                                <div className="explanation-container" style={{ marginTop: '16px', padding: '14px 20px', backgroundColor: '#f5f9ff', borderLeft: '4px solid #2196f3', borderRadius: '4px', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
                                     <div style={{ fontSize: '12px', fontWeight: '600', color: '#1976d2', marginBottom: '6px' }}>
                                         Explanation:
                                     </div>
-                                    <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }} className="explanation-content">
+                                    <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6', maxWidth: '100%', overflowX: 'auto' }} className="explanation-content">
                                         <MathText>{q.explanation}</MathText>
                                     </div>
                                 </div>

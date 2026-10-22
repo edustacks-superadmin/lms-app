@@ -517,7 +517,7 @@ textarea.form-input {
   min-width: 0;
   width: auto;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   /* Smooth scrolling on iOS */
   padding: 20px 32px;
@@ -1653,4 +1653,84 @@ textarea.form-input {
 .post-body-content code {
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+/* KaTeX & Math Formula Responsive Display - Prevents Mobile Page Overflow */
+.katex-display {
+  display: block !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 4px 0 !important;
+  margin: 0.8em 0 !important;
+}
+
+.katex-display > .katex {
+  max-width: 100% !important;
+  text-align: left !important;
+}
+
+.katex-container {
+  display: inline-block !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  vertical-align: middle !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.katex {
+  max-width: 100% !important;
+}
+
+.math-text-content {
+  display: inline-block;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  vertical-align: middle;
+  -webkit-overflow-scrolling: touch !important;
+  word-break: break-word;
+}
+
+.math-text-content ol,
+.math-text-content ul {
+  padding-left: 20px;
+  max-width: 100% !important;
+}
+
+.math-text-content li {
+  max-width: 100% !important;
+  word-break: break-word;
+}
+
+.explanation-container {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.explanation-content {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  word-break: break-word;
+}
+
+/* Custom subtle scrollbars for math formulas */
+.katex-display::-webkit-scrollbar,
+.katex-container::-webkit-scrollbar,
+.math-text-content::-webkit-scrollbar,
+.explanation-content::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-thumb,
+.katex-container::-webkit-scrollbar-thumb,
+.math-text-content::-webkit-scrollbar-thumb,
+.explanation-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
