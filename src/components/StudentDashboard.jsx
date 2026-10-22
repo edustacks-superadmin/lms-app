@@ -407,13 +407,16 @@ const StudentDashboard = () => {
 
                     {/* Resume Learning Widget */}
                     {resumeCourse && (
-                        <div className="resume-course-card">
-                            <div style={{
+                        <div
+                            className="resume-course-card"
+                            onClick={handleResume}
+                        >
+                            <div className="resume-course-accent-bar" style={{
                                 position: 'absolute',
                                 left: 0,
                                 top: 0,
                                 bottom: 0,
-                                width: '6px',
+                                width: '5px',
                                 backgroundColor: '#2563eb'
                             }} />
 
@@ -422,7 +425,6 @@ const StudentDashboard = () => {
                                     <img
                                         src={resumeCourse.course.image_url}
                                         alt={resumeCourse.course.title}
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
@@ -431,58 +433,41 @@ const StudentDashboard = () => {
                                 )}
                             </div>
 
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                    <span style={{
-                                        fontSize: '11px',
-                                        fontWeight: '700',
-                                        color: '#2563eb',
-                                        backgroundColor: '#eff6ff',
-                                        padding: '4px 10px',
-                                        borderRadius: '20px',
-                                        letterSpacing: '0.5px'
-                                    }}>
+                            <div className="resume-course-body">
+                                <div className="resume-course-meta">
+                                    <span className="resume-course-badge">
                                         RESUME LEARNING
                                     </span>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="resume-course-date">
                                         <Clock size={12} />
                                         Last accessed {new Date(resumeCourse.last_accessed_at).toLocaleDateString()}
                                     </span>
                                 </div>
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b' }}>
+                                <h3 className="resume-course-title">
                                     {resumeCourse.course?.title}
                                 </h3>
-                                <p style={{ fontSize: '14px', color: '#64748b', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ fontWeight: '500' }}>{resumeCourse.chapter?.title || 'Course Start'}</span>
-                                    {resumeCourse.content?.title && (
-                                        <>
-                                            <span style={{ color: '#cbd5e1' }}>•</span>
-                                            <span>{resumeCourse.content.title}</span>
-                                        </>
-                                    )}
-                                </p>
+                                <div className="resume-course-footer">
+                                    <p className="resume-course-subtitle">
+                                        <span style={{ fontWeight: '500' }}>{resumeCourse.chapter?.title || 'Course Start'}</span>
+                                        {resumeCourse.content?.title && (
+                                            <>
+                                                <span style={{ color: '#cbd5e1' }}>•</span>
+                                                <span className="resume-course-content-title">{resumeCourse.content.title}</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleResume();
+                                        }}
+                                        className="resume-course-btn"
+                                    >
+                                        <PlayCircle size={16} />
+                                        <span>Continue</span>
+                                    </button>
+                                </div>
                             </div>
-
-                            <button
-                                onClick={handleResume}
-                                style={{
-                                    backgroundColor: '#2563eb',
-                                    color: 'white',
-                                    border: 'none',
-                                    padding: '14px 28px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    transition: 'all 0.2s',
-                                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-                                }}
-                            >
-                                <PlayCircle size={20} />
-                                Continue
-                            </button>
                         </div>
                     )}
 
