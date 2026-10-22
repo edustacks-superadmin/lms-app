@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Lock, Clock, CheckCircle, List } from 'lucide-react';
+import { Lock, Clock, CheckCircle, List, Search, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useExams } from '../context/ExamContext';
 import ExamList from './ExamList';
@@ -11,6 +11,7 @@ const ExamsPage = () => {
     const activeTab = status || 'running'; // Default to 'running' if no status in route
     const [selectedCourses, setSelectedCourses] = useState([]);
     const [selectedTags, setSelectedTags] = useState([]);
+    const [courseSearch, setCourseSearch] = useState('');
 
     // Get exam status based on dates
     const getExamStatus = (exam) => {
@@ -45,24 +46,34 @@ const ExamsPage = () => {
         exams.forEach(exam => {
             if (exam.course_exams && exam.course_exams.length > 0) {
                 exam.course_exams.forEach(ce => {
-                    if (ce.courses) {
-                        coursesMap.set(ce.courses.id, ce.courses.title);
+                    if (ce.courses && ce.courses.id) {
+                        coursesMap.set(ce.courses.id, ce.courses.title || 'Untitled Course');
                     }
                 });
             }
         });
-        return Array.from(coursesMap, ([id, title]) => ({ id, title }));
+        return Array.from(coursesMap, ([id, title]) => ({ id, title }))
+            .sort((a, b) => a.title.localeCompare(b.title));
     }, [exams]);
+
+    // Filter courses based on search query
+    const visibleCourses = useMemo(() => {
+        if (!courseSearch.trim()) return allCourses;
+        const q = courseSearch.toLowerCase();
+        return allCourses.filter(c => c.title?.toLowerCase().includes(q));
+    }, [allCourses, courseSearch]);
 
     // Get unique tags from all exams
     const allTags = useMemo(() => {
         const tagsSet = new Set();
         exams.forEach(exam => {
             if (exam.tags && Array.isArray(exam.tags)) {
-                exam.tags.forEach(tag => tagsSet.add(tag));
+                exam.tags.forEach(tag => {
+                    if (tag) tagsSet.add(tag);
+                });
             }
         });
-        return Array.from(tagsSet);
+        return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
     }, [exams]);
 
     const toggleCourse = (courseId) => {
@@ -134,40 +145,260 @@ const ExamsPage = () => {
 
                 {/* Filter by Tags */}
                 {allTags.length > 0 && (
-                    <div style={{ marginTop: '32px' }}>
-                        <h3 style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '12px' }}>Filter by tags</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {allTags.map(tag => (
-                                <label key={tag} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedTags.includes(tag)}
-                                        onChange={() => toggleTag(tag)}
-                                        style={{ marginRight: '8px', accentColor: 'var(--primary-color)' }}
-                                    />
-                                    <span style={{ color: '#666' }}>{tag}</span>
-                                </label>
-                            ))}
+                    <div style={{ marginTop: '24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Filter by tags
+                                </h3>
+                                {selectedTags.length > 0 && (
+                                    <span style={{
+                                        fontSize: '11px',
+                                        backgroundColor: '#dbeafe',
+                                        color: '#1d4ed8',
+                                        padding: '1px 6px',
+                                        borderRadius: '10px',
+                                        fontWeight: 600
+                                    }}>
+                                        {selectedTags.length}
+                                    </span>
+                                )}
+                            </div>
+                            {selectedTags.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedTags([])}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#2563eb',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        fontWeight: 500,
+                                        textDecoration: 'underline'
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+                        <div
+                            style={{
+                                maxHeight: '160px',
+                                overflowY: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px',
+                                paddingRight: '4px',
+                                scrollbarWidth: 'thin'
+                            }}
+                        >
+                            {allTags.map(tag => {
+                                const isChecked = selectedTags.includes(tag);
+                                return (
+                                    <label
+                                        key={tag}
+                                        title={tag}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '5px 8px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            backgroundColor: isChecked ? '#eff6ff' : 'transparent',
+                                            color: isChecked ? '#1d4ed8' : '#475569',
+                                            transition: 'background 0.15s ease',
+                                            userSelect: 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isChecked) e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isChecked) e.currentTarget.style.backgroundColor = 'transparent';
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => toggleTag(tag)}
+                                            style={{
+                                                margin: 0,
+                                                accentColor: 'var(--primary-color)',
+                                                cursor: 'pointer',
+                                                flexShrink: 0
+                                            }}
+                                        />
+                                        <span
+                                            style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                fontWeight: isChecked ? 500 : 400
+                                            }}
+                                        >
+                                            {tag}
+                                        </span>
+                                    </label>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
 
                 {/* Filter by Courses */}
                 {allCourses.length > 0 && (
-                    <div style={{ marginTop: '16px' }}>
-                        <h3 style={{ fontSize: '14px', color: 'var(--text-light)', marginBottom: '12px' }}>Filter by Courses</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {allCourses.map(course => (
-                                <label key={course.id} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: '14px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedCourses.includes(course.id)}
-                                        onChange={() => toggleCourse(course.id)}
-                                        style={{ marginRight: '8px', accentColor: 'var(--primary-color)' }}
-                                    />
-                                    <span style={{ color: '#666' }}>{course.title}</span>
-                                </label>
-                            ))}
+                    <div style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <h3 style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Filter by Courses
+                                </h3>
+                                {selectedCourses.length > 0 && (
+                                    <span style={{
+                                        fontSize: '11px',
+                                        backgroundColor: '#dbeafe',
+                                        color: '#1d4ed8',
+                                        padding: '1px 6px',
+                                        borderRadius: '10px',
+                                        fontWeight: 600
+                                    }}>
+                                        {selectedCourses.length}
+                                    </span>
+                                )}
+                            </div>
+                            {selectedCourses.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedCourses([])}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: '#2563eb',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        fontWeight: 500,
+                                        textDecoration: 'underline'
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </div>
+
+                        {allCourses.length > 5 && (
+                            <div style={{ position: 'relative', marginBottom: '8px' }}>
+                                <Search size={13} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                                <input
+                                    type="text"
+                                    value={courseSearch}
+                                    onChange={(e) => setCourseSearch(e.target.value)}
+                                    placeholder="Search courses..."
+                                    style={{
+                                        width: '100%',
+                                        padding: '5px 24px 5px 26px',
+                                        fontSize: '12px',
+                                        borderRadius: '6px',
+                                        border: '1px solid #e2e8f0',
+                                        background: '#f8fafc',
+                                        outline: 'none',
+                                        boxSizing: 'border-box'
+                                    }}
+                                />
+                                {courseSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCourseSearch('')}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '6px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: '#94a3b8',
+                                            padding: 2,
+                                            display: 'flex',
+                                            alignItems: 'center'
+                                        }}
+                                        title="Clear search"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        <div
+                            style={{
+                                maxHeight: '260px',
+                                overflowY: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px',
+                                paddingRight: '4px',
+                                scrollbarWidth: 'thin'
+                            }}
+                        >
+                            {visibleCourses.map(course => {
+                                const isChecked = selectedCourses.includes(course.id);
+                                return (
+                                    <label
+                                        key={course.id}
+                                        title={course.title}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '5px 8px',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            backgroundColor: isChecked ? '#eff6ff' : 'transparent',
+                                            color: isChecked ? '#1d4ed8' : '#475569',
+                                            transition: 'background 0.15s ease',
+                                            userSelect: 'none'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isChecked) e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!isChecked) e.currentTarget.style.backgroundColor = 'transparent';
+                                        }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => toggleCourse(course.id)}
+                                            style={{
+                                                margin: 0,
+                                                accentColor: 'var(--primary-color)',
+                                                cursor: 'pointer',
+                                                flexShrink: 0
+                                            }}
+                                        />
+                                        <span
+                                            style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                fontWeight: isChecked ? 500 : 400
+                                            }}
+                                        >
+                                            {course.title}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                            {visibleCourses.length === 0 && (
+                                <div style={{ fontSize: '12px', color: '#94a3b8', padding: '12px 8px', textAlign: 'center' }}>
+                                    No courses found
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
