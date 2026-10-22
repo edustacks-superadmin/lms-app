@@ -501,52 +501,59 @@ const StudentDashboard = () => {
                             {products.map(product => {
                                 const prodImg = product.image || product.image_url;
                                 const prodLink = `/student/store/product/${product.id}`;
-                                const priceText = product.price ? `₹${product.price}` : 'Free';
+                                const isFree = !product.price || Number(product.price) === 0;
+                                const priceDisplay = isFree ? 'Free' : `₹${product.price}`;
+                                const hasDiscount = Boolean(product.strikethrough_price && Number(product.strikethrough_price) > Number(product.price));
 
                                 return (
-                                    <div key={product.id} style={{
-                                        backgroundColor: 'white',
-                                        borderRadius: '16px',
-                                        overflow: 'hidden',
-                                        boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
-                                        border: '1px solid #f0f0f0',
-                                        transition: 'transform 0.2s',
-                                        cursor: 'pointer'
-                                    }}
+                                    <div
+                                        key={product.id}
+                                        className="dashboard-product-card"
                                         onClick={() => navigate(prodLink)}
                                     >
-                                        <div style={{ height: '160px', backgroundColor: '#f1f5f9', position: 'relative' }}>
+                                        <div className="dashboard-product-thumb">
                                             {prodImg ? (
-                                                <img src={prodImg} alt={product.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <img src={prodImg} alt={product.title} />
                                             ) : (
-                                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
-                                                    <BookOpen size={40} />
+                                                <div className="dashboard-product-placeholder">
+                                                    <BookOpen size={36} />
                                                 </div>
                                             )}
                                         </div>
-                                        <div style={{ padding: '16px' }}>
-                                            <h4 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#1e293b', lineHeight: '1.4' }}>{product.title}</h4>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f59e0b', fontSize: '13px', marginBottom: '12px' }}>
-                                                <Star size={14} fill="#f59e0b" />
-                                                <span style={{ fontWeight: '600' }}>4.8</span>
-                                                <span style={{ color: '#94a3b8' }}>(120 reviews)</span>
+                                        <div className="dashboard-product-body">
+                                            <h4 className="dashboard-product-title">{product.title}</h4>
+                                            
+                                            <div className="dashboard-product-meta">
+                                                <div className="dashboard-product-rating">
+                                                    <Star size={13} fill="#f59e0b" />
+                                                    <span style={{ fontWeight: '600' }}>4.8</span>
+                                                    <span className="dashboard-product-reviews">(120 reviews)</span>
+                                                </div>
                                             </div>
-                                            <button style={{
-                                                width: '100%',
-                                                padding: '10px',
-                                                backgroundColor: '#f8fafc',
-                                                border: '1px solid #e2e8f0',
-                                                borderRadius: '8px',
-                                                color: '#475569',
-                                                fontWeight: '600',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '8px'
-                                            }}>
-                                                <ShoppingCart size={16} /> View Details
-                                            </button>
+
+                                            <div className="dashboard-product-footer">
+                                                <div className="dashboard-product-price-box">
+                                                    <span className="dashboard-product-price">
+                                                        {priceDisplay}
+                                                    </span>
+                                                    {hasDiscount && (
+                                                        <span className="dashboard-product-strike">
+                                                            ₹{product.strikethrough_price}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    className="dashboard-product-btn"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(prodLink);
+                                                    }}
+                                                >
+                                                    <ShoppingCart size={14} />
+                                                    <span>View Details</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 );
