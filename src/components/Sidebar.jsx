@@ -2,7 +2,10 @@ import React from 'react';
 import { CheckCircle, Archive, Layers } from 'lucide-react';
 import { useTags } from '../context/TagContext';
 
-const Sidebar = ({ selectedTags = [], onTagsChange, sortBy = '', onSortChange, onApplyFilters }) => {
+const Sidebar = ({
+    activeTab = 'published',
+    onTabChange = () => {},
+    selectedTags = [], onTagsChange, sortBy = '', onSortChange, onApplyFilters }) => {
     const { tags, loading } = useTags();
 
     const handleTagToggle = (tagId) => {
@@ -23,20 +26,37 @@ const Sidebar = ({ selectedTags = [], onTagsChange, sortBy = '', onSortChange, o
     return (
         <aside style={{ width: '250px', flexShrink: 0, padding: '20px 16px 20px 28px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button className="btn btn-primary" style={{ justifyContent: 'flex-start', width: '100%' }}>
+                <button
+                    className={`btn ${activeTab === 'published' ? 'btn-primary' : ''}`}
+                    onClick={() => onTabChange('published')}
+                    style={{
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        color: activeTab === 'published' ? 'white' : 'var(--text-light)',
+                        background: activeTab === 'published' ? 'var(--primary-color)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer'
+                    }}
+                >
                     <CheckCircle size={16} /> Published
                 </button>
-                <button className="btn" style={{ justifyContent: 'flex-start', width: '100%', color: 'var(--text-light)', background: 'transparent', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                    className={`btn ${activeTab === 'archived' ? 'btn-primary' : ''}`}
+                    onClick={() => onTabChange('archived')}
+                    style={{
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        color: activeTab === 'archived' ? 'white' : 'var(--text-light)',
+                        background: activeTab === 'archived' ? 'var(--primary-color)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer'
+                    }}
+                >
                     <Archive size={16} /> Archived Courses
-                    <span style={{
-                        fontSize: '9px',
-                        backgroundColor: '#ffa726',
-                        color: 'white',
-                        padding: '2px 6px',
-                        borderRadius: '10px',
-                        fontWeight: 'bold',
-                        marginLeft: 'auto'
-                    }}>SOON</span>
                 </button>
                 <button className="btn" style={{ justifyContent: 'flex-start', width: '100%', color: 'var(--text-light)', background: 'transparent', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Layers size={16} /> Bundles

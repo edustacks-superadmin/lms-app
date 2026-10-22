@@ -7,9 +7,9 @@ import Pagination from './Pagination';
 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
-const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) => {
+const CourseList = ({ activeTab = 'published', selectedTags: propTags = [], sortBy: propSortBy = '' }) => {
     const navigate = useNavigate();
-    const { courses, reorderCourses } = useCourses();
+    const { courses, reorderCourses, archiveCourse, unarchiveCourse } = useCourses();
     const [searchQuery, setSearchQuery] = useState('');
     const [cloneModalOpen, setCloneModalOpen] = useState(false);
     const [courseToClone, setCourseToClone] = useState(null);
@@ -45,6 +45,13 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
     // Filter and sort courses
     const filteredCourses = useMemo(() => {
         let result = courses;
+
+        // Filter by published vs archived status
+        if (activeTab === 'archived') {
+            result = result.filter(course => course.is_archived === true);
+        } else {
+            result = result.filter(course => !course.is_archived);
+        }
 
         // Apply search filter
         if (searchQuery.trim()) {
@@ -269,12 +276,30 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
         }
     };
 
+    const handleArchiveCourse = async (course) => {
+        const confirmed = window.confirm(`Archive "${course.title}"?\n\nThis will remove it from the active Published list and store, but keep all student progress, chapters, and history safe in Archived Courses.`);
+        if (!confirmed) return;
+        const res = await archiveCourse(course.id);
+        if (res && res.success === false) {
+            alert('Failed to archive course: ' + res.error);
+        }
+    };
+
+    const handleUnarchiveCourse = async (course) => {
+        const confirmed = window.confirm(`Unarchive "${course.title}"?\n\nThis will restore the course back to the active Published list.`);
+        if (!confirmed) return;
+        const res = await unarchiveCourse(course.id);
+        if (res && res.success === false) {
+            alert('Failed to restore course: ' + res.error);
+        }
+    };
+
     return (
         <div style={{ flex: 1 }}>
             {/* Top Controls */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
                 <h2 style={{ fontSize: '24px', fontWeight: '400' }}>
-                    Courses <span style={{ fontSize: '16px', color: '#666', marginLeft: '8px' }}>({filteredCourses.length})</span>
+                    {activeTab === 'archived' ? 'Archived Courses' : 'Courses'} <span style={{ fontSize: '16px', color: '#666', marginLeft: '8px' }}>({filteredCourses.length})</span>
                 </h2>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <div className="input-group" style={{ width: '250px', maxWidth: '100%' }}>
@@ -383,6 +408,17 @@ const CourseList = ({ selectedTags: propTags = [], sortBy: propSortBy = '' }) =>
                                                             >
                                                                 <Copy size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
                                                                 Clone
+                                                            </span> •
+                                                            <span
+                                                                style={{
+                                                                    cursor: 'pointer',
+                                                                    textDecoration: 'underline',
+                                                                    color: course.is_archived ? '#16a34a' : '#d97706',
+                                                                    fontWeight: '500'
+                                                                }}
+                                                                onClick={() => course.is_archived ? handleUnarchiveCourse(course) : handleArchiveCourse(course)}
+                                                            >
+                                                                {course.is_archived ? 'Unarchive' : 'Archive'}
                                                             </span> •
                                                             <span style={{ color: '#999', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                                                 {course.learners || 0} Learners

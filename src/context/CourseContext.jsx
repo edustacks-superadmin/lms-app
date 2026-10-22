@@ -308,12 +308,51 @@ export const CourseProvider = ({ children }) => {
         }
     };
 
+    const archiveCourse = async (id) => {
+        try {
+            const now = new Date().toISOString();
+            const { error } = await supabase
+                .from('courses')
+                .update({ is_archived: true, archived_at: now })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setCourses(prev => prev.map(course =>
+                course.id === id ? { ...course, is_archived: true, archived_at: now } : course
+            ));
+            return { success: true };
+        } catch (error) {
+            console.error('Error archiving course:', error.message);
+            return { success: false, error: error.message };
+        }
+    };
+
+    const unarchiveCourse = async (id) => {
+        try {
+            const { error } = await supabase
+                .from('courses')
+                .update({ is_archived: false, archived_at: null })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setCourses(prev => prev.map(course =>
+                course.id === id ? { ...course, is_archived: false, archived_at: null } : course
+            ));
+            return { success: true };
+        } catch (error) {
+            console.error('Error unarchiving course:', error.message);
+            return { success: false, error: error.message };
+        }
+    };
+
     const getCourse = useCallback((id) => {
         return courses.find(course => course.id == id);
     }, [courses]);
 
     return (
-        <CourseContext.Provider value={{ courses, loading, addCourse, updateCourse, deleteCourse, reorderCourses, getCourse }}>
+        <CourseContext.Provider value={{ courses, loading, addCourse, updateCourse, deleteCourse, archiveCourse, unarchiveCourse, reorderCourses, getCourse }}>
             {children}
         </CourseContext.Provider>
     );
