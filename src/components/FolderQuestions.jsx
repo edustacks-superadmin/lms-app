@@ -382,13 +382,6 @@ const FolderQuestions = () => {
                                                 ))}
                                             </div>
 
-                                            {/* Subject Info */}
-                                            {(item.questions?.subject || item.questions?.subjects) && (
-                                                <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
-                                                    <strong>Subject:</strong> {item.questions.subject || item.questions.subjects?.name}
-                                                </div>
-                                            )}
-
                                             {/* Explanation */}
                                             {item.questions?.explanation && (
                                                 <div className="explanation-container" style={{ marginTop: '12px', padding: '14px 20px', backgroundColor: '#f5f9ff', borderLeft: '4px solid #2196f3', borderRadius: '4px' }}>
@@ -398,6 +391,26 @@ const FolderQuestions = () => {
                                                     <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6' }} className="explanation-content">
                                                         <MathText>{item.questions.explanation}</MathText>
                                                     </div>
+                                                </div>
+                                            )}
+
+                                            {/* Subject Info */}
+                                            {(item.questions?.subject || item.questions?.subjects) && (
+                                                <div style={{ marginTop: '12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <strong style={{ color: '#475569' }}>Subject:</strong>
+                                                    <span style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        padding: '2px 8px',
+                                                        backgroundColor: '#eff6ff',
+                                                        border: '1px solid #bfdbfe',
+                                                        borderRadius: '12px',
+                                                        color: '#1d4ed8',
+                                                        fontSize: '12px',
+                                                        fontWeight: '500'
+                                                    }}>
+                                                        {item.questions.subject || item.questions.subjects?.name}
+                                                    </span>
                                                 </div>
                                             )}
 

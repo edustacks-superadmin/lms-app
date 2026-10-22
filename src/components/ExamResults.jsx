@@ -604,15 +604,6 @@ const ExamResults = () => {
                             })}
                         </div>
 
-                        {/* Subject Info */}
-                        {
-                            q.subject && (
-                                <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
-                                    <strong>Subject:</strong> {q.subject}
-                                </div>
-                            )
-                        }
-
                         {/* Explanation */}
                         {
                             q.explanation && (
@@ -623,6 +614,28 @@ const ExamResults = () => {
                                     <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.6', maxWidth: '100%', overflowX: 'hidden' }} className="explanation-content">
                                         <MathText>{q.explanation}</MathText>
                                     </div>
+                                </div>
+                            )
+                        }
+
+                        {/* Subject Info */}
+                        {
+                            q.subject && (
+                                <div style={{ marginTop: '12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <strong style={{ color: '#475569' }}>Subject:</strong>
+                                    <span style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        padding: '2px 8px',
+                                        backgroundColor: '#eff6ff',
+                                        border: '1px solid #bfdbfe',
+                                        borderRadius: '12px',
+                                        color: '#1d4ed8',
+                                        fontSize: '12px',
+                                        fontWeight: '500'
+                                    }}>
+                                        {q.subject}
+                                    </span>
                                 </div>
                             )
                         }

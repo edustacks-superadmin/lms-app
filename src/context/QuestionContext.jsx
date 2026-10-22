@@ -39,7 +39,7 @@ export const QuestionProvider = ({ children }) => {
             const to = from + perPage - 1;
 
             const { data, error: fetchError, count } = await query
-                .order('created_at', { ascending: false })
+                .order('id', { ascending: false })
                 .range(from, to);
 
             if (fetchError) throw fetchError;
@@ -217,6 +217,28 @@ export const QuestionProvider = ({ children }) => {
         }
     };
 
+    const updateQuestionSubject = async (questionId, subjectId) => {
+        try {
+            const { error: updateError } = await supabase
+                .from('questions')
+                .update({ subject_id: subjectId, updated_at: new Date() })
+                .eq('id', questionId);
+
+            if (updateError) throw updateError;
+
+            setQuestions(prev => prev.map(q => {
+                if (q.id === questionId) {
+                    return { ...q, subject_id: subjectId };
+                }
+                return q;
+            }));
+            return { success: true };
+        } catch (err) {
+            console.error('Error updating question subject:', err);
+            return { success: false, error: err.message };
+        }
+    };
+
     const deleteQuestion = async (id) => {
         setLoading(true);
         setError(null);
@@ -243,10 +265,12 @@ export const QuestionProvider = ({ children }) => {
         <QuestionContext.Provider
             value={{
                 questions,
+                setQuestions,
                 totalCount,
                 fetchQuestions,
                 addQuestion,
                 updateQuestion,
+                updateQuestionSubject,
                 deleteQuestion,
                 loading,
                 error

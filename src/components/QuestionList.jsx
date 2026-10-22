@@ -10,10 +10,11 @@ import * as XLSX from 'xlsx';
 
 const QuestionList = () => {
     const navigate = useNavigate();
-    const { questions, totalCount, fetchQuestions, deleteQuestion, loading } = useQuestions();
+    const { questions, setQuestions, totalCount, fetchQuestions, deleteQuestion, updateQuestionSubject, loading } = useQuestions();
     const { subjects, fetchSubjects } = useSubjects();
     const { getQuestionsUsage } = useQuestionFolders();
     const [questionUsage, setQuestionUsage] = useState({});
+    const [editingSubjectId, setEditingSubjectId] = useState(null);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(200);
@@ -68,6 +69,61 @@ const QuestionList = () => {
             await deleteQuestion(id);
             fetchQuestions({ page: currentPage, perPage, search: searchTerm, ...filters });
         }
+    };
+
+    const getSubjectName = (question) => {
+        if (question.subjects) {
+            if (Array.isArray(question.subjects) && question.subjects.length > 0) {
+                const sub = question.subjects[0];
+                if (sub.parent_id) {
+                    const parent = subjects.find(s => s.id === sub.parent_id);
+                    if (parent) return `${parent.name} › ${sub.name}`;
+                }
+                return sub.name;
+            } else if (typeof question.subjects === 'object' && question.subjects.name) {
+                if (question.subjects.parent_id) {
+                    const parent = subjects.find(s => s.id === question.subjects.parent_id);
+                    if (parent) return `${parent.name} › ${question.subjects.name}`;
+                }
+                return question.subjects.name;
+            }
+        }
+        if (question.subject) {
+            if (typeof question.subject === 'string') return question.subject;
+            if (question.subject.name) return question.subject.name;
+        }
+        if (question.subject_id && subjects.length > 0) {
+            const sub = subjects.find(s => s.id === question.subject_id);
+            if (sub) {
+                if (sub.parent_id) {
+                    const parent = subjects.find(s => s.id === sub.parent_id);
+                    if (parent) return `${parent.name} › ${sub.name}`;
+                }
+                return sub.name;
+            }
+        }
+        return null;
+    };
+
+    const handleQuickSubjectChange = async (questionId, newSubjectId) => {
+        const subId = newSubjectId ? parseInt(newSubjectId, 10) : null;
+        if (updateQuestionSubject) {
+            const res = await updateQuestionSubject(questionId, subId);
+            if (res.success && setQuestions) {
+                const matchedSubject = subId ? subjects.find(s => s.id === subId) : null;
+                setQuestions(prev => prev.map(q => {
+                    if (q.id === questionId) {
+                        return {
+                            ...q,
+                            subject_id: subId,
+                            subjects: matchedSubject ? { id: matchedSubject.id, name: matchedSubject.name, parent_id: matchedSubject.parent_id } : null
+                        };
+                    }
+                    return q;
+                }));
+            }
+        }
+        setEditingSubjectId(null);
     };
 
     const handleExport = () => {
@@ -343,13 +399,6 @@ const QuestionList = () => {
                             ))}
                         </div>
 
-                        {/* Subject Info */}
-                        {question.subjects && (
-                            <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
-                                <strong>Subject:</strong> {question.subjects.name}
-                            </div>
-                        )}
-
                         {/* Explanation */}
                         {question.explanation && (
                             <div className="explanation-container" style={{ marginTop: '12px', padding: '14px 20px', backgroundColor: '#f5f9ff', borderLeft: '4px solid #2196f3', borderRadius: '4px' }}>
@@ -361,6 +410,94 @@ const QuestionList = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Subject Mention - Below Explanation */}
+                        <div style={{ marginTop: '12px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: '600', color: '#475569' }}>Subject:</span>
+                            {editingSubjectId === question.id ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <select
+                                        defaultValue={question.subject_id || ''}
+                                        onChange={(e) => handleQuickSubjectChange(question.id, e.target.value)}
+                                        onBlur={() => setEditingSubjectId(null)}
+                                        autoFocus
+                                        style={{
+                                            fontSize: '12px',
+                                            padding: '3px 8px',
+                                            borderRadius: '6px',
+                                            border: '1px solid #3b82f6',
+                                            backgroundColor: '#fff',
+                                            outline: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="">-- No Subject --</option>
+                                        {subjects.map(s => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingSubjectId(null)}
+                                        style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px', fontSize: '12px' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : getSubjectName(question) ? (
+                                <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '2px 10px',
+                                    backgroundColor: '#eff6ff',
+                                    border: '1px solid #bfdbfe',
+                                    borderRadius: '12px',
+                                    color: '#1d4ed8',
+                                    fontSize: '12px',
+                                    fontWeight: '500'
+                                }}>
+                                    {getSubjectName(question)}
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingSubjectId(question.id)}
+                                        title="Change Subject"
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: 0,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            color: '#3b82f6'
+                                        }}
+                                    >
+                                        <Edit2 size={11} />
+                                    </button>
+                                </span>
+                            ) : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Not specified</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingSubjectId(question.id)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#2563eb',
+                                            fontSize: '12px',
+                                            cursor: 'pointer',
+                                            padding: 0,
+                                            textDecoration: 'underline'
+                                        }}
+                                    >
+                                        + Assign
+                                    </button>
+                                </span>
+                            )}
+                        </div>
 
                         {/* Tags */}
                         {question.tags && question.tags.length > 0 && (
