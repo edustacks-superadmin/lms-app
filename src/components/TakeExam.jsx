@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Info, FileText, Bookmark, Flag, X } from 'lucide-react';
 import { supabase } from '../supabaseClient';
@@ -24,6 +24,7 @@ const TakeExam = () => {
     const [answers, setAnswers] = useState({}); // { qId: optionIndex }
     const [markedForReview, setMarkedForReview] = useState(new Set());
     const [visited, setVisited] = useState(new Set([0])); // Track visited question INDICES
+    const lastTapRef = useRef({ time: 0, questionId: null, optionIndex: null });
     const [showSubmitModal, setShowSubmitModal] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [bookmarks, setBookmarks] = useState(new Set());
@@ -289,9 +290,28 @@ const TakeExam = () => {
     };
 
     const handleAnswer = (optionIndex) => {
+        const currentQ = questions[currentQuestionIndex];
+        if (!currentQ) return;
+
+        const now = Date.now();
+        const lastTap = lastTapRef.current;
+        const DOUBLE_TAP_WINDOW = 500;
+
+        const isDoubleTap =
+            lastTap.questionId === currentQ.id &&
+            lastTap.optionIndex === optionIndex &&
+            (now - lastTap.time) < DOUBLE_TAP_WINDOW;
+
+        if (isDoubleTap) {
+            lastTapRef.current = { time: 0, questionId: null, optionIndex: null };
+            clearResponse();
+            return;
+        }
+
+        lastTapRef.current = { time: now, questionId: currentQ.id, optionIndex };
         setAnswers(prev => ({
             ...prev,
-            [questions[currentQuestionIndex].id]: optionIndex
+            [currentQ.id]: optionIndex
         }));
     };
 
@@ -989,7 +1009,8 @@ const TakeExam = () => {
                                         name={`q-${questions[currentQuestionIndex].id}`}
                                         style={styles.radio}
                                         checked={answers[questions[currentQuestionIndex].id] === idx}
-                                        onChange={() => handleAnswer(idx)}
+                                        onClick={() => handleAnswer(idx)}
+                                        onChange={() => {}}
                                     />
                                     <span><MathText>{option}</MathText></span>
                                 </label>

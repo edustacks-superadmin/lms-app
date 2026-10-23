@@ -96,6 +96,7 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
         <Animated.View style={animatedStyle}>
             <TouchableOpacity
                 activeOpacity={0.8}
+                delayPressIn={0}
                 onPress={() => handleOptionSelect(item.id, index, item.correctAnswerIndex)}
                 className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderColor} ${bgColor}`}
             >
@@ -148,6 +149,7 @@ export default function NativeExamScreen() {
     const [timeLeft, setTimeLeft] = useState(0);
     const [showPalette, setShowPalette] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
+    const lastTapRef = useRef({ time: 0, questionId: null, optionIndex: null });
 
     // Math Equation Horizontal Scroll Locking
     const [isMathScrolling, setIsMathScrolling] = useState(false);
@@ -775,6 +777,8 @@ export default function NativeExamScreen() {
                 await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             } else if (type === 'error') {
                 await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            } else if (type === 'warning') {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             } else if (type === 'selection') {
                 await Haptics.selectionAsync();
             }
@@ -784,6 +788,41 @@ export default function NativeExamScreen() {
     };
 
     const handleOptionSelect = React.useCallback((questionId, optionIndex, correctAnswerIndex) => {
+        // If Instant Feedback is enabled, prevent changing answer after selection
+        if (quizMode && answers[questionId] !== undefined) {
+            return;
+        }
+
+        const now = Date.now();
+        const lastTap = lastTapRef.current;
+        const DOUBLE_TAP_WINDOW = 500; // 500ms double tap window
+
+        const isDoubleTap =
+            lastTap.questionId === questionId &&
+            lastTap.optionIndex === optionIndex &&
+            (now - lastTap.time) < DOUBLE_TAP_WINDOW;
+
+        if (isDoubleTap) {
+            // Reset tap ref to prevent 3rd tap from re-triggering clear
+            lastTapRef.current = { time: 0, questionId: null, optionIndex: null };
+
+            // Double tap detected: Clear response
+            setAnswers(prev => {
+                if (quizMode && prev[questionId] !== undefined) {
+                    return prev;
+                }
+                const updated = { ...prev };
+                delete updated[questionId];
+                return updated;
+            });
+
+            triggerHaptics('warning');
+            return;
+        }
+
+        // Record current tap
+        lastTapRef.current = { time: now, questionId, optionIndex };
+
         setAnswers(prev => {
             // If Instant Feedback is enabled, prevent changing answer after selection
             if (quizMode && prev[questionId] !== undefined) {
@@ -807,7 +846,7 @@ export default function NativeExamScreen() {
 
             return { ...prev, [questionId]: optionIndex };
         });
-    }, [quizMode]);
+    }, [quizMode, answers]);
 
     const toggleMarkReview = () => {
         setMarked(prev => {
@@ -879,6 +918,16 @@ export default function NativeExamScreen() {
                         />
                     ))}
                 </View>
+
+                {/* Helpful Clear Response Tip when an option is selected */}
+                {!quizMode && isSelectedOption !== undefined && (
+                    <View className="flex-row items-center justify-center mt-3 opacity-70">
+                        <Ionicons name="information-circle-outline" size={13} color="#94a3b8" />
+                        <Text className="text-slate-400 text-[11px] font-medium ml-1">
+                            Double tap selected option to clear response
+                        </Text>
+                    </View>
+                )}
 
                 {/* Explanation Box (Quiz Mode Only) */}
                 {quizMode && isSelectedOption !== undefined && item.explanation && (
