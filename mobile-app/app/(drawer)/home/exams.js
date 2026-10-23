@@ -441,27 +441,6 @@ export default function Exams() {
             </View>
         );
     };
-                        <TouchableOpacity
-                            activeOpacity={0.8}
-                            onPress={() => handleTakeExam(item)}
-                            className="flex-1 flex-row items-center justify-center py-2.5 px-4 rounded-xl bg-blue-600"
-                        >
-                            <Ionicons name="play" size={14} color="#ffffff" />
-                            <Text className="text-white text-xs font-bold ml-1.5">Start Exam</Text>
-                        </TouchableOpacity>
-                    ) : isUpcoming ? (
-                        <View className="flex-1 py-2 rounded-xl bg-slate-100 items-center justify-center">
-                            <Text className="text-slate-500 text-xs font-semibold">Test Not Started Yet</Text>
-                        </View>
-                    ) : (
-                        <View className="flex-1 py-2 rounded-xl bg-slate-100 items-center justify-center">
-                            <Text className="text-slate-400 text-xs font-semibold">Exam Ended</Text>
-                        </View>
-                    )}
-                </View>
-            </View>
-        );
-    };
 
     return (
         <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
