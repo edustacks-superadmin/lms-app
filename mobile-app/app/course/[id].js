@@ -347,7 +347,7 @@ export default function CoursePlayer() {
     const renderLeaderboardItem = (item) => (
         <View key={item.member_id} className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100">
             <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${item.rank <= 3 ? 'bg-yellow-100' : 'bg-gray-100'}`}>
-                <Text className={`font-bold text-sm ${item.rank <= 3 ? 'text-yellow-600' : 'text-gray-600'}`}>#{item.rank}</Text>
+                <Text className={`font-bold text-sm ${item.rank <= 3 ? 'text-yellow-600' : 'text-gray-600'}`}>{item.rank}</Text>
             </View>
             {item.photo_url ? (
                 <Image source={{ uri: item.photo_url }} style={{ marginRight: 12 }} className="w-10 h-10 rounded-full mr-3" />

@@ -57,7 +57,7 @@ export default function Ranking() {
                     {icon ? (
                         <Ionicons name={icon.name} size={28} color={icon.color} />
                     ) : (
-                        <Text className="text-gray-500 font-bold text-lg">#{index + 1}</Text>
+                        <Text className="text-gray-500 font-bold text-lg">{index + 1}</Text>
                     )}
                 </View>
 
@@ -117,7 +117,7 @@ export default function Ranking() {
                     renderItem={({ item, index }) => (
                         <View className={`flex-row items-center py-3 border-b border-slate-100 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
                             <Text className={`w-14 text-center font-bold ${index < 3 ? 'text-yellow-600 text-lg' : 'text-slate-500'}`}>
-                                #{index + 1}
+                                {index + 1}
                             </Text>
                             <View className="flex-1 px-3 flex-row items-center">
                                 {item.photo_url ? (
