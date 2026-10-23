@@ -85,17 +85,20 @@ const ExamStatistics = ({ examId }) => {
                 attemptsWithMembers.map(async (attempt) => {
                     const { data: answers } = await supabase
                         .from('exam_answers')
-                        .select('is_correct')
+                        .select('is_correct, selected_option_index')
                         .eq('attempt_id', attempt.id);
 
                     const totalQuestions = answers?.length || 0;
+                    const answered = answers?.filter(a => a.selected_option_index !== null && a.selected_option_index !== undefined).length || 0;
                     const correctAnswers = answers?.filter(a => a.is_correct).length || 0;
-                    const incorrectAnswers = totalQuestions - correctAnswers;
+                    const incorrectAnswers = answers?.filter(a => a.selected_option_index !== null && a.selected_option_index !== undefined && !a.is_correct).length || 0;
+                    const unattempted = totalQuestions - answered;
                     const percentage = totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100).toFixed(2) : 0;
 
                     return {
                         ...attempt,
                         totalQuestions,
+                        answered,
                         correctAnswers,
                         incorrectAnswers,
                         percentage
@@ -214,8 +217,8 @@ const ExamStatistics = ({ examId }) => {
                 bValue = b.members?.username || b.members?.email || '';
                 break;
             case 'answered':
-                aValue = a.totalQuestions;
-                bValue = b.totalQuestions;
+                aValue = a.answered;
+                bValue = b.answered;
                 break;
             case 'correct':
                 aValue = a.correctAnswers;
@@ -552,7 +555,7 @@ const ExamStatistics = ({ examId }) => {
                                         {attempt.members?.username || attempt.members?.email || 'N/A'}
                                     </td>
                                     <td style={{ padding: '12px 16px', fontSize: '14px', color: '#333', textAlign: 'center' }}>
-                                        {attempt.totalQuestions}
+                                        {attempt.answered} / {attempt.totalQuestions}
                                     </td>
                                     <td style={{ padding: '12px 16px', fontSize: '14px', color: '#4caf50', textAlign: 'center', fontWeight: '500' }}>
                                         {attempt.correctAnswers}

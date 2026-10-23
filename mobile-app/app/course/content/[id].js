@@ -139,7 +139,7 @@ export default function ContentPlayer() {
 
                 const { data: examMeta } = await supabase
                     .from('exams')
-                    .select('duration_minutes, max_attempts, allow_mode_toggle')
+                    .select('duration_minutes, max_attempts, allow_mode_toggle, negative_marking_enabled, negative_marks_per_question')
                     .eq('id', data.exam_id)
                     .single();
 
@@ -159,7 +159,9 @@ export default function ContentPlayer() {
                     maxAttempts: examMeta?.max_attempts || 0,
                     maxAttempts: examMeta?.max_attempts || 0,
                     attemptsUsed: attemptCount,  // Use the stored count
-                    allowModeToggle: examMeta?.allow_mode_toggle
+                    allowModeToggle: examMeta?.allow_mode_toggle,
+                    negativeMarkingEnabled: Boolean(examMeta?.negative_marking_enabled),
+                    negativeMarks: examMeta?.negative_marks_per_question ?? 0.33
                 });
             }
 
@@ -673,6 +675,31 @@ export default function ContentPlayer() {
                                 </View>
                             </View>
 
+                        )}
+
+                        {/* Negative Marking Notice */}
+                        {examDetails && (
+                            examDetails.negativeMarkingEnabled ? (
+                                <View className="mb-6 flex-row items-center justify-between p-3.5 rounded-xl border bg-amber-500/10 border-amber-500/30">
+                                    <View className="flex-row items-center gap-2.5 flex-1 mr-2">
+                                        <Ionicons name="alert-circle" size={20} color="#f59e0b" />
+                                        <View className="flex-1">
+                                            <Text className="text-amber-400 font-bold text-xs uppercase tracking-wider">Negative Marking</Text>
+                                            <Text className="text-slate-300 text-xs mt-0.5">
+                                                -{examDetails.negativeMarks} marks for each incorrect answer
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <View className="bg-amber-500/20 px-2.5 py-1 rounded-md border border-amber-500/40">
+                                        <Text className="text-amber-300 font-extrabold text-xs">-{examDetails.negativeMarks}</Text>
+                                    </View>
+                                </View>
+                            ) : (
+                                <View className="mb-6 flex-row items-center p-3 rounded-xl border bg-slate-800/40 border-slate-700/40">
+                                    <Ionicons name="checkmark-circle-outline" size={18} color="#22c55e" style={{ marginRight: 8 }} />
+                                    <Text className="text-slate-300 text-xs font-medium">No negative marking</Text>
+                                </View>
+                            )
                         )}
 
                         {/* Mode Selection Toggle */}

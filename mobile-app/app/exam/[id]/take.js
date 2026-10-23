@@ -818,9 +818,16 @@ export default function NativeExamScreen() {
                 style={{ width: width }}
             >
                 {/* Question metadata */}
-                <View className="flex-row justify-between mb-2">
+                <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-gray-500 text-xs font-bold">Question {index + 1} of {questions.length}</Text>
-                    <Text className="text-green-600 text-xs font-bold">+{item.marks} Marks</Text>
+                    <View className="flex-row items-center gap-1.5">
+                        <Text className="text-green-600 text-xs font-bold">+{item.marks} {item.marks === 1 ? 'Mark' : 'Marks'}</Text>
+                        {exam?.negative_marking_enabled && (
+                            <View className="bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                <Text className="text-rose-600 text-[10px] font-bold">-{exam.negative_marks_per_question} Neg</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 {/* Question Card */}

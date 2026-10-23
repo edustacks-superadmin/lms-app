@@ -433,7 +433,19 @@ export default function ExamReviewScreen() {
                 <View className="flex-row justify-between items-center mb-2">
                     <View>
                         <Text className="text-gray-500 text-xs font-bold">Q {index + 1}</Text>
-                        <Text className={`text-xs font-bold ${statusColor}`}>{statusText}</Text>
+                        <View className="flex-row items-center gap-1.5 mt-0.5">
+                            <Text className={`text-xs font-bold ${statusColor}`}>{statusText}</Text>
+                            {statusText === 'Correct' && (
+                                <Text className="text-green-600 text-[10px] font-bold bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
+                                    +{item.marks}
+                                </Text>
+                            )}
+                            {statusText === 'Incorrect' && exam?.negative_marking_enabled && (
+                                <Text className="text-rose-600 text-[10px] font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                    -{exam.negative_marks_per_question}
+                                </Text>
+                            )}
+                        </View>
                     </View>
 
                     <View className="flex-row gap-4">
