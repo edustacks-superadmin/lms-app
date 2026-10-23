@@ -31,7 +31,7 @@ const formatTime = (seconds) => {
 };
 
 // Helper: Option Card Component with Animation and Haptics
-const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSelect, quizMode }) => {
+const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSelect, quizMode, onScrollStatusChange }) => {
     const scale = useSharedValue(1);
     const translateX = useSharedValue(0);
 
@@ -92,27 +92,30 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
         }
     }
 
+    const selectOption = () => {
+        handleOptionSelect(item.id, index, item.correctAnswerIndex);
+    };
+
     return (
         <Animated.View style={animatedStyle}>
             <TouchableOpacity
                 activeOpacity={0.8}
                 delayPressIn={0}
-                onPress={() => handleOptionSelect(item.id, index, item.correctAnswerIndex)}
+                onPress={selectOption}
                 className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderColor} ${bgColor}`}
             >
-                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${indicatorColor}`}>
+                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3.5 ${indicatorColor}`}>
                     {(isSelected || (quizMode && isSelectedOption !== undefined && index === item.correctAnswerIndex)) && (
                         <View className={`w-3 h-3 rounded-full ${indicatorBg}`} />
                     )}
                 </View>
                 <View className="flex-1">
-                    <View pointerEvents="none">
-                        {/* Static Text fallback if WebView is too heavy? No, stick to WebView for Latex */}
-                        <MathWebView
-                            content={item.options[index] || ''}
-                            style={{ minHeight: 20 }}
-                        />
-                    </View>
+                    <MathWebView
+                        content={item.options[index] || ''}
+                        style={{ minHeight: 20 }}
+                        onOptionPress={selectOption}
+                        onScrollStatusChange={onScrollStatusChange}
+                    />
                 </View>
             </TouchableOpacity>
         </Animated.View>
@@ -915,6 +918,7 @@ export default function NativeExamScreen() {
                             isSelectedOption={isSelectedOption}
                             handleOptionSelect={handleOptionSelect}
                             quizMode={quizMode}
+                            onScrollStatusChange={handleMathScrollStatusChange}
                         />
                     ))}
                 </View>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { WebView } from 'react-native-webview';
 import { View } from 'react-native';
 
-const MathWebView = ({ content, style, onScrollStatusChange }) => {
+const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) => {
     const minHeight = style?.minHeight || 20;
     const [height, setHeight] = useState(minHeight);
 
@@ -14,6 +14,10 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
             } else if (data.type === 'mathScroll' && typeof data.active === 'boolean') {
                 if (onScrollStatusChange) {
                     onScrollStatusChange(data.active);
+                }
+            } else if (data.type === 'tap') {
+                if (onOptionPress) {
+                    onOptionPress();
                 }
             }
         } catch (e) { }
@@ -53,7 +57,7 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
           
           <!-- KaTeX JS & Auto-render extension -->
           <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-          <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+          <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/auto-render.min.js" crossorigin="anonymous"></script>
 
           <style>
             *, *::before, *::after {
@@ -90,15 +94,28 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               display: none !important;
             }
 
-            /* === KaTeX Equations & Presentation === */
+            /* === KaTeX Equations & Automatic Line-Wrapping === */
             .katex {
-              font-size: 1.08em;
+              font-size: 1.05em;
               text-rendering: auto;
-              white-space: nowrap;
+              white-space: normal !important;
+              max-width: 100% !important;
             }
 
             .katex-html {
-              white-space: nowrap;
+              white-space: normal !important;
+              display: inline !important;
+              max-width: 100% !important;
+            }
+
+            /* Allow mathematical parts/bases (terms between =, +, -) to wrap gracefully */
+            .katex-html > .base, .katex .base {
+              white-space: nowrap !important;
+              display: inline-block !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              margin-top: 1.5px;
+              margin-bottom: 1.5px;
             }
 
             /* Display equations (block formulas): smooth horizontal scroll with visible indicator */
@@ -127,7 +144,7 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               white-space: nowrap !important;
             }
 
-            /* Scrollable wrapper for inline math formulas that exceed container width */
+            /* Scrollable wrapper for equations/formulas when they exceed container width */
             .katex-scroll-wrapper {
               display: inline-block !important;
               max-width: 100% !important;
@@ -138,29 +155,29 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               touch-action: pan-x !important;
               scrollbar-width: thin;
               scrollbar-color: rgba(37, 99, 235, 0.45) transparent;
-              padding: 2px 4px 2px 0 !important;
+              padding: 2px 2px !important;
               box-sizing: border-box !important;
             }
 
             .katex-scroll-wrapper > .katex {
               display: inline-block !important;
-              white-space: nowrap !important;
+              white-space: normal !important;
             }
 
             /* Clean, visible horizontal scrollbars when equations overflow */
             .katex-display::-webkit-scrollbar,
             .katex-scroll-wrapper::-webkit-scrollbar {
-              height: 4px !important;
+              height: 3px !important;
             }
             .katex-display::-webkit-scrollbar-track,
             .katex-scroll-wrapper::-webkit-scrollbar-track {
               background: rgba(0, 0, 0, 0.04) !important;
-              border-radius: 4px !important;
+              border-radius: 3px !important;
             }
             .katex-display::-webkit-scrollbar-thumb,
             .katex-scroll-wrapper::-webkit-scrollbar-thumb {
               background-color: rgba(37, 99, 235, 0.45) !important;
-              border-radius: 4px !important;
+              border-radius: 3px !important;
             }
           </style>
         </head>
@@ -217,27 +234,23 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
                 }
               } catch (e) {}
 
-              // Wrap inline KaTeX equations in a scrollable container so wide formulas never get cut off
+              // Wrap only formulas that actually overflow container width in a scrollable wrapper
               try {
+                var contentEl = document.getElementById('content');
+                var cWidth = contentEl ? contentEl.clientWidth : 300;
                 var allKatex = document.querySelectorAll('.katex');
                 for (var kIdx = 0; kIdx < allKatex.length; kIdx++) {
                   var itemKatex = allKatex[kIdx];
                   if (itemKatex.closest && itemKatex.closest('.katex-display')) continue;
                   if (itemKatex.closest && itemKatex.closest('.katex-scroll-wrapper')) continue;
 
-                  var targetToWrap = itemKatex;
-                  if (itemKatex.parentElement && itemKatex.parentElement.tagName === 'SPAN' && itemKatex.parentElement.style.whiteSpace === 'nowrap') {
-                    targetToWrap = itemKatex.parentElement;
+                  // If formula still exceeds container width, allow horizontal scrolling
+                  if (itemKatex.scrollWidth > cWidth + 2) {
+                    var scrollWrap = document.createElement('span');
+                    scrollWrap.className = 'katex-scroll-wrapper';
+                    itemKatex.parentNode.insertBefore(scrollWrap, itemKatex);
+                    scrollWrap.appendChild(itemKatex);
                   }
-
-                  if (targetToWrap.parentElement && targetToWrap.parentElement.classList && targetToWrap.parentElement.classList.contains('katex-scroll-wrapper')) {
-                    continue;
-                  }
-
-                  var scrollWrap = document.createElement('span');
-                  scrollWrap.className = 'katex-scroll-wrapper';
-                  targetToWrap.parentNode.insertBefore(scrollWrap, targetToWrap);
-                  scrollWrap.appendChild(targetToWrap);
                 }
               } catch (e) {}
 
@@ -290,15 +303,42 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
             }
 
             var activeScrollElement = null;
+            var touchStartX = 0;
+            var touchStartY = 0;
+            var touchStartTime = 0;
+            var isTouchMoved = false;
 
             document.addEventListener('touchstart', function(e) {
+              if (e.touches && e.touches.length === 1) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+                isTouchMoved = false;
+              }
               activeScrollElement = findScrollableParent(e.target);
               if (activeScrollElement && window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
                 window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mathScroll', active: true }));
               }
             }, { passive: true });
 
-            document.addEventListener('touchend', function() {
+            document.addEventListener('touchmove', function(e) {
+              if (e.touches && e.touches.length === 1) {
+                var dx = Math.abs(e.touches[0].clientX - touchStartX);
+                var dy = Math.abs(e.touches[0].clientY - touchStartY);
+                if (dx > 8 || dy > 8) {
+                  isTouchMoved = true;
+                }
+              }
+            }, { passive: true });
+
+            document.addEventListener('touchend', function(e) {
+              var duration = Date.now() - touchStartTime;
+              // If user tapped without dragging, notify React Native to handle selection/double-tap
+              if (!isTouchMoved && duration < 350) {
+                if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'tap' }));
+                }
+              }
               if (activeScrollElement) {
                 activeScrollElement = null;
                 if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -308,6 +348,7 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
             }, { passive: true });
 
             document.addEventListener('touchcancel', function() {
+              isTouchMoved = false;
               if (activeScrollElement) {
                 activeScrollElement = null;
                 if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
