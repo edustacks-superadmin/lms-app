@@ -95,7 +95,7 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
             <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleOptionSelect(item.id, index, item.correctAnswerIndex)}
-                className={`flex-row items-center p-4 rounded-xl border-2 ${borderColor} ${bgColor}`}
+                className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderColor} ${bgColor}`}
             >
                 <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-4 ${indicatorColor}`}>
                     {(isSelected || (quizMode && isSelectedOption !== undefined && index === item.correctAnswerIndex)) && (
@@ -107,7 +107,7 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
                         {/* Static Text fallback if WebView is too heavy? No, stick to WebView for Latex */}
                         <MathWebView
                             content={item.options[index] || ''}
-                            style={{ minHeight: 40 }}
+                            style={{ minHeight: 20 }}
                         />
                     </View>
                 </View>
@@ -831,16 +831,16 @@ export default function NativeExamScreen() {
                 </View>
 
                 {/* Question Card */}
-                <View className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4">
                     <MathWebView
                         content={item.question}
-                        style={{ minHeight: 100 }}
+                        style={{ minHeight: 24 }}
                         onScrollStatusChange={handleMathScrollStatusChange}
                     />
                 </View>
 
                 {/* Options */}
-                <View className="space-y-3">
+                <View className="space-y-2.5">
                     {item.options.map((opt, idx) => (
                         <OptionCard
                             key={idx}
@@ -855,14 +855,14 @@ export default function NativeExamScreen() {
 
                 {/* Explanation Box (Quiz Mode Only) */}
                 {quizMode && isSelectedOption !== undefined && item.explanation && (
-                    <View className="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                    <View className="mt-4 bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
                         <View className="flex-row items-center mb-2">
                             <Ionicons name="information-circle" size={20} color="#2563EB" />
                             <Text className="text-blue-700 font-bold ml-2">Explanation</Text>
                         </View>
                         <MathWebView
                             content={item.explanation}
-                            style={{ minHeight: 60, backgroundColor: 'transparent' }}
+                            style={{ minHeight: 24, backgroundColor: 'transparent' }}
                             onScrollStatusChange={handleMathScrollStatusChange}
                         />
                     </View>

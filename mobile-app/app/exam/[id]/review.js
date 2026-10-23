@@ -462,16 +462,16 @@ export default function ExamReviewScreen() {
                 </View>
 
                 {/* Question */}
-                <View className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4">
                     <MathWebView
                         content={item.question}
-                        style={{ minHeight: 100 }}
+                        style={{ minHeight: 24 }}
                         onScrollStatusChange={handleMathScrollStatusChange}
                     />
                 </View>
 
                 {/* Options */}
-                <View className="space-y-3">
+                <View className="space-y-2.5">
                     {item.options.map((opt, idx) => {
                         // Determine Style
                         // 1. Is this the CORRECT answer?
@@ -505,13 +505,13 @@ export default function ExamReviewScreen() {
                         return (
                             <View
                                 key={idx}
-                                className={`flex-row items-center p-4 rounded-xl border-2 ${borderClass} ${bgClass}`}
+                                className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderClass} ${bgClass}`}
                             >
                                 <View className="flex-1">
                                     <View pointerEvents="none">
                                         <MathWebView
                                             content={opt.text}
-                                            style={{ minHeight: 40 }}
+                                            style={{ minHeight: 20 }}
                                         />
                                     </View>
                                 </View>
@@ -523,10 +523,11 @@ export default function ExamReviewScreen() {
 
                 {/* Explanation */}
                 {item.explanation && (
-                    <View className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <View className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <Text className="font-bold text-blue-800 mb-2">Explanation:</Text>
                         <MathWebView
                             content={item.explanation}
+                            style={{ minHeight: 24 }}
                             onScrollStatusChange={handleMathScrollStatusChange}
                         />
                     </View>

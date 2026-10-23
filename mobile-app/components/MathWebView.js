@@ -3,7 +3,7 @@ import { WebView } from 'react-native-webview';
 import { View } from 'react-native';
 
 const MathWebView = ({ content, style, onScrollStatusChange }) => {
-    const minHeight = style?.minHeight || 30;
+    const minHeight = style?.minHeight || 20;
     const [height, setHeight] = useState(minHeight);
 
     const onMessage = (event) => {
@@ -45,7 +45,7 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               color: #1e293b;
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
               font-size: 15px;
-              line-height: 1.55;
+              line-height: 1.45;
               word-wrap: break-word;
               overflow-wrap: break-word;
             }
@@ -57,10 +57,13 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               height: auto !important;
             }
             p {
-              margin: 0 0 8px 0;
+              margin: 0 0 4px 0;
             }
             p:last-child {
-              margin-bottom: 0;
+              margin-bottom: 0 !important;
+            }
+            p:empty {
+              display: none !important;
             }
 
             /* === KaTeX Equations & Presentation === */
@@ -159,13 +162,19 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
 
             function postHeight() {
               var content = document.getElementById('content');
-              var h = Math.max(
-                document.body.scrollHeight || 0,
-                document.documentElement.scrollHeight || 0,
-                content ? content.offsetHeight : 0
-              );
+              var h = 0;
+              if (content) {
+                var rect = content.getBoundingClientRect();
+                h = Math.ceil(rect.height);
+              }
+              if (!h) {
+                h = Math.max(
+                  document.body.scrollHeight || 0,
+                  document.documentElement.scrollHeight || 0
+                );
+              }
               if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'height', height: h + 4 }));
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'height', height: h + 2 }));
               }
             }
 
