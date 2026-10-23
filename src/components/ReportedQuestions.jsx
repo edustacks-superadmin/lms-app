@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Flag, CheckCircle, XCircle, Eye, Trash2, AlertTriangle, Search, Filter } from 'lucide-react';
+import { Flag, CheckCircle, XCircle, Eye, Trash2, AlertTriangle, Search, Filter, Edit, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ReportedQuestions = () => {
@@ -327,6 +327,15 @@ const ReportedQuestions = () => {
                                                 >
                                                     <Eye size={16} />
                                                 </button>
+                                                {report.question_id && (
+                                                    <button
+                                                        onClick={() => window.open(`/questions/edit/${report.question_id}`, '_blank')}
+                                                        style={{ padding: '6px', border: '1px solid #bfdbfe', borderRadius: '4px', background: '#eff6ff', cursor: 'pointer', color: '#2563eb' }}
+                                                        title="Edit Question in New Tab"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                )}
                                                 {report.status === 'open' && (
                                                     <button
                                                         onClick={() => handleStatusUpdate(report.id, 'resolved')}
@@ -411,7 +420,15 @@ const ReportedQuestions = () => {
                                         <>
                                             <div style={{ fontSize: '15px', lineHeight: '1.6', color: '#333', marginBottom: '16px' }} dangerouslySetInnerHTML={{ __html: selectedReport.exam_questions.questions.question_text }} />
                                             <div style={{ fontSize: '12px', color: '#999', borderTop: '1px solid #eee', paddingTop: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                                                <span>Question ID: {selectedReport.question_id}</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span>Question ID: {selectedReport.question_id}</span>
+                                                    <button
+                                                        onClick={() => window.open(`/questions/edit/${selectedReport.question_id}`, '_blank')}
+                                                        style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px', padding: 0 }}
+                                                    >
+                                                        <ExternalLink size={12} /> (Edit in New Tab)
+                                                    </button>
+                                                </div>
                                                 <span>Type: {selectedReport.exam_questions.questions.question_type}</span>
                                             </div>
                                         </>
@@ -427,6 +444,16 @@ const ReportedQuestions = () => {
 
                         {/* Actions */}
                         <div style={{ padding: '16px 24px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '12px', backgroundColor: '#f8f9fa', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
+                            {selectedReport.question_id && (
+                                <button
+                                    onClick={() => window.open(`/questions/edit/${selectedReport.question_id}`, '_blank')}
+                                    style={{ padding: '8px 16px', border: '1px solid #bfdbfe', borderRadius: '4px', background: '#eff6ff', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#2563eb', display: 'flex', alignItems: 'center', gap: '6px', marginRight: 'auto' }}
+                                    title="Open question editor in new tab"
+                                >
+                                    <Edit size={16} />
+                                    Edit Question
+                                </button>
+                            )}
                             <button
                                 onClick={() => setSelectedReport(null)}
                                 style={{ padding: '8px 16px', border: '1px solid #ddd', borderRadius: '4px', background: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#666' }}
