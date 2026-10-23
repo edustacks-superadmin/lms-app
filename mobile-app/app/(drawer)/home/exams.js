@@ -320,115 +320,77 @@ export default function Exams() {
         const isAvailable = item.status === 'available';
 
         return (
-            <View className="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm">
-                {/* Header Row: Course Tag & Status Badge */}
-                <View className="flex-row items-center justify-between mb-2">
+            <View className="bg-white rounded-xl p-3 mb-2 border border-slate-100 shadow-sm">
+                {/* Header Row: Course Tag & Status / Score Badge */}
+                <View className="flex-row items-center justify-between mb-1.5">
                     {item.course_title ? (
-                        <View className="bg-slate-100 px-2.5 py-1 rounded-md max-w-[65%]">
-                            <Text className="text-[11px] font-medium text-slate-600" numberOfLines={1}>
-                                {item.course_title}
-                            </Text>
-                        </View>
+                        <Text className="text-[11px] font-semibold text-blue-600 flex-1 mr-2" numberOfLines={1}>
+                            {item.course_title}
+                        </Text>
                     ) : (
-                        <View className="bg-blue-50 px-2.5 py-1 rounded-md">
-                            <Text className="text-[11px] font-medium text-blue-700">Practice Exam</Text>
-                        </View>
+                        <Text className="text-[11px] font-semibold text-slate-500 flex-1 mr-2">
+                            Practice Exam
+                        </Text>
                     )}
 
                     {isCompleted && (
-                        <View className="flex-row items-center bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                            <Ionicons name="checkmark-circle" size={12} color="#059669" />
-                            <Text className="text-[11px] font-semibold text-emerald-700 ml-1">Completed</Text>
+                        <View className="flex-row items-center bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            <Ionicons name="trophy" size={11} color="#059669" />
+                            <Text className="text-[11px] font-bold text-emerald-700 ml-1">
+                                Score: {item.bestScore ?? 0}/{item.total_marks || item.number_of_questions || '?'}
+                            </Text>
                         </View>
                     )}
 
                     {isAvailable && (
-                        <View className="flex-row items-center bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
-                            <View className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5" />
+                        <View className="flex-row items-center bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                            <View className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1" />
                             <Text className="text-[11px] font-semibold text-blue-700">Available</Text>
                         </View>
                     )}
 
                     {isUpcoming && (
-                        <View className="flex-row items-center bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-                            <Ionicons name="time" size={12} color="#7c3aed" />
+                        <View className="flex-row items-center bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">
+                            <Ionicons name="time" size={11} color="#7c3aed" />
                             <Text className="text-[11px] font-semibold text-purple-700 ml-1">Upcoming</Text>
                         </View>
                     )}
 
                     {isEnded && (
-                        <View className="flex-row items-center bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
-                            <Ionicons name="lock-closed" size={12} color="#64748b" />
+                        <View className="flex-row items-center bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                            <Ionicons name="lock-closed" size={11} color="#64748b" />
                             <Text className="text-[11px] font-semibold text-slate-600 ml-1">Ended</Text>
                         </View>
                     )}
                 </View>
 
                 {/* Exam Title */}
-                <Text className="text-base font-bold text-slate-800 leading-snug mb-2.5">
+                <Text className="text-sm font-bold text-slate-800 leading-snug mb-1">
                     {item.title}
                 </Text>
 
-                {/* Stats Chips Row */}
-                <View className="flex-row flex-wrap items-center gap-2 mb-3">
-                    {item.duration_minutes ? (
-                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
-                            <Ionicons name="time-outline" size={13} color="#64748b" />
-                            <Text className="text-xs text-slate-600 font-medium ml-1">
-                                {item.duration_minutes} mins
-                            </Text>
-                        </View>
-                    ) : null}
-
-                    {item.number_of_questions ? (
-                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
-                            <Ionicons name="help-circle-outline" size={13} color="#64748b" />
-                            <Text className="text-xs text-slate-600 font-medium ml-1">
-                                {item.number_of_questions} Qs
-                            </Text>
-                        </View>
-                    ) : null}
-
-                    {item.total_marks ? (
-                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
-                            <Ionicons name="ribbon-outline" size={13} color="#64748b" />
-                            <Text className="text-xs text-slate-600 font-medium ml-1">
-                                {item.total_marks} Marks
-                            </Text>
-                        </View>
-                    ) : null}
-
-                    {item.negative_marking_enabled ? (
-                        <View className="flex-row items-center bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
-                            <Ionicons name="alert-circle-outline" size={13} color="#e11d48" />
-                            <Text className="text-xs text-rose-700 font-medium ml-1">
-                                -{item.negative_marks_per_question ?? 0.33} Neg
-                            </Text>
-                        </View>
-                    ) : null}
+                {/* Single-line Metadata row */}
+                <View className="flex-row items-center flex-wrap mb-2">
+                    <Text className="text-xs text-slate-500">
+                        {item.duration_minutes ? `${item.duration_minutes}m` : ''}
+                        {item.duration_minutes && item.number_of_questions ? '  •  ' : ''}
+                        {item.number_of_questions ? `${item.number_of_questions} Qs` : ''}
+                        {(item.duration_minutes || item.number_of_questions) && item.total_marks ? '  •  ' : ''}
+                        {item.total_marks ? `${item.total_marks} Marks` : ''}
+                    </Text>
+                    {Boolean(item.negative_marking_enabled) && (
+                        <Text className="text-xs text-rose-600 font-medium ml-1.5">
+                            •  -{item.negative_marks_per_question ?? 0.33} Neg
+                        </Text>
+                    )}
                 </View>
 
-                {/* Completed Score Banner */}
-                {isCompleted && item.bestScore !== null && (
-                    <View className="flex-row items-center justify-between bg-emerald-50/60 p-2.5 rounded-xl mb-3 border border-emerald-100">
-                        <View className="flex-row items-center">
-                            <Ionicons name="trophy" size={16} color="#059669" />
-                            <Text className="text-xs font-semibold text-emerald-800 ml-1.5">
-                                Best Score:
-                            </Text>
-                        </View>
-                        <Text className="text-xs font-bold text-emerald-900">
-                            {item.bestScore} / {item.total_marks || item.number_of_questions || '?'}
-                        </Text>
-                    </View>
-                )}
-
-                {/* Upcoming Schedule Info */}
+                {/* Upcoming Schedule Info (if applicable) */}
                 {isUpcoming && item.start_date && (
-                    <View className="flex-row items-center bg-purple-50 p-2.5 rounded-xl mb-3 border border-purple-100">
-                        <Ionicons name="calendar-outline" size={15} color="#7c3aed" />
+                    <View className="flex-row items-center bg-purple-50 px-2.5 py-1.5 rounded-lg mb-2 border border-purple-100">
+                        <Ionicons name="calendar-outline" size={13} color="#7c3aed" />
                         <Text className="text-xs font-medium text-purple-800 ml-1.5">
-                            Starts {new Date(item.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            Starts {new Date(item.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         </Text>
                     </View>
                 )}
@@ -440,9 +402,9 @@ export default function Exams() {
                             <TouchableOpacity
                                 activeOpacity={0.8}
                                 onPress={() => handleReviewExam(item)}
-                                className="flex-1 flex-row items-center justify-center py-2.5 px-3 rounded-xl bg-blue-600"
+                                className="flex-1 flex-row items-center justify-center py-2 px-3 rounded-lg bg-blue-600"
                             >
-                                <Ionicons name="eye-outline" size={16} color="#ffffff" />
+                                <Ionicons name="eye-outline" size={14} color="#ffffff" />
                                 <Text className="text-white text-xs font-bold ml-1.5">Review Answers</Text>
                             </TouchableOpacity>
 
@@ -450,14 +412,35 @@ export default function Exams() {
                                 <TouchableOpacity
                                     activeOpacity={0.8}
                                     onPress={() => handleTakeExam(item)}
-                                    className="flex-row items-center justify-center py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-200"
+                                    className="flex-row items-center justify-center py-2 px-3 rounded-lg bg-slate-100 border border-slate-200"
                                 >
-                                    <Ionicons name="refresh-outline" size={15} color="#334155" />
+                                    <Ionicons name="refresh-outline" size={13} color="#334155" />
                                     <Text className="text-slate-700 text-xs font-bold ml-1">Retake</Text>
                                 </TouchableOpacity>
                             )}
                         </>
                     ) : isAvailable ? (
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => handleTakeExam(item)}
+                            className="flex-1 flex-row items-center justify-center py-2 px-4 rounded-lg bg-blue-600"
+                        >
+                            <Ionicons name="play" size={13} color="#ffffff" />
+                            <Text className="text-white text-xs font-bold ml-1.5">Start Exam</Text>
+                        </TouchableOpacity>
+                    ) : isUpcoming ? (
+                        <View className="flex-1 py-1.5 rounded-lg bg-slate-100 items-center justify-center">
+                            <Text className="text-slate-500 text-xs font-semibold">Test Not Started Yet</Text>
+                        </View>
+                    ) : (
+                        <View className="flex-1 py-1.5 rounded-lg bg-slate-100 items-center justify-center">
+                            <Text className="text-slate-400 text-xs font-semibold">Exam Ended</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        );
+    };
                         <TouchableOpacity
                             activeOpacity={0.8}
                             onPress={() => handleTakeExam(item)}
@@ -485,42 +468,42 @@ export default function Exams() {
             <StatusBar style="dark" />
 
             {/* Header */}
-            <View className="bg-white px-5 pt-3 pb-3 border-b border-slate-100">
-                <View className="flex-row items-center justify-between mb-3">
+            <View className="bg-white px-4 pt-2.5 pb-2.5 border-b border-slate-100">
+                <View className="flex-row items-center justify-between mb-2">
                     <View className="flex-row items-center flex-1">
                         <TouchableOpacity
                             activeOpacity={0.7}
                             onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-                            className="w-10 h-10 rounded-xl bg-slate-100 items-center justify-center mr-3"
+                            className="w-9 h-9 rounded-xl bg-slate-100 items-center justify-center mr-2.5"
                         >
-                            <Ionicons name="menu" size={22} color="#1e293b" />
+                            <Ionicons name="menu" size={20} color="#1e293b" />
                         </TouchableOpacity>
                         <View className="flex-1">
-                            <Text className="text-xl font-bold text-slate-900">Exams</Text>
-                            <Text className="text-xs text-blue-600 font-medium">Tests, quizzes & assessments</Text>
+                            <Text className="text-lg font-bold text-slate-900 leading-tight">Exams</Text>
+                            <Text className="text-[11px] text-blue-600 font-medium">Tests, quizzes & assessments</Text>
                         </View>
                     </View>
                 </View>
 
                 {/* Search Bar */}
-                <View className="flex-row items-center bg-slate-100 rounded-xl px-3 py-2 mb-2">
-                    <Ionicons name="search" size={18} color="#94a3b8" />
+                <View className="flex-row items-center bg-slate-100 rounded-xl px-3 py-1.5 mb-2">
+                    <Ionicons name="search" size={16} color="#94a3b8" />
                     <TextInput
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         placeholder="Search tests and exams..."
                         placeholderTextColor="#94a3b8"
-                        className="flex-1 text-sm text-slate-800 ml-2 py-0"
+                        className="flex-1 text-xs text-slate-800 ml-2 py-0"
                     />
                     {searchQuery.length > 0 && (
                         <TouchableOpacity onPress={() => setSearchQuery('')}>
-                            <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                            <Ionicons name="close-circle" size={16} color="#94a3b8" />
                         </TouchableOpacity>
                     )}
                 </View>
 
                 {/* Filter Tabs */}
-                <View className="flex-row items-center gap-1.5 pt-1">
+                <View className="flex-row items-center gap-1.5 pt-0.5">
                     {[
                         { key: 'all', label: 'All', count: counts.all },
                         { key: 'available', label: 'Available', count: counts.available },
@@ -576,7 +559,7 @@ export default function Exams() {
                     data={filteredExams}
                     renderItem={renderExamCard}
                     keyExtractor={item => item.id.toString()}
-                    contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+                    contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 8, paddingBottom: 16 }}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
                     }
