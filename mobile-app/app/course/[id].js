@@ -257,7 +257,8 @@ export default function CoursePlayer() {
 
             // Calculate totals
             Object.values(memberScores).forEach(m => {
-                m.total = Object.values(m.scores).reduce((sum, s) => sum + s, 0);
+                const totalRaw = Object.values(m.scores).reduce((sum, s) => sum + (Number(s) || 0), 0);
+                m.total = Math.round(totalRaw * 100) / 100;
             });
 
             // Sort by total descending
@@ -359,7 +360,7 @@ export default function CoursePlayer() {
                 <Text className="font-medium text-slate-800">{item.name}</Text>
             </View>
             <View className="items-end">
-                <Text className="font-bold text-blue-600">{item.total}</Text>
+                <Text className="font-bold text-blue-600">{parseFloat(Number(item.total || 0).toFixed(2))}</Text>
                 <Text className="text-xs text-slate-400">points</Text>
             </View>
         </View>

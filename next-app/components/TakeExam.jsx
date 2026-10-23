@@ -426,7 +426,7 @@ const TakeExam = () => {
                 else if (selectedIdx !== undefined && exam.negative_marking_enabled) score -= exam.negative_marks_per_question;
                 return { question_id: q.id, selected_option_index: selectedIdx, is_correct: isCorrect };
             });
-            score = Math.max(0, score);
+            score = Math.max(0, Math.round(score * 100) / 100);
 
             const { data: attempt, error: attemptError } = await supabase.from('exam_attempts').insert([{
                 exam_id: id,
@@ -533,7 +533,7 @@ const TakeExam = () => {
                                     </div>
                                     {attempt.score !== null && (
                                         <div className="text-right flex items-center gap-4">
-                                            <div className="font-bold text-slate-900">{attempt.score} <span className="text-slate-400 font-normal">/ {attempt.total_marks}</span></div>
+                                            <div className="font-bold text-slate-900">{parseFloat(Number(attempt.score || 0).toFixed(2))} <span className="text-slate-400 font-normal">/ {attempt.total_marks}</span></div>
                                             <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-500" />
                                         </div>
                                     )}

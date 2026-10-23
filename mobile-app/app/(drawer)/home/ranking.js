@@ -73,7 +73,7 @@ export default function Ranking() {
                 </View>
 
                 <View className="items-end pl-2">
-                    <Text className="font-black text-lg text-blue-600 leading-none">{item.total_score}</Text>
+                    <Text className="font-black text-lg text-blue-600 leading-none">{parseFloat(Number(item.total_score || 0).toFixed(2))}</Text>
                     <Text className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Points</Text>
                 </View>
             </View>

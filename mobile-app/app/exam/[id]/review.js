@@ -532,7 +532,7 @@ export default function ExamReviewScreen() {
                     <Text className="font-bold text-lg text-center" numberOfLines={1} style={{ maxWidth: 200 }}>Review Result</Text>
                     {attempt && (
                         <Text className="text-xs text-center text-gray-500">
-                            Score: {attempt.score} / {attempt.total_marks}
+                            Score: {parseFloat(Number(attempt.score || 0).toFixed(2))} / {attempt.total_marks}
                         </Text>
                     )}
                 </View>

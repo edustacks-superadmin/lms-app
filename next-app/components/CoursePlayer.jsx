@@ -579,7 +579,7 @@ const CoursePlayer = () => {
                                             {isExam && isAttempted && (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
                                                     <CheckCircle size={12} />
-                                                    Attempted {attempts.length > 1 ? `(${attempts.length}x)` : ''} • Score: {bestScore}{totalMarks ? `/${totalMarks}` : ''} {percentage !== null ? `(${percentage}%)` : ''}
+                                                    Attempted {attempts.length > 1 ? `(${attempts.length}x)` : ''} • Score: {parseFloat(Number(bestScore || 0).toFixed(2))}{totalMarks ? `/${totalMarks}` : ''} {percentage !== null ? `(${percentage}%)` : ''}
                                                 </span>
                                             )}
 
@@ -752,7 +752,7 @@ const CoursePlayer = () => {
                                                             </span>
                                                         </div>
                                                         <div className="text-lg sm:text-xl font-bold text-emerald-950 mt-0.5">
-                                                            Best Score: {bestScore} {examTotalMarks ? `/ ${examTotalMarks}` : ''}
+                                                            Best Score: {parseFloat(Number(bestScore || 0).toFixed(2))} {examTotalMarks ? `/ ${examTotalMarks}` : ''}
                                                             {scorePercentage !== null && (
                                                                 <span className="text-sm font-semibold ml-1.5 text-emerald-700">
                                                                     ({scorePercentage}%)

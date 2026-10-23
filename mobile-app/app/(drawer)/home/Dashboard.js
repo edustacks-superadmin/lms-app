@@ -933,7 +933,7 @@ export default function Dashboard() {
                                     </Text>
                                 </View>
                                 <Text className="w-16 text-center font-bold text-blue-600 text-xs">
-                                    {item.total_score}
+                                    {parseFloat(Number(item.total_score || 0).toFixed(2))}
                                 </Text>
                             </View>
                         ))}

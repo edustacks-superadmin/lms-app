@@ -599,7 +599,7 @@ export default function NativeExamScreen() {
                     is_correct: isCorrect
                 };
             });
-            score = Math.max(0, score);
+            score = Math.max(0, Math.round(score * 100) / 100);
 
             // 2.5. Count previous attempts to get correct attempt_number
             const { count: previousAttempts } = await supabase

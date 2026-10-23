@@ -35,7 +35,7 @@ const SubmissionModal = ({ visible, score, totalMarks, onReview, onGoBack }) => 
                         <View className="bg-slate-50 border border-slate-100 rounded-2xl p-4 w-full items-center mb-6">
                             <Text className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Your Score</Text>
                             <Text className="text-4xl font-extrabold text-slate-800">
-                                {score} <Text className="text-xl text-slate-400 font-medium">/ {totalMarks || 10}</Text>
+                                {parseFloat(Number(score || 0).toFixed(2))} <Text className="text-xl text-slate-400 font-medium">/ {totalMarks || 10}</Text>
                                 {/* Note: totalMarks isn't always 10, should be prop if needed, using 10 from user screenshot context or pass it */}
                             </Text>
                         </View>
