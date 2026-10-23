@@ -699,18 +699,37 @@ textarea.form-input {
   max-width: 1400px;
   margin: 0 auto;
   font-family: 'Inter', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-main-grid {
   display: grid;
-  grid-template-columns: 1fr 350px;
+  grid-template-columns: minmax(0, 1fr) 350px;
   gap: 30px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-main-column,
+.dashboard-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .banner-container {
@@ -719,6 +738,9 @@ textarea.form-input {
   position: relative;
   height: 260px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .resume-course-card {
@@ -1058,11 +1080,15 @@ textarea.form-input {
 
 @media (max-width: 1024px) {
   .dashboard-main-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 100%;
   }
 
   .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -1612,17 +1638,69 @@ textarea.form-input {
 
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 20px 16px 80px;
+    padding: 20px 16px 80px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
     /* Added bottom padding for mobile nav */
   }
 
+  .dashboard-main-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .dashboard-main-column,
+  .dashboard-side-column {
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .dashboard-stat-card {
+    padding: 16px !important;
+    border-radius: 14px !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  .dashboard-widget-card,
+  .dashboard-promo-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  .dashboard-welcome-title {
+    font-size: 22px !important;
+  }
+
+  .dashboard-welcome-subtitle {
+    font-size: 13.5px !important;
   }
 
   .banner-container {
     height: 200px;
     border-radius: 16px;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   /* Resume Course: compact horizontal layout on mobile */

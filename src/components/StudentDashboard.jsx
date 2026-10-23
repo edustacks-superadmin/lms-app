@@ -308,23 +308,23 @@ const StudentDashboard = () => {
         <div className="dashboard-container">
 
             {/* Header Section */}
-            <div style={{ marginBottom: '10px' }}>
-                <h2 style={{ fontSize: '28px', fontWeight: '800', color: '#1a1a1a', marginBottom: '8px' }}>
+            <div className="dashboard-header-section" style={{ marginBottom: '14px', width: '100%', boxSizing: 'border-box' }}>
+                <h2 className="dashboard-welcome-title" style={{ fontSize: '28px', fontWeight: '800', color: '#1a1a1a', marginBottom: '8px', wordBreak: 'break-word' }}>
                     Welcome back, {studentName || 'Student'}! 👋
                 </h2>
                 {quote ? (
-                    <p style={{ color: '#666', fontSize: '16px', fontStyle: 'italic' }}>
+                    <p className="dashboard-welcome-subtitle" style={{ color: '#666', fontSize: '16px', fontStyle: 'italic', wordBreak: 'break-word' }}>
                         "{quote.text}" {quote.author && <span style={{ fontSize: '14px', fontStyle: 'normal', color: '#94a3b8' }}>— {quote.author}</span>}
                     </p>
                 ) : (
-                    <p style={{ color: '#666', fontSize: '16px' }}>Here's what's happening with your learning today.</p>
+                    <p className="dashboard-welcome-subtitle" style={{ color: '#666', fontSize: '16px' }}>Here's what's happening with your learning today.</p>
                 )}
             </div>
 
             <div className="dashboard-main-grid">
 
                 {/* Left Column: Main Content */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                <div className="dashboard-main-column">
 
                     {/* Banner Carousel */}
                     <div
@@ -382,29 +382,29 @@ const StudentDashboard = () => {
 
                     {/* Stats Grid */}
                     <div className="stats-grid">
-                        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0' }}>
-                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7' }}>
+                        <div className="dashboard-stat-card" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0', minWidth: 0, boxSizing: 'border-box' }}>
+                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#e0f2fe', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', flexShrink: 0 }}>
                                 <BookOpen size={24} />
                             </div>
-                            <div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>Active Courses</p>
                                 <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>{stats.activeCourses}</p>
                             </div>
                         </div>
-                        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0' }}>
-                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                        <div className="dashboard-stat-card" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0', minWidth: 0, boxSizing: 'border-box' }}>
+                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', flexShrink: 0 }}>
                                 <CheckCircle size={24} />
                             </div>
-                            <div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>Completed Exams</p>
                                 <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>{stats.completedExams}</p>
                             </div>
                         </div>
-                        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0' }}>
-                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706' }}>
+                        <div className="dashboard-stat-card" style={{ backgroundColor: 'white', padding: '20px', borderRadius: '16px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', display: 'flex', alignItems: 'center', gap: '16px', border: '1px solid #f0f0f0', minWidth: 0, boxSizing: 'border-box' }}>
+                            <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d97706', flexShrink: 0 }}>
                                 <Award size={24} />
                             </div>
-                            <div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>Average Score</p>
                                 <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>{stats.averageScore}%</p>
                             </div>
@@ -623,10 +623,10 @@ const StudentDashboard = () => {
                 </div>
 
                 {/* Right Column: Sidebar Widgets */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                <div className="dashboard-side-column">
 
                     {/* Monthly Leaderboard Widget */}
-                    <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0', height: 'fit-content' }}>
+                    <div className="dashboard-widget-card" style={{ backgroundColor: 'white', padding: '24px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0', height: 'fit-content', width: '100%', boxSizing: 'border-box', minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                             <div style={{ padding: '8px', backgroundColor: '#fff7ed', borderRadius: '8px', color: '#ea580c' }}>
                                 <Trophy size={20} />
@@ -661,8 +661,8 @@ const StudentDashboard = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 2px 0' }}>{student.name}</p>
+                                    <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                                        <p style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', margin: '0 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{student.name}</p>
                                         <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{student.total_score} pts</p>
                                     </div>
                                 </div>
@@ -691,7 +691,7 @@ const StudentDashboard = () => {
                     </div>
 
                     {/* Quick Actions / Promo (Optional) */}
-                    <div style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '20px', color: 'white', position: 'relative', overflow: 'hidden' }}>
+                    <div className="dashboard-promo-card" style={{ backgroundColor: '#1e293b', padding: '24px', borderRadius: '20px', color: 'white', position: 'relative', overflow: 'hidden', width: '100%', boxSizing: 'border-box', minWidth: 0 }}>
                         <div style={{ position: 'relative', zIndex: 1 }}>
                             <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>Join Premium</h3>
                             <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '20px', lineHeight: '1.5' }}>Get access to all courses and exclusive content.</p>
