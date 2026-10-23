@@ -97,7 +97,7 @@ export const BatchProvider = ({ children }) => {
             if (error) throw error;
 
             setBatches(prev => prev.map(batch =>
-                batch.id === id ? { ...batch, ...updatedData } : batch
+                String(batch.id) === String(id) ? { ...batch, ...updatedData } : batch
             ));
         } catch (error) {
             console.error('Error updating batch:', error.message);
@@ -113,14 +113,14 @@ export const BatchProvider = ({ children }) => {
 
             if (error) throw error;
 
-            setBatches(prev => prev.filter(batch => batch.id !== id));
+            setBatches(prev => prev.filter(batch => String(batch.id) !== String(id)));
         } catch (error) {
             console.error('Error deleting batch:', error.message);
         }
     };
 
     const getBatch = (id) => {
-        return batches.find(batch => batch.id === id);
+        return batches.find(batch => String(batch.id) === String(id));
     };
 
     const cloneBatch = async (id) => {

@@ -3,6 +3,7 @@ import { Search, Plus, Upload, X, FileSpreadsheet, Download } from 'lucide-react
 import { useNavigate } from 'react-router-dom';
 import { useBatches } from '../context/BatchContext';
 import { useUsers } from '../context/UserContext';
+import { supabase } from '../supabaseClient';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import * as XLSX from 'xlsx';
 
@@ -10,7 +11,7 @@ import * as XLSX from 'xlsx';
 const BatchManagement = () => {
     const navigate = useNavigate();
     const { batches, deleteBatch, cloneBatch, addMembersToBatch, removeMembersFromBatch, forceLogoutBatchMembers } = useBatches();
-    const { users, addUser } = useUsers();
+    const { users, addUser, fetchUsers } = useUsers();
     const [searchQuery, setSearchQuery] = useState('');
     const [openDropdown, setOpenDropdown] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, batch: null });
@@ -389,6 +390,7 @@ const BatchManagement = () => {
                         await addMembersToBatch(addUsersModal.batch.id, selectedUserIds);
                         alert(`${selectedUserIds.length} user(s) added to batch`);
                         setAddUsersModal({ isOpen: false, batch: null });
+                        if (fetchUsers) fetchUsers();
                     } catch (error) {
                         alert('Error adding users: ' + error.message);
                     }
@@ -406,6 +408,7 @@ const BatchManagement = () => {
                         await removeMembersFromBatch(unassignUsersModal.batch.id, selectedUserIds);
                         alert(`${selectedUserIds.length} user(s) removed from batch`);
                         setUnassignUsersModal({ isOpen: false, batch: null });
+                        if (fetchUsers) fetchUsers();
                     } catch (error) {
                         alert('Error removing users: ' + error.message);
                     }
@@ -456,20 +459,65 @@ const BatchManagement = () => {
 };
 
 // Add Existing Users Modal Component
-const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfirm }) => {
+const AddExistingUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [existingMemberIds, setExistingMemberIds] = useState([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen || !batch?.id) {
+            setSelectedUsers([]);
+            setSearchTerm('');
+            setExistingMemberIds([]);
+            return;
+        }
+
+        const fetchExistingMembers = async () => {
+            setLoadingMembers(true);
+            try {
+                const { data, error } = await supabase
+                    .from('batch_members')
+                    .select('member_id')
+                    .eq('batch_id', batch.id);
+
+                if (!error && data) {
+                    setExistingMemberIds(data.map(r => r.member_id));
+                }
+            } catch (err) {
+                console.error('Error fetching batch members:', err);
+            } finally {
+                setLoadingMembers(false);
+            }
+        };
+
+        fetchExistingMembers();
+    }, [isOpen, batch?.id]);
 
     if (!isOpen || !batch) return null;
 
-    // Get users already in this batch
-    const batchMemberIds = []; // You would fetch this from batch_members table
+    const getUserName = (user) => {
+        return user?.displayName ||
+            user?.name ||
+            user?.display_name ||
+            (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
+            user?.username ||
+            (user?.email ? user.email.split('@')[0] : 'User');
+    };
 
-    // Filter available users (not already in batch)
-    const availableUsers = users.filter(user =>
-        !batchMemberIds.includes(user.id) &&
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter available users (not already in this batch)
+    const availableUsers = (users || []).filter(user => {
+        const isAlreadyIn = existingMemberIds.includes(user.id) ||
+            (Array.isArray(user.batchIds) && user.batchIds.some(bId => String(bId) === String(batch.id)));
+        if (isAlreadyIn) return false;
+
+        if (!searchTerm.trim()) return true;
+        const term = searchTerm.toLowerCase();
+        const name = getUserName(user).toLowerCase();
+        const email = (user.email || '').toLowerCase();
+        const phone = (user.phone_number || '').toLowerCase();
+        return name.includes(term) || email.includes(term) || phone.includes(term);
+    });
 
     const toggleUser = (userId) => {
         setSelectedUsers(prev =>
@@ -477,6 +525,14 @@ const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfi
                 ? prev.filter(id => id !== userId)
                 : [...prev, userId]
         );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedUsers.length === availableUsers.length && availableUsers.length > 0) {
+            setSelectedUsers([]);
+        } else {
+            setSelectedUsers(availableUsers.map(u => u.id));
+        }
     };
 
     return (
@@ -496,57 +552,120 @@ const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfi
                 backgroundColor: 'white',
                 borderRadius: '8px',
                 padding: '24px',
-                maxWidth: '500px',
-                width: '90%',
-                maxHeight: '80vh',
+                maxWidth: '560px',
+                width: '92%',
+                maxHeight: '85vh',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h3 style={{ margin: 0 }}>Add Users to {batch.name}</h3>
-                    <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>
+                            Add Users to {batch.name}
+                        </h3>
+                        <span style={{ fontSize: '13px', color: '#666' }}>
+                            Select existing students/members to enroll in this batch
+                        </span>
+                    </div>
+                    <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#666' }}>
                         <X size={20} />
                     </button>
                 </div>
 
-                <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        marginBottom: '16px'
-                    }}
-                />
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <input
+                        type="text"
+                        placeholder="Search by name, email, or phone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            flex: 1,
+                            padding: '9px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                        }}
+                    />
+                    {availableUsers.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleSelectAll}
+                            style={{
+                                padding: '0 12px',
+                                fontSize: '13px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                background: '#f8f9fa',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            {selectedUsers.length === availableUsers.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                    )}
+                </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px' }}>
-                    {availableUsers.map(user => (
-                        <label key={user.id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '8px',
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #f0f0f0'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={selectedUsers.includes(user.id)}
-                                onChange={() => toggleUser(user.id)}
-                                style={{ marginRight: '12px' }}
-                            />
-                            <div>
-                                <div style={{ fontWeight: '500' }}>{user.name}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
-                            </div>
-                        </label>
-                    ))}
-                    {availableUsers.length === 0 && (
-                        <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
-                            No users available
+                <div style={{
+                    fontSize: '12px',
+                    color: '#666',
+                    marginBottom: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                }}>
+                    <span>{availableUsers.length} user(s) available</span>
+                    <span>{selectedUsers.length} selected</span>
+                </div>
+
+                <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    marginBottom: '20px',
+                    border: '1px solid #eee',
+                    borderRadius: '4px',
+                    maxHeight: '380px'
+                }}>
+                    {loadingMembers ? (
+                        <div style={{ textAlign: 'center', color: '#666', padding: '30px', fontSize: '14px' }}>
+                            Loading users...
+                        </div>
+                    ) : availableUsers.length > 0 ? (
+                        availableUsers.map(user => {
+                            const name = getUserName(user);
+                            const isSelected = selectedUsers.includes(user.id);
+                            return (
+                                <label
+                                    key={user.id}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '10px 14px',
+                                        cursor: 'pointer',
+                                        borderBottom: '1px solid #f0f0f0',
+                                        backgroundColor: isSelected ? '#f0fdf4' : 'transparent',
+                                        transition: 'background-color 0.15s'
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => toggleUser(user.id)}
+                                        style={{ marginRight: '14px', width: '16px', height: '16px', cursor: 'pointer' }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: '500', fontSize: '14px', color: '#1a1a1a', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                            {name}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            {user.email || user.phone_number || 'No contact info'}
+                                        </div>
+                                    </div>
+                                </label>
+                            );
+                        })
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#999', padding: '30px', fontSize: '14px' }}>
+                            {searchTerm ? 'No users matching your search' : 'All users are already enrolled in this batch'}
                         </div>
                     )}
                 </div>
@@ -555,7 +674,7 @@ const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfi
                     <button
                         onClick={onClose}
                         className="btn"
-                        style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none' }}
+                        style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
                     >
                         Cancel
                     </button>
@@ -565,7 +684,15 @@ const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfi
                             setSelectedUsers([]);
                         }}
                         className="btn"
-                        style={{ backgroundColor: '#00bfa5', color: 'white', border: 'none' }}
+                        style={{
+                            backgroundColor: selectedUsers.length === 0 ? '#a7f3d0' : '#00bfa5',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 20px',
+                            borderRadius: '4px',
+                            cursor: selectedUsers.length === 0 ? 'not-allowed' : 'pointer',
+                            fontWeight: '500'
+                        }}
                         disabled={selectedUsers.length === 0}
                     >
                         Add {selectedUsers.length} User(s)
@@ -580,13 +707,62 @@ const AddExistingUsersModal = ({ isOpen, batch, users, batches, onClose, onConfi
 const UnassignUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [existingMemberIds, setExistingMemberIds] = useState([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
+
+    useEffect(() => {
+        if (!isOpen || !batch?.id) {
+            setSelectedUsers([]);
+            setSearchTerm('');
+            setExistingMemberIds([]);
+            return;
+        }
+
+        const fetchExistingMembers = async () => {
+            setLoadingMembers(true);
+            try {
+                const { data, error } = await supabase
+                    .from('batch_members')
+                    .select('member_id')
+                    .eq('batch_id', batch.id);
+
+                if (!error && data) {
+                    setExistingMemberIds(data.map(r => r.member_id));
+                }
+            } catch (err) {
+                console.error('Error fetching batch members:', err);
+            } finally {
+                setLoadingMembers(false);
+            }
+        };
+
+        fetchExistingMembers();
+    }, [isOpen, batch?.id]);
 
     if (!isOpen || !batch) return null;
 
-    // Filter batch members (you would fetch from batch_members table)
-    const batchMembers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const getUserName = (user) => {
+        return user?.displayName ||
+            user?.name ||
+            user?.display_name ||
+            (user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : '') ||
+            user?.username ||
+            (user?.email ? user.email.split('@')[0] : 'User');
+    };
+
+    // Filter batch members currently assigned to this batch
+    const batchMembers = (users || []).filter(user => {
+        const isIn = existingMemberIds.includes(user.id) ||
+            (Array.isArray(user.batchIds) && user.batchIds.some(bId => String(bId) === String(batch.id)));
+        if (!isIn) return false;
+
+        if (!searchTerm.trim()) return true;
+        const term = searchTerm.toLowerCase();
+        const name = getUserName(user).toLowerCase();
+        const email = (user.email || '').toLowerCase();
+        const phone = (user.phone_number || '').toLowerCase();
+        return name.includes(term) || email.includes(term) || phone.includes(term);
+    });
 
     const toggleUser = (userId) => {
         setSelectedUsers(prev =>
@@ -594,6 +770,14 @@ const UnassignUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
                 ? prev.filter(id => id !== userId)
                 : [...prev, userId]
         );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedUsers.length === batchMembers.length && batchMembers.length > 0) {
+            setSelectedUsers([]);
+        } else {
+            setSelectedUsers(batchMembers.map(u => u.id));
+        }
     };
 
     return (
@@ -613,57 +797,120 @@ const UnassignUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
                 backgroundColor: 'white',
                 borderRadius: '8px',
                 padding: '24px',
-                maxWidth: '500px',
-                width: '90%',
-                maxHeight: '80vh',
+                maxWidth: '560px',
+                width: '92%',
+                maxHeight: '85vh',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h3 style={{ margin: 0 }}>Remove Users from {batch.name}</h3>
-                    <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>
+                            Remove Users from {batch.name}
+                        </h3>
+                        <span style={{ fontSize: '13px', color: '#666' }}>
+                            Select students to unassign from this batch
+                        </span>
+                    </div>
+                    <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#666' }}>
                         <X size={20} />
                     </button>
                 </div>
 
-                <input
-                    type="text"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        marginBottom: '16px'
-                    }}
-                />
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <input
+                        type="text"
+                        placeholder="Search enrolled users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            flex: 1,
+                            padding: '9px 12px',
+                            border: '1px solid #ccc',
+                            borderRadius: '4px',
+                            fontSize: '14px'
+                        }}
+                    />
+                    {batchMembers.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleSelectAll}
+                            style={{
+                                padding: '0 12px',
+                                fontSize: '13px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                background: '#f8f9fa',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            {selectedUsers.length === batchMembers.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                    )}
+                </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px' }}>
-                    {batchMembers.map(user => (
-                        <label key={user.id} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            padding: '8px',
-                            cursor: 'pointer',
-                            borderBottom: '1px solid #f0f0f0'
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={selectedUsers.includes(user.id)}
-                                onChange={() => toggleUser(user.id)}
-                                style={{ marginRight: '12px' }}
-                            />
-                            <div>
-                                <div style={{ fontWeight: '500' }}>{user.name}</div>
-                                <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
-                            </div>
-                        </label>
-                    ))}
-                    {batchMembers.length === 0 && (
-                        <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
-                            No users in this batch
+                <div style={{
+                    fontSize: '12px',
+                    color: '#666',
+                    marginBottom: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                }}>
+                    <span>{batchMembers.length} user(s) in this batch</span>
+                    <span>{selectedUsers.length} selected for removal</span>
+                </div>
+
+                <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    marginBottom: '20px',
+                    border: '1px solid #eee',
+                    borderRadius: '4px',
+                    maxHeight: '380px'
+                }}>
+                    {loadingMembers ? (
+                        <div style={{ textAlign: 'center', color: '#666', padding: '30px', fontSize: '14px' }}>
+                            Loading batch members...
+                        </div>
+                    ) : batchMembers.length > 0 ? (
+                        batchMembers.map(user => {
+                            const name = getUserName(user);
+                            const isSelected = selectedUsers.includes(user.id);
+                            return (
+                                <label
+                                    key={user.id}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '10px 14px',
+                                        cursor: 'pointer',
+                                        borderBottom: '1px solid #f0f0f0',
+                                        backgroundColor: isSelected ? '#fef2f2' : 'transparent',
+                                        transition: 'background-color 0.15s'
+                                    }}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={() => toggleUser(user.id)}
+                                        style={{ marginRight: '14px', width: '16px', height: '16px', cursor: 'pointer' }}
+                                    />
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: '500', fontSize: '14px', color: '#1a1a1a', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                            {name}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            {user.email || user.phone_number || 'No contact info'}
+                                        </div>
+                                    </div>
+                                </label>
+                            );
+                        })
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#999', padding: '30px', fontSize: '14px' }}>
+                            {searchTerm ? 'No users matching your search' : 'No users are currently assigned to this batch'}
                         </div>
                     )}
                 </div>
@@ -672,7 +919,7 @@ const UnassignUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
                     <button
                         onClick={onClose}
                         className="btn"
-                        style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none' }}
+                        style={{ backgroundColor: '#e0e0e0', color: '#333', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}
                     >
                         Cancel
                     </button>
@@ -682,7 +929,15 @@ const UnassignUsersModal = ({ isOpen, batch, users, onClose, onConfirm }) => {
                             setSelectedUsers([]);
                         }}
                         className="btn"
-                        style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none' }}
+                        style={{
+                            backgroundColor: selectedUsers.length === 0 ? '#fca5a5' : '#d32f2f',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 20px',
+                            borderRadius: '4px',
+                            cursor: selectedUsers.length === 0 ? 'not-allowed' : 'pointer',
+                            fontWeight: '500'
+                        }}
                         disabled={selectedUsers.length === 0}
                     >
                         Remove {selectedUsers.length} User(s)
