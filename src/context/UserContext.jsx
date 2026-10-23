@@ -16,6 +16,12 @@ export const UserProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Skip heavy background data fetching on public auth pages
+        const publicAuthPaths = ['/login', '/student/signup', '/forgot-password', '/reset-password'];
+        if (publicAuthPaths.includes(window.location.pathname)) {
+            setLoading(false);
+            return;
+        }
         fetchUsers();
     }, []);
 
@@ -31,43 +37,42 @@ export const UserProvider = ({ children }) => {
 
             if (error) throw error;
 
-            // Enrich each member with batch information
-            const usersWithBatches = await Promise.all(members.map(async (member) => {
-                // 1. Fetch manually assigned batches
-                const { data: batchMembers } = await supabase
-                    .from('batch_members')
-                    .select('batch_id, batches(name)')
-                    .eq('member_id', member.id);
+            if (!members || members.length === 0) {
+                setUsers([]);
+                return;
+            }
 
-                const manualBatches = batchMembers
-                    ? batchMembers.map(bm => bm.batches?.name).filter(Boolean)
-                    : [];
-                const manualBatchIds = batchMembers
-                    ? batchMembers.map(bm => bm.batch_id).filter(Boolean)
-                    : [];
+            // Fetch all batch_members and active subscriptions in 2 parallel batch queries
+            const [{ data: allBatchMembers }, { data: allSubscriptions }] = await Promise.all([
+                supabase.from('batch_members').select('member_id, batch_id, batches(name)'),
+                supabase.from('subscriptions').select('user_id, batch_id, batch:batches(name)').eq('status', 'Active')
+            ]);
 
-                // 2. Fetch subscribed batches (if user has a linked auth account)
-                let subscribedBatches = [];
-                let subscribedBatchIds = [];
-                if (member.user_id) {
-                    const { data: subscriptions } = await supabase
-                        .from('subscriptions')
-                        .select('batch_id, batch:batches(name)')
-                        .eq('user_id', member.user_id)
-                        .eq('status', 'Active'); // Only show active subscriptions
-
-                    if (subscriptions) {
-                        subscribedBatches = subscriptions.map(sub => sub.batch?.name).filter(Boolean);
-                        subscribedBatchIds = subscriptions.map(sub => sub.batch_id).filter(Boolean);
-                    }
+            const manualBatchesByMember = {};
+            (allBatchMembers || []).forEach(bm => {
+                if (!manualBatchesByMember[bm.member_id]) {
+                    manualBatchesByMember[bm.member_id] = { names: [], ids: [] };
                 }
+                if (bm.batches?.name) manualBatchesByMember[bm.member_id].names.push(bm.batches.name);
+                if (bm.batch_id) manualBatchesByMember[bm.member_id].ids.push(bm.batch_id);
+            });
 
-                // Combine and deduplicate names
-                const allBatches = [...new Set([...manualBatches, ...subscribedBatches])];
+            const subscribedBatchesByUser = {};
+            (allSubscriptions || []).forEach(sub => {
+                if (!subscribedBatchesByUser[sub.user_id]) {
+                    subscribedBatchesByUser[sub.user_id] = { names: [], ids: [] };
+                }
+                if (sub.batch?.name) subscribedBatchesByUser[sub.user_id].names.push(sub.batch.name);
+                if (sub.batch_id) subscribedBatchesByUser[sub.user_id].ids.push(sub.batch_id);
+            });
+
+            const usersWithBatches = members.map(member => {
+                const manual = manualBatchesByMember[member.id] || { names: [], ids: [] };
+                const subscribed = (member.user_id && subscribedBatchesByUser[member.user_id]) || { names: [], ids: [] };
+
+                const allBatches = [...new Set([...manual.names, ...subscribed.names])];
                 const batchNames = allBatches.length > 0 ? allBatches.join(', ') : '--';
-
-                // Combine and deduplicate IDs
-                const allBatchIds = [...new Set([...manualBatchIds, ...subscribedBatchIds])];
+                const allBatchIds = [...new Set([...manual.ids, ...subscribed.ids])];
 
                 return {
                     ...member,
@@ -81,7 +86,7 @@ export const UserProvider = ({ children }) => {
                     batchIds: allBatchIds,
                     avatar: member.photo_url || `https://via.placeholder.com/40?text=${member.display_name ? member.display_name.charAt(0).toUpperCase() : 'U'}`
                 };
-            }));
+            });
 
             setUsers(usersWithBatches);
         } catch (error) {

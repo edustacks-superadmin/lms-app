@@ -16,11 +16,18 @@ export const BatchProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Skip heavy background data fetching on public auth pages
+        const publicAuthPaths = ['/login', '/student/signup', '/forgot-password', '/reset-password'];
+        if (publicAuthPaths.includes(window.location.pathname)) {
+            setLoading(false);
+            return;
+        }
         fetchBatches();
     }, []);
 
     const fetchBatches = async () => {
         try {
+            // 1. Fetch batches
             const { data, error } = await supabase
                 .from('batches')
                 .select('*')
@@ -28,22 +35,31 @@ export const BatchProvider = ({ children }) => {
 
             if (error) throw error;
 
-            const batchesWithCounts = await Promise.all(data.map(async (batch) => {
-                const { count: userCount } = await supabase
-                    .from('batch_members')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('batch_id', batch.id);
+            if (!data || data.length === 0) {
+                setBatches([]);
+                return;
+            }
 
-                const { count: courseCount } = await supabase
-                    .from('batch_courses')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('batch_id', batch.id);
+            // 2. Fetch all counts in 2 single batch queries (instead of 486 individual queries)
+            const [{ data: allBatchMembers }, { data: allBatchCourses }] = await Promise.all([
+                supabase.from('batch_members').select('batch_id'),
+                supabase.from('batch_courses').select('batch_id')
+            ]);
 
-                return {
-                    ...batch,
-                    users: userCount || 0,
-                    courses: courseCount || 0
-                };
+            const memberCountMap = {};
+            (allBatchMembers || []).forEach(row => {
+                memberCountMap[row.batch_id] = (memberCountMap[row.batch_id] || 0) + 1;
+            });
+
+            const courseCountMap = {};
+            (allBatchCourses || []).forEach(row => {
+                courseCountMap[row.batch_id] = (courseCountMap[row.batch_id] || 0) + 1;
+            });
+
+            const batchesWithCounts = data.map(batch => ({
+                ...batch,
+                users: memberCountMap[batch.id] || 0,
+                courses: courseCountMap[batch.id] || 0
             }));
 
             setBatches(batchesWithCounts);

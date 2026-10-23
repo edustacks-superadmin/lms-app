@@ -16,6 +16,11 @@ export const TagProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const publicAuthPaths = ['/login', '/student/signup', '/forgot-password', '/reset-password'];
+        if (publicAuthPaths.includes(window.location.pathname)) {
+            setLoading(false);
+            return;
+        }
         fetchTags();
     }, []);
 

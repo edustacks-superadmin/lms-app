@@ -369,6 +369,10 @@ export const TransactionProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        const publicAuthPaths = ['/login', '/student/signup', '/forgot-password', '/reset-password'];
+        if (publicAuthPaths.includes(window.location.pathname)) {
+            return;
+        }
         fetchTransactions();
     }, []);
 
