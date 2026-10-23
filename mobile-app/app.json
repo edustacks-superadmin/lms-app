@@ -76,6 +76,12 @@
         "projectId": "94efc2fa-dfbe-40b5-a365-c2075cdc874a"
       }
     },
-    "owner": "hi0123443210s-team"
+    "owner": "hi0123443210s-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/94efc2fa-dfbe-40b5-a365-c2075cdc874a"
+    }
   }
 }
