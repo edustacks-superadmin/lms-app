@@ -919,6 +919,7 @@ export default function Dashboard() {
                                     {item.photo_url ? (
                                         <Image
                                             source={{ uri: getImageUrl(item.photo_url) }}
+                                            style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }}
                                             className="w-6 h-6 rounded-full bg-gray-200 mr-2"
                                         />
                                     ) : (

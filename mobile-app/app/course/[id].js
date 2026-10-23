@@ -350,7 +350,7 @@ export default function CoursePlayer() {
                 <Text className={`font-bold text-sm ${item.rank <= 3 ? 'text-yellow-600' : 'text-gray-600'}`}>#{item.rank}</Text>
             </View>
             {item.photo_url ? (
-                <Image source={{ uri: item.photo_url }} className="w-10 h-10 rounded-full mr-3" />
+                <Image source={{ uri: item.photo_url }} style={{ marginRight: 12 }} className="w-10 h-10 rounded-full mr-3" />
             ) : (
                 <View className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center mr-3">
                     <Text className="text-blue-600 font-bold">{item.name?.charAt(0)?.toUpperCase() || '?'}</Text>
