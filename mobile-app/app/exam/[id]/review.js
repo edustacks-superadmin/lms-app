@@ -399,10 +399,11 @@ export default function ExamReviewScreen() {
 
             Alert.alert("Success", "Report submitted successfully. We will review it shortly.");
             setReportModalVisible(false);
+            setReportText('');
 
         } catch (error) {
             console.error("Report Error:", error);
-            Alert.alert("Error", "Failed to submit report.");
+            Alert.alert("Error", error.message || "Failed to submit report.");
         } finally {
             setSubmittingReport(false);
         }
