@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { WebView } from 'react-native-webview';
 import { View } from 'react-native';
 
-const MathWebView = ({ content, style }) => {
+const MathWebView = ({ content, style, onScrollStatusChange }) => {
     const minHeight = style?.minHeight || 30;
     const [height, setHeight] = useState(minHeight);
 
@@ -11,6 +11,10 @@ const MathWebView = ({ content, style }) => {
             const data = JSON.parse(event.nativeEvent.data);
             if (data.type === 'height' && typeof data.height === 'number') {
                 setHeight(Math.max(data.height, minHeight));
+            } else if (data.type === 'mathScroll' && typeof data.active === 'boolean') {
+                if (onScrollStatusChange) {
+                    onScrollStatusChange(data.active);
+                }
             }
         } catch (e) { }
     };
@@ -70,7 +74,7 @@ const MathWebView = ({ content, style }) => {
               white-space: nowrap;
             }
 
-            /* Display equations (block formulas): centered with smooth horizontal scroll if wide */
+            /* Display equations (block formulas): auto-wrap at operators where possible, smooth scroll if still wide */
             .katex-display {
               display: block !important;
               margin: 0.75em 0 !important;
@@ -84,13 +88,25 @@ const MathWebView = ({ content, style }) => {
 
             .katex-display > .katex {
               display: inline-block !important;
-              text-align: initial !important;
-              white-space: nowrap !important;
+              text-align: center !important;
+              max-width: 100% !important;
+              white-space: normal !important;
             }
 
             .katex-display > .katex > .katex-html {
-              display: inline-block !important;
+              display: flex !important;
+              flex-wrap: wrap !important;
+              justify-content: center !important;
+              align-items: center !important;
+              max-width: 100% !important;
+              white-space: normal !important;
+            }
+
+            .katex-display > .katex > .katex-html > .base {
+              display: inline-flex !important;
+              align-items: center !important;
               white-space: nowrap !important;
+              margin: 3px 0 !important;
             }
 
             /* Subtle horizontal scrollbar indicator when display equations overflow on small screens */
@@ -168,6 +184,36 @@ const MathWebView = ({ content, style }) => {
             setTimeout(postHeight, 100);
             setTimeout(postHeight, 300);
             setTimeout(postHeight, 800);
+
+            // Handle touch detection for scrollable equations to prevent parent FlatList paging
+            document.addEventListener('touchstart', function(e) {
+              var target = e.target;
+              var isScrollable = false;
+              while (target && target !== document.body) {
+                if (target.classList && target.classList.contains('katex-display')) {
+                  if (target.scrollWidth > target.clientWidth + 2) {
+                    isScrollable = true;
+                    break;
+                  }
+                }
+                target = target.parentElement;
+              }
+              if (isScrollable && window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mathScroll', active: true }));
+              }
+            }, { passive: true });
+
+            document.addEventListener('touchend', function() {
+              if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mathScroll', active: false }));
+              }
+            }, { passive: true });
+
+            document.addEventListener('touchcancel', function() {
+              if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mathScroll', active: false }));
+              }
+            }, { passive: true });
           </script>
         </body>
       </html>
@@ -180,7 +226,8 @@ const MathWebView = ({ content, style }) => {
                 source={{ html: katexHtml }}
                 onMessage={onMessage}
                 style={[{ width: '100%', height, backgroundColor: 'transparent' }, style]}
-                scrollEnabled={false}
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
                 showsVerticalScrollIndicator={false}
                 showsHorizontalScrollIndicator={false}
                 originWhitelist={['*']}

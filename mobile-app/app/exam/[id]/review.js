@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, Text, ActivityIndicator, Alert, SafeAreaView, TouchableOpacity, ScrollView, Dimensions, useWindowDimensions, Modal, BackHandler, FlatList, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
@@ -20,6 +20,24 @@ export default function ExamReviewScreen() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef(null);
     const [showPalette, setShowPalette] = useState(false);
+
+    // Math Equation Horizontal Scroll Locking
+    const [isMathScrolling, setIsMathScrolling] = useState(false);
+    const mathScrollTimeoutRef = useRef(null);
+    const handleMathScrollStatusChange = useCallback((active) => {
+        if (mathScrollTimeoutRef.current) {
+            clearTimeout(mathScrollTimeoutRef.current);
+            mathScrollTimeoutRef.current = null;
+        }
+        if (active) {
+            setIsMathScrolling(true);
+            mathScrollTimeoutRef.current = setTimeout(() => {
+                setIsMathScrolling(false);
+            }, 2500);
+        } else {
+            setIsMathScrolling(false);
+        }
+    }, []);
 
     const { attemptId } = useLocalSearchParams();
 
@@ -436,6 +454,7 @@ export default function ExamReviewScreen() {
                     <MathWebView
                         content={item.question}
                         style={{ minHeight: 100 }}
+                        onScrollStatusChange={handleMathScrollStatusChange}
                     />
                 </View>
 
@@ -494,7 +513,10 @@ export default function ExamReviewScreen() {
                 {item.explanation && (
                     <View className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <Text className="font-bold text-blue-800 mb-2">Explanation:</Text>
-                        <MathWebView content={item.explanation} />
+                        <MathWebView
+                            content={item.explanation}
+                            onScrollStatusChange={handleMathScrollStatusChange}
+                        />
                     </View>
                 )}
                 {/* Subject Info */}
@@ -549,6 +571,7 @@ export default function ExamReviewScreen() {
                 keyExtractor={item => item.id}
                 horizontal
                 pagingEnabled
+                scrollEnabled={!isMathScrolling}
                 showsHorizontalScrollIndicator={false}
                 initialNumToRender={3}
                 maxToRenderPerBatch={3}
