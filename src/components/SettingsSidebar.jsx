@@ -28,7 +28,7 @@ const SettingsSidebar = () => {
                     <Home size={18} /> Home Page
                 </NavLink>
                 <NavLink to="/settings/profile" style={getLinkStyle}>
-                    <User size={18} /> Profile
+                    <User size={18} /> Profile & Security
                 </NavLink>
                 <NavLink to="/settings/institute" style={getLinkStyle}>
                     <Building size={18} /> Institute

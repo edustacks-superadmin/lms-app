@@ -650,6 +650,7 @@ function App() {
                                                       </div>
                                                     </AdminLayout>
                                                   } />
+                                                  <Route path="/settings/security" element={<Navigate to="/settings/profile" replace />} />
                                                   <Route path="/settings/institute" element={
                                                     <AdminLayout>
                                                       <SettingsSidebar />

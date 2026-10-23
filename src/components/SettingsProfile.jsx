@@ -1,3 +1,4 @@
+import TwoFactorAuthSettings from './TwoFactorAuthSettings';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
@@ -435,6 +436,10 @@ const SettingsProfile = () => {
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <div style={{ marginTop: '32px' }}>
+                <TwoFactorAuthSettings />
             </div>
         </div>
     );
