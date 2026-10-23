@@ -497,13 +497,21 @@ const StudentProgressReport = () => {
                                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Score</th>
                                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Date</th>
                                     <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Status</th>
+                                    <th style={{ padding: '12px 16px', textAlign: 'center', fontSize: '13px', fontWeight: '600', color: '#374151' }}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredExamAttempts.map((attempt) => (
                                     <tr key={attempt.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                                         <td style={{ padding: '16px', fontSize: '14px', fontWeight: '500', color: '#111' }}>
-                                            {attempt.exams?.title || 'N/A'}
+                                            <span
+                                                onClick={() => navigate(`/exams/result/${attempt.id}`, { state: { fromAdmin: true } })}
+                                                style={{ color: '#2563eb', cursor: 'pointer' }}
+                                                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                            >
+                                                {attempt.exams?.title || 'N/A'}
+                                            </span>
                                         </td>
                                         <td style={{ padding: '16px', fontSize: '14px', color: '#666' }}>
                                             {attempt.exams?.courses?.title || 'N/A'}
@@ -517,7 +525,9 @@ const StudentProgressReport = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '16px', fontSize: '14px', color: '#666' }}>
-                                            {new Date(attempt.created_at).toLocaleDateString()}
+                                            {attempt.submitted_at || attempt.started_at
+                                                ? new Date(attempt.submitted_at || attempt.started_at).toLocaleDateString('en-GB')
+                                                : '--'}
                                         </td>
                                         <td style={{ padding: '16px' }}>
                                             <span style={{
@@ -530,6 +540,21 @@ const StudentProgressReport = () => {
                                             }}>
                                                 {attempt.score >= 50 ? 'Passed' : 'Failed'}
                                             </span>
+                                        </td>
+                                        <td style={{ padding: '16px', textAlign: 'center' }}>
+                                            <button
+                                                onClick={() => navigate(`/exams/result/${attempt.id}`, { state: { fromAdmin: true } })}
+                                                className="btn btn-primary"
+                                                style={{
+                                                    padding: '6px 14px',
+                                                    fontSize: '12px',
+                                                    fontWeight: '500',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Review
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

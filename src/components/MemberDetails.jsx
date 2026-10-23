@@ -717,7 +717,7 @@ const MemberDetails = () => {
                                                             </td>
                                                             <td style={{ padding: '14px 12px', textAlign: 'center' }}>
                                                                 <button
-                                                                    onClick={() => navigate(`/exams/result/${attempt.id}`)}
+                                                                    onClick={() => navigate(`/exams/result/${attempt.id}`, { state: { fromAdmin: true } })}
                                                                     className="btn btn-primary"
                                                                     style={{
                                                                         padding: '5px 14px',
@@ -727,7 +727,7 @@ const MemberDetails = () => {
                                                                         cursor: 'pointer'
                                                                     }}
                                                                 >
-                                                                    View
+                                                                    Review
                                                                 </button>
                                                             </td>
                                                         </tr>

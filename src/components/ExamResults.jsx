@@ -147,14 +147,13 @@ const ExamResults = () => {
                         .maybeSingle();
 
                     if (memberData) {
-                        studentName = memberData.display_name || 
-                            ([memberData.first_name, memberData.last_name].filter(Boolean).join(' ')) || 
-                            memberData.email;
+                        studentName = memberData.email || memberData.display_name || 
+                            ([memberData.first_name, memberData.last_name].filter(Boolean).join(' '));
                     } else if (user) {
-                        studentName = user.user_metadata?.full_name || user.email;
+                        studentName = user.email || user.user_metadata?.full_name;
                     }
                 } else if (user) {
-                    studentName = user.user_metadata?.full_name || user.email;
+                    studentName = user.email || user.user_metadata?.full_name;
                 }
 
                 // 3. Fetch Answers
@@ -229,6 +228,39 @@ const ExamResults = () => {
                     }
                 }
 
+                // Fallback: If exam_questions has no rows, fetch questions directly from answers
+                if ((!qData || qData.length === 0) && answers.length > 0) {
+                    const answerQuestionIds = answers.map(a => a.question_id).filter(Boolean);
+                    if (answerQuestionIds.length > 0) {
+                        const { data: qAnswersList, error: qaError } = await supabase
+                            .from('questions')
+                            .select(`
+                                id,
+                                question_text,
+                                explanation,
+                                subjects (name),
+                                question_options (
+                                    id,
+                                    option_label,
+                                    option_text,
+                                    is_correct
+                                )
+                            `)
+                            .in('id', answerQuestionIds);
+
+                        if (!qaError && qAnswersList) {
+                            const qMap = new Map(qAnswersList.map(q => [q.id, q]));
+                            qData = answers.map((ans, idx) => ({
+                                id: ans.id || idx,
+                                question_id: ans.question_id,
+                                order: idx + 1,
+                                marks: exam.marks_per_question || 1,
+                                questions: qMap.get(ans.question_id) || null
+                            })).filter(item => item.questions !== null);
+                        }
+                    }
+                }
+
                 // Fetch Question Stats
                 let questionStats = {};
                 if (qData && qData.length > 0) {
@@ -285,16 +317,39 @@ const ExamResults = () => {
                     };
                 }).filter(Boolean); // Remove nulls
 
+                const rawDate = currentAttempt.submitted_at || currentAttempt.started_at;
+                let formattedDate = '--';
+                if (rawDate) {
+                    const d = new Date(rawDate);
+                    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    let timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    timeStr = timeStr.replace(' AM', ' a.m.').replace(' PM', ' p.m.');
+                    formattedDate = `${dateStr}, ${timeStr}`;
+                }
+
+                let durationStr = `${exam.duration_minutes || 0} mins`;
+                if (currentAttempt.started_at && currentAttempt.submitted_at) {
+                    const diffSec = Math.max(0, Math.floor((new Date(currentAttempt.submitted_at) - new Date(currentAttempt.started_at)) / 1000));
+                    const hrs = Math.floor(diffSec / 3600);
+                    const mins = Math.floor((diffSec % 3600) / 60);
+                    const secs = diffSec % 60;
+                    durationStr = `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }
+
+                const marksPerQ = exam.marks_per_question !== undefined && exam.marks_per_question !== null
+                    ? Number(exam.marks_per_question).toFixed(2)
+                    : (processedQuestions.length > 0 && processedQuestions[0].marks ? Number(processedQuestions[0].marks).toFixed(2) : '1.00');
+
                 setResultData({
                     name: studentName,
-                    takenOn: new Date(currentAttempt.submitted_at || currentAttempt.started_at || Date.now()).toLocaleString(),
-                    duration: `${exam.duration_minutes} mins`,
+                    takenOn: formattedDate,
+                    duration: durationStr,
                     totalQuestions: processedQuestions.length,
-                    marksPerQuestion: processedQuestions.length > 0 ? processedQuestions[0].marks : 0,
+                    marksPerQuestion: marksPerQ,
                     totalCorrect: processedQuestions.filter(q => q.status === 'correct').length,
                     totalWrong: processedQuestions.filter(q => q.status === 'incorrect').length,
-                    score: currentAttempt.score,
-                    rank: "N/A",
+                    score: Number(currentAttempt.score || 0).toFixed(2),
+                    rank: currentAttempt.rank ? String(currentAttempt.rank) : "N/A",
                     gradingStatus: currentAttempt.status === 'completed' ? 'Completed' : 'Pending',
                     examTitle: exam.title
                 });
@@ -464,9 +519,11 @@ const ExamResults = () => {
 
     return (
         <div style={styles.container}>
-            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            <div style={{ display: 'flex', gap: '8px', width: '100%', marginBottom: '16px' }}>
                 <button onClick={() => {
-                    if (location.state?.fromAdmin && location.state?.examId) {
+                    if (window.history.length > 1) {
+                        navigate(-1);
+                    } else if (location.state?.fromAdmin && location.state?.examId) {
                         navigate(`/exams/${location.state.examId}/statistics`);
                     } else if (location.state?.courseId) {
                         navigate(`/student/course/${location.state.courseId}`);
@@ -474,24 +531,23 @@ const ExamResults = () => {
                         navigate('/student/exams');
                     }
                 }} style={{
-                    flex: 1,
-                    padding: '8px',
+                    padding: '8px 16px',
                     backgroundColor: '#2563eb',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: '6px',
                     fontWeight: '600',
+                    fontSize: '13px',
                     cursor: 'pointer',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
+                    gap: '6px',
                     transition: 'background-color 0.2s'
                 }}
                     onMouseOver={e => e.currentTarget.style.backgroundColor = '#1d4ed8'}
                     onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563eb'}
                 >
-                    <ChevronLeft size={16} /> Back to {location.state?.fromAdmin ? 'Statistics' : (location.state?.courseId ? 'Course' : 'Exams')}
+                    <ChevronLeft size={16} /> Back
                 </button>
             </div>
 
@@ -505,7 +561,7 @@ const ExamResults = () => {
             <div style={styles.card}>
                 <table style={styles.table}>
                     <tbody>
-                        <tr><td style={styles.th}>Name</td><td style={{ ...styles.td, color: '#007bff' }}>{resultData.name}</td></tr>
+                        <tr><td style={styles.th}>Member</td><td style={{ ...styles.td, color: '#007bff' }}>{resultData.name}</td></tr>
                         <tr><td style={styles.th}>Taken On</td><td style={styles.td}>{resultData.takenOn}</td></tr>
                         <tr><td style={styles.th}>Total Duration</td><td style={styles.td}>{resultData.duration}</td></tr>
                         <tr><td style={styles.th}>Total Questions</td><td style={styles.td}>{resultData.totalQuestions}</td></tr>
