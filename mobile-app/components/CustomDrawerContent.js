@@ -111,6 +111,19 @@ export default function CustomDrawerContent(props) {
 
                 {/* Main Navigation Items */}
                 <View style={styles.drawerItemsContainer}>
+                    {/* My Profile */}
+                    <DrawerItem
+                        label="My Profile"
+                        labelStyle={styles.menuItemLabel}
+                        icon={({ color, size }) => (
+                            <Ionicons name="person-outline" size={22} color="#475569" />
+                        )}
+                        onPress={() => {
+                            props.navigation.closeDrawer();
+                            router.push('/(drawer)/profile');
+                        }}
+                    />
+
                     {/* Cart */}
                     <DrawerItem
                         label={() => (

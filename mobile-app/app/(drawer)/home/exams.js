@@ -1,0 +1,602 @@
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import {
+    View,
+    Text,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    RefreshControl,
+    TextInput
+} from 'react-native';
+import { useRouter, useNavigation } from 'expo-router';
+import { DrawerActions, useFocusEffect } from '@react-navigation/native';
+import { supabase } from '../../../lib/supabase';
+import { ORG_CONFIG } from '../../../config/organization';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function Exams() {
+    const router = useRouter();
+    const navigation = useNavigation();
+
+    const [exams, setExams] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'available' | 'upcoming' | 'completed'
+    const [searchQuery, setSearchQuery] = useState('');
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchStudentExams(exams.length > 0);
+        }, [exams.length])
+    );
+
+    const fetchStudentExams = async (silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setLoading(false);
+                setRefreshing(false);
+                return;
+            }
+
+            // 1. Get Member ID
+            const { data: member } = await supabase
+                .from('members')
+                .select('id, email')
+                .eq('email', user.email)
+                .eq('institute_id', ORG_CONFIG.id)
+                .maybeSingle();
+
+            if (!member) {
+                setLoading(false);
+                setRefreshing(false);
+                return;
+            }
+
+            const memberId = member.id;
+            const instituteId = ORG_CONFIG.id;
+
+            // 2. Fetch Enrollments
+            const { data: enrollments } = await supabase
+                .from('enrollments')
+                .select('course_id')
+                .eq('member_id', memberId)
+                .in('status', ['active', 'completed']);
+            const enrolledCourseIds = (enrollments || []).map(e => e.course_id);
+
+            // 3. Fetch Batches & Valid Subscriptions
+            const { data: batchMembers } = await supabase
+                .from('batch_members')
+                .select('batch_id')
+                .eq('member_id', memberId);
+            const batchIds = (batchMembers || []).map(b => b.batch_id);
+
+            let batchCourseIds = [];
+            if (batchIds.length > 0) {
+                const { data: subscriptions } = await supabase
+                    .from('subscriptions')
+                    .select('batch_id, status, expires_on')
+                    .eq('member_id', memberId)
+                    .in('batch_id', batchIds);
+
+                const today = new Date().toISOString().split('T')[0];
+                const validBatches = (subscriptions || [])
+                    .filter(sub => {
+                        if (sub.status !== 'Active') return false;
+                        if (sub.expires_on && sub.expires_on < today) return false;
+                        return true;
+                    })
+                    .map(sub => sub.batch_id);
+
+                if (validBatches.length > 0) {
+                    const { data: batchCourses } = await supabase
+                        .from('batch_courses')
+                        .select('course_id')
+                        .in('batch_id', validBatches);
+                    batchCourseIds = (batchCourses || []).map(b => b.course_id);
+                }
+            }
+
+            // 4. Product / Order Based Courses
+            let productCourseIds = [];
+            const { data: orders } = await supabase
+                .from('orders')
+                .select('product_id')
+                .or(`member_id.eq.${memberId},user_id.eq.${memberId},user_email.ilike.${member.email}`)
+                .eq('status', 'completed');
+
+            const pids = (orders || []).map(o => o.product_id).filter(Boolean);
+            if (pids.length > 0) {
+                const { data: pCourses } = await supabase
+                    .from('courses')
+                    .select('id')
+                    .overlaps('allowed_products', pids);
+                productCourseIds = (pCourses || []).map(c => c.id);
+            }
+
+            // 5. Public Courses
+            const { data: publicCourses } = await supabase
+                .from('courses')
+                .select('id')
+                .eq('is_public', true)
+                .eq('institute_id', instituteId);
+            const publicCourseIds = (publicCourses || []).map(c => c.id);
+
+            const allCourseIds = [...new Set([
+                ...enrolledCourseIds,
+                ...batchCourseIds,
+                ...productCourseIds,
+                ...publicCourseIds
+            ])];
+
+            const examMap = new Map();
+
+            // 6. Fetch Chapter Contents Exams
+            if (allCourseIds.length > 0) {
+                const { data: chapters } = await supabase
+                    .from('chapters')
+                    .select('id, course_id, courses(id, title)')
+                    .in('course_id', allCourseIds);
+
+                const chapterMap = {};
+                (chapters || []).forEach(ch => {
+                    chapterMap[ch.id] = ch.courses?.title;
+                });
+
+                const chapterIds = (chapters || []).map(c => c.id);
+                if (chapterIds.length > 0) {
+                    const { data: ccList } = await supabase
+                        .from('chapter_contents')
+                        .select('id, title, exam_id, chapter_id, exams(*)')
+                        .in('chapter_id', chapterIds)
+                        .eq('type', 'exam');
+
+                    (ccList || []).forEach(cc => {
+                        if (cc.exams && cc.exams.id) {
+                            examMap.set(cc.exams.id, {
+                                ...cc.exams,
+                                course_title: chapterMap[cc.chapter_id] || null,
+                                content_id: cc.id
+                            });
+                        }
+                    });
+                }
+
+                // Direct course exams
+                const { data: directExams } = await supabase
+                    .from('exams')
+                    .select('*, courses(id, title)')
+                    .in('course_id', allCourseIds)
+                    .eq('is_active', true);
+
+                (directExams || []).forEach(dex => {
+                    if (!examMap.has(dex.id)) {
+                        examMap.set(dex.id, {
+                            ...dex,
+                            course_title: dex.courses?.title || null
+                        });
+                    }
+                });
+            }
+
+            // 7. Student Attempts (fetch all attempts by student to attach score/status & include any attempted exam)
+            const { data: attempts } = await supabase
+                .from('exam_attempts')
+                .select('id, exam_id, score, total_marks, started_at, submitted_at, exams(*)')
+                .eq('member_id', memberId)
+                .order('started_at', { ascending: false });
+
+            const attemptsByExam = {};
+            (attempts || []).forEach(att => {
+                if (!attemptsByExam[att.exam_id]) {
+                    attemptsByExam[att.exam_id] = [];
+                }
+                attemptsByExam[att.exam_id].push(att);
+
+                // If this attempted exam is not in examMap, add it!
+                if (att.exams && att.exams.id && !examMap.has(att.exams.id)) {
+                    examMap.set(att.exams.id, {
+                        ...att.exams,
+                        course_title: null
+                    });
+                }
+            });
+
+            // 8. Assemble Exams with computed metadata
+            const now = new Date();
+            const examList = Array.from(examMap.values()).map(exam => {
+                const userAttempts = attemptsByExam[exam.id] || [];
+                const submittedAttempts = userAttempts.filter(a => a.submitted_at);
+                const hasCompleted = submittedAttempts.length > 0;
+
+                let bestScore = null;
+                let latestScore = null;
+                let latestAttemptId = null;
+
+                if (hasCompleted) {
+                    bestScore = Math.max(...submittedAttempts.map(a => a.score ?? 0));
+                    latestScore = submittedAttempts[0].score ?? 0;
+                    latestAttemptId = submittedAttempts[0].id;
+                }
+
+                const startDate = exam.start_date ? new Date(exam.start_date) : null;
+                const endDate = exam.end_date ? new Date(exam.end_date) : null;
+
+                let status = 'available';
+                if (hasCompleted) {
+                    status = 'completed';
+                } else if (startDate && startDate > now) {
+                    status = 'upcoming';
+                } else if (endDate && endDate < now) {
+                    status = 'ended';
+                } else {
+                    status = 'available';
+                }
+
+                const maxAttempts = exam.max_attempts || 0;
+                const canRetake = maxAttempts === 0 || submittedAttempts.length < maxAttempts;
+
+                return {
+                    ...exam,
+                    status,
+                    hasCompleted,
+                    attemptsCount: submittedAttempts.length,
+                    bestScore: bestScore !== null ? parseFloat(Number(bestScore).toFixed(2)) : null,
+                    latestScore: latestScore !== null ? parseFloat(Number(latestScore).toFixed(2)) : null,
+                    latestAttemptId,
+                    canRetake
+                };
+            });
+
+            // Sort: Running/Available first, then Completed, then Upcoming, then Ended
+            const statusOrder = { available: 1, completed: 2, upcoming: 3, ended: 4 };
+            examList.sort((a, b) => {
+                const orderDiff = (statusOrder[a.status] || 5) - (statusOrder[b.status] || 5);
+                if (orderDiff !== 0) return orderDiff;
+                return (b.id || 0) - (a.id || 0);
+            });
+
+            setExams(examList);
+        } catch (error) {
+            console.error('Error fetching exams for tab:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchStudentExams(false);
+    };
+
+    const filteredExams = useMemo(() => {
+        return exams.filter(exam => {
+            // Tab filter
+            if (activeFilter === 'available' && exam.status !== 'available') return false;
+            if (activeFilter === 'upcoming' && exam.status !== 'upcoming') return false;
+            if (activeFilter === 'completed' && exam.status !== 'completed') return false;
+
+            // Search query
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const titleMatch = exam.title?.toLowerCase().includes(query);
+                const courseMatch = exam.course_title?.toLowerCase().includes(query);
+                return titleMatch || courseMatch;
+            }
+            return true;
+        });
+    }, [exams, activeFilter, searchQuery]);
+
+    const counts = useMemo(() => {
+        return {
+            all: exams.length,
+            available: exams.filter(e => e.status === 'available').length,
+            upcoming: exams.filter(e => e.status === 'upcoming').length,
+            completed: exams.filter(e => e.status === 'completed').length,
+        };
+    }, [exams]);
+
+    const handleTakeExam = (exam) => {
+        router.push(`/exam/${exam.id}/take?courseId=${exam.course_id || ''}`);
+    };
+
+    const handleReviewExam = (exam) => {
+        if (exam.latestAttemptId) {
+            router.push(`/exam/${exam.id}/review?attemptId=${exam.latestAttemptId}`);
+        } else {
+            router.push(`/exam/${exam.id}/review`);
+        }
+    };
+
+    const renderExamCard = ({ item }) => {
+        const isCompleted = item.status === 'completed';
+        const isUpcoming = item.status === 'upcoming';
+        const isEnded = item.status === 'ended';
+        const isAvailable = item.status === 'available';
+
+        return (
+            <View className="bg-white rounded-2xl p-4 mb-3 border border-slate-100 shadow-sm">
+                {/* Header Row: Course Tag & Status Badge */}
+                <View className="flex-row items-center justify-between mb-2">
+                    {item.course_title ? (
+                        <View className="bg-slate-100 px-2.5 py-1 rounded-md max-w-[65%]">
+                            <Text className="text-[11px] font-medium text-slate-600" numberOfLines={1}>
+                                {item.course_title}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View className="bg-blue-50 px-2.5 py-1 rounded-md">
+                            <Text className="text-[11px] font-medium text-blue-700">Practice Exam</Text>
+                        </View>
+                    )}
+
+                    {isCompleted && (
+                        <View className="flex-row items-center bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                            <Text className="text-[11px] font-semibold text-emerald-700 ml-1">Completed</Text>
+                        </View>
+                    )}
+
+                    {isAvailable && (
+                        <View className="flex-row items-center bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                            <View className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5" />
+                            <Text className="text-[11px] font-semibold text-blue-700">Available</Text>
+                        </View>
+                    )}
+
+                    {isUpcoming && (
+                        <View className="flex-row items-center bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
+                            <Ionicons name="time" size={12} color="#7c3aed" />
+                            <Text className="text-[11px] font-semibold text-purple-700 ml-1">Upcoming</Text>
+                        </View>
+                    )}
+
+                    {isEnded && (
+                        <View className="flex-row items-center bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                            <Ionicons name="lock-closed" size={12} color="#64748b" />
+                            <Text className="text-[11px] font-semibold text-slate-600 ml-1">Ended</Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Exam Title */}
+                <Text className="text-base font-bold text-slate-800 leading-snug mb-2.5">
+                    {item.title}
+                </Text>
+
+                {/* Stats Chips Row */}
+                <View className="flex-row flex-wrap items-center gap-2 mb-3">
+                    {item.duration_minutes ? (
+                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
+                            <Ionicons name="time-outline" size={13} color="#64748b" />
+                            <Text className="text-xs text-slate-600 font-medium ml-1">
+                                {item.duration_minutes} mins
+                            </Text>
+                        </View>
+                    ) : null}
+
+                    {item.number_of_questions ? (
+                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
+                            <Ionicons name="help-circle-outline" size={13} color="#64748b" />
+                            <Text className="text-xs text-slate-600 font-medium ml-1">
+                                {item.number_of_questions} Qs
+                            </Text>
+                        </View>
+                    ) : null}
+
+                    {item.total_marks ? (
+                        <View className="flex-row items-center bg-slate-50 px-2 py-1 rounded-lg">
+                            <Ionicons name="ribbon-outline" size={13} color="#64748b" />
+                            <Text className="text-xs text-slate-600 font-medium ml-1">
+                                {item.total_marks} Marks
+                            </Text>
+                        </View>
+                    ) : null}
+
+                    {item.negative_marking_enabled ? (
+                        <View className="flex-row items-center bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                            <Ionicons name="alert-circle-outline" size={13} color="#e11d48" />
+                            <Text className="text-xs text-rose-700 font-medium ml-1">
+                                -{item.negative_marks_per_question ?? 0.33} Neg
+                            </Text>
+                        </View>
+                    ) : null}
+                </View>
+
+                {/* Completed Score Banner */}
+                {isCompleted && item.bestScore !== null && (
+                    <View className="flex-row items-center justify-between bg-emerald-50/60 p-2.5 rounded-xl mb-3 border border-emerald-100">
+                        <View className="flex-row items-center">
+                            <Ionicons name="trophy" size={16} color="#059669" />
+                            <Text className="text-xs font-semibold text-emerald-800 ml-1.5">
+                                Best Score:
+                            </Text>
+                        </View>
+                        <Text className="text-xs font-bold text-emerald-900">
+                            {item.bestScore} / {item.total_marks || item.number_of_questions || '?'}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Upcoming Schedule Info */}
+                {isUpcoming && item.start_date && (
+                    <View className="flex-row items-center bg-purple-50 p-2.5 rounded-xl mb-3 border border-purple-100">
+                        <Ionicons name="calendar-outline" size={15} color="#7c3aed" />
+                        <Text className="text-xs font-medium text-purple-800 ml-1.5">
+                            Starts {new Date(item.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Action Buttons Row */}
+                <View className="flex-row items-center gap-2 pt-1 border-t border-slate-100">
+                    {isCompleted ? (
+                        <>
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                onPress={() => handleReviewExam(item)}
+                                className="flex-1 flex-row items-center justify-center py-2.5 px-3 rounded-xl bg-blue-600"
+                            >
+                                <Ionicons name="eye-outline" size={16} color="#ffffff" />
+                                <Text className="text-white text-xs font-bold ml-1.5">Review Answers</Text>
+                            </TouchableOpacity>
+
+                            {item.canRetake && (
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => handleTakeExam(item)}
+                                    className="flex-row items-center justify-center py-2.5 px-3 rounded-xl bg-slate-100 border border-slate-200"
+                                >
+                                    <Ionicons name="refresh-outline" size={15} color="#334155" />
+                                    <Text className="text-slate-700 text-xs font-bold ml-1">Retake</Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
+                    ) : isAvailable ? (
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={() => handleTakeExam(item)}
+                            className="flex-1 flex-row items-center justify-center py-2.5 px-4 rounded-xl bg-blue-600"
+                        >
+                            <Ionicons name="play" size={14} color="#ffffff" />
+                            <Text className="text-white text-xs font-bold ml-1.5">Start Exam</Text>
+                        </TouchableOpacity>
+                    ) : isUpcoming ? (
+                        <View className="flex-1 py-2 rounded-xl bg-slate-100 items-center justify-center">
+                            <Text className="text-slate-500 text-xs font-semibold">Test Not Started Yet</Text>
+                        </View>
+                    ) : (
+                        <View className="flex-1 py-2 rounded-xl bg-slate-100 items-center justify-center">
+                            <Text className="text-slate-400 text-xs font-semibold">Exam Ended</Text>
+                        </View>
+                    )}
+                </View>
+            </View>
+        );
+    };
+
+    return (
+        <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+            <StatusBar style="dark" />
+
+            {/* Header */}
+            <View className="bg-white px-5 pt-3 pb-3 border-b border-slate-100">
+                <View className="flex-row items-center justify-between mb-3">
+                    <View className="flex-row items-center flex-1">
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+                            className="w-10 h-10 rounded-xl bg-slate-100 items-center justify-center mr-3"
+                        >
+                            <Ionicons name="menu" size={22} color="#1e293b" />
+                        </TouchableOpacity>
+                        <View className="flex-1">
+                            <Text className="text-xl font-bold text-slate-900">Exams</Text>
+                            <Text className="text-xs text-blue-600 font-medium">Tests, quizzes & assessments</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Search Bar */}
+                <View className="flex-row items-center bg-slate-100 rounded-xl px-3 py-2 mb-2">
+                    <Ionicons name="search" size={18} color="#94a3b8" />
+                    <TextInput
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholder="Search tests and exams..."
+                        placeholderTextColor="#94a3b8"
+                        className="flex-1 text-sm text-slate-800 ml-2 py-0"
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity onPress={() => setSearchQuery('')}>
+                            <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Filter Tabs */}
+                <View className="flex-row items-center gap-1.5 pt-1">
+                    {[
+                        { key: 'all', label: 'All', count: counts.all },
+                        { key: 'available', label: 'Available', count: counts.available },
+                        { key: 'upcoming', label: 'Upcoming', count: counts.upcoming },
+                        { key: 'completed', label: 'Completed', count: counts.completed },
+                    ].map(tab => {
+                        const isActive = activeFilter === tab.key;
+                        return (
+                            <TouchableOpacity
+                                key={tab.key}
+                                activeOpacity={0.8}
+                                onPress={() => setActiveFilter(tab.key)}
+                                className={`flex-row items-center py-1.5 px-3 rounded-full ${
+                                    isActive ? 'bg-blue-600' : 'bg-slate-100'
+                                }`}
+                            >
+                                <Text
+                                    className={`text-xs font-semibold ${
+                                        isActive ? 'text-white' : 'text-slate-600'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </Text>
+                                {tab.count > 0 && (
+                                    <View
+                                        className={`ml-1 px-1.5 py-0.2 rounded-full ${
+                                            isActive ? 'bg-blue-500' : 'bg-slate-200'
+                                        }`}
+                                    >
+                                        <Text
+                                            className={`text-[10px] font-bold ${
+                                                isActive ? 'text-white' : 'text-slate-600'
+                                            }`}
+                                        >
+                                            {tab.count}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </View>
+
+            {/* Exam List */}
+            {loading && exams.length === 0 ? (
+                <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" color="#2563EB" />
+                    <Text className="text-slate-400 text-xs mt-3 font-medium">Loading exams...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredExams}
+                    renderItem={renderExamCard}
+                    keyExtractor={item => item.id.toString()}
+                    contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
+                    }
+                    ListEmptyComponent={
+                        <View className="items-center justify-center mt-20 px-8">
+                            <View className="w-16 h-16 rounded-full bg-slate-100 items-center justify-center mb-4">
+                                <Ionicons name="document-text-outline" size={32} color="#94a3b8" />
+                            </View>
+                            <Text className="text-slate-700 font-bold text-base text-center">
+                                {searchQuery ? 'No matching exams found' : 'No exams in this category'}
+                            </Text>
+                            <Text className="text-slate-400 text-xs text-center mt-1">
+                                {searchQuery
+                                    ? 'Try searching with a different term'
+                                    : 'Exams assigned to your courses will appear here.'}
+                            </Text>
+                        </View>
+                    }
+                />
+            )}
+        </SafeAreaView>
+    );
+}

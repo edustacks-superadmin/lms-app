@@ -10,7 +10,7 @@ import Dashboard from './index';
 import MyLearning from './mylearning';
 import Explore from './explore';
 import Ranking from './ranking';
-import Profile from './profile';
+import Exams from './exams';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -138,13 +138,13 @@ export default function TabsLayout({ route }) {
                 }}
             />
             <Tab.Screen
-                name="Profile"
-                component={Profile}
+                name="Exams"
+                component={Exams}
                 options={{
                     tabBarIcon: ({ color, focused }) => (
-                        <Ionicons name={focused ? "person" : "person-outline"} size={20} color={color} />
+                        <Ionicons name={focused ? "document-text" : "document-text-outline"} size={20} color={color} />
                     ),
-                    tabBarLabel: 'Profile',
+                    tabBarLabel: 'Exams',
                 }}
             />
         </Tab.Navigator>
