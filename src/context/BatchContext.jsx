@@ -188,16 +188,39 @@ export const BatchProvider = ({ children }) => {
 
     const addMembersToBatch = async (batchId, memberIds) => {
         try {
-            const inserts = memberIds.map(memberId => ({
-                batch_id: batchId,
-                member_id: memberId
-            }));
+            let apiSuccess = false;
 
-            const { error } = await supabase
-                .from('batch_members')
-                .insert(inserts);
+            // 1. Try via backend API route (bypasses RLS using service role)
+            try {
+                const res = await fetch('/api/batch-members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchId, memberIds, instituteId: 10 })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success) {
+                        apiSuccess = true;
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('API /api/batch-members not available, falling back to direct insert:', apiErr);
+            }
 
-            if (error) throw error;
+            // 2. Direct Supabase insert fallback
+            if (!apiSuccess) {
+                const inserts = memberIds.map(memberId => ({
+                    batch_id: parseInt(batchId),
+                    member_id: parseInt(memberId),
+                    institute_id: 10
+                }));
+
+                const { error } = await supabase
+                    .from('batch_members')
+                    .insert(inserts);
+
+                if (error) throw error;
+            }
 
             await fetchBatches();
         } catch (error) {
@@ -208,13 +231,35 @@ export const BatchProvider = ({ children }) => {
 
     const removeMembersFromBatch = async (batchId, memberIds) => {
         try {
-            const { error } = await supabase
-                .from('batch_members')
-                .delete()
-                .eq('batch_id', batchId)
-                .in('member_id', memberIds);
+            let apiSuccess = false;
 
-            if (error) throw error;
+            // 1. Try via backend API route (bypasses RLS using service role)
+            try {
+                const res = await fetch('/api/batch-members', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchId, memberIds })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success) {
+                        apiSuccess = true;
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('API /api/batch-members delete not available, falling back:', apiErr);
+            }
+
+            // 2. Direct Supabase delete fallback
+            if (!apiSuccess) {
+                const { error } = await supabase
+                    .from('batch_members')
+                    .delete()
+                    .eq('batch_id', parseInt(batchId))
+                    .in('member_id', memberIds.map(id => parseInt(id)));
+
+                if (error) throw error;
+            }
 
             await fetchBatches();
         } catch (error) {
