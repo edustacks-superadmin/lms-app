@@ -137,6 +137,24 @@ export const isMobileFeatureEnabled = (config, featureName) => {
 };
 
 /**
+ * Check if screenshot protection is enabled for a given screen/context
+ * @param {'exam' | 'pdf' | 'global'} screenType
+ * @returns {Promise<boolean>}
+ */
+export const isScreenshotProtectionEnabled = async (screenType = 'global') => {
+    try {
+        const config = await fetchAppConfig();
+        const sec = config?.security || config?.mobileFeatures || {};
+        if (sec.preventAllScreenshots) return true;
+        if (screenType === 'exam') return sec.preventExamScreenshots !== false;
+        if (screenType === 'pdf') return sec.preventPdfScreenshots !== false;
+        return false;
+    } catch {
+        return false;
+    }
+};
+
+/**
  * Get default config for offline/error scenarios
  */
 const getDefaultConfig = () => ({

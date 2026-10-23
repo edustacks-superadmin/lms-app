@@ -8,6 +8,8 @@ import MathWebView from '../../../components/MathWebView';
 import SubmissionModal from '../../../components/SubmissionModal';
 import ConfirmationModal from '../../../components/ConfirmationModal';
 import * as Haptics from 'expo-haptics';
+import * as ScreenCapture from 'expo-screen-capture';
+import { isScreenshotProtectionEnabled } from '../../../lib/configService';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming } from 'react-native-reanimated';
 
 // Helper: Shuffle Array
@@ -180,6 +182,31 @@ export default function NativeExamScreen() {
         onConfirm: () => { },
         type: 'warning'
     });
+
+    // Screenshot Protection for Exam
+    useEffect(() => {
+        let isMounted = true;
+        const initProtection = async () => {
+            try {
+                const shouldBlock = await isScreenshotProtectionEnabled('exam');
+                if (shouldBlock && isMounted) {
+                    await ScreenCapture.preventScreenCaptureAsync();
+                }
+            } catch (e) {
+                console.warn('Error setting screen capture protection:', e);
+            }
+        };
+        initProtection();
+
+        return () => {
+            isMounted = false;
+            isScreenshotProtectionEnabled('global').then(isGlobal => {
+                if (!isGlobal) {
+                    ScreenCapture.allowScreenCaptureAsync().catch(() => {});
+                }
+            });
+        };
+    }, []);
 
     // Prevent Back Button - Ask to Pause
     useEffect(() => {

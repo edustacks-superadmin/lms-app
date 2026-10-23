@@ -73,6 +73,10 @@ export async function GET(request) {
                     ? (platformConfig.faceIdEnabled || false)
                     : (platformConfig.biometricLoginEnabled || false),
                 pushNotifications: platformConfig.pushNotificationsEnabled !== false,
+                // Security / Screenshot Protection
+                preventExamScreenshots: platformConfig.preventExamScreenshots !== undefined ? platformConfig.preventExamScreenshots : true,
+                preventPdfScreenshots: platformConfig.preventPdfScreenshots !== undefined ? platformConfig.preventPdfScreenshots : true,
+                preventAllScreenshots: platformConfig.preventAllScreenshots || false,
                 // iOS-specific
                 ...(platform === 'ios' && {
                     appleSignIn: platformConfig.appleSignInEnabled !== false
@@ -81,6 +85,13 @@ export async function GET(request) {
                 ...(platform === 'android' && {
                     zoom: platformConfig.zoomEnabled || false
                 })
+            },
+
+            // Security & Content Protection
+            security: {
+                preventExamScreenshots: platformConfig.preventExamScreenshots !== undefined ? platformConfig.preventExamScreenshots : true,
+                preventPdfScreenshots: platformConfig.preventPdfScreenshots !== undefined ? platformConfig.preventPdfScreenshots : true,
+                preventAllScreenshots: platformConfig.preventAllScreenshots || false
             },
 
             // Universal Feature Flags

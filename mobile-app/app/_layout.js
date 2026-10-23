@@ -42,9 +42,6 @@ export default function RootLayout() {
     useEffect(() => {
         async function prepare() {
             try {
-                // Ensure screenshot protection is DISABLED
-                await ScreenCapture.allowScreenCaptureAsync();
-
                 // Request notification permissions on app start
                 requestNotificationPermissions();
 
@@ -64,6 +61,14 @@ export default function RootLayout() {
                 // Fetch app config from server
                 const config = await fetchAppConfig(true);
                 setAppConfig(config);
+
+                // Configure screenshot protection based on admin settings
+                const sec = config?.security || config?.mobileFeatures || {};
+                if (sec.preventAllScreenshots) {
+                    await ScreenCapture.preventScreenCaptureAsync();
+                } else {
+                    await ScreenCapture.allowScreenCaptureAsync();
+                }
 
                 // Check for blocking conditions
                 if (isMaintenanceMode(config)) {

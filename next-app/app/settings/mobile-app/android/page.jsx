@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Save, Upload, ArrowLeft, Smartphone, Loader2, AlertTriangle, RefreshCw, Moon, Wifi, Fingerprint, Bell } from 'lucide-react';
+import { Save, Upload, ArrowLeft, Smartphone, Loader2, AlertTriangle, RefreshCw, Moon, Wifi, Fingerprint, Bell, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../../supabaseClient';
 
@@ -41,7 +41,12 @@ export default function AndroidConfigPage() {
         darkModeEnabled: false,
         offlineModeEnabled: false,
         biometricLoginEnabled: false,
-        pushNotificationsEnabled: true
+        pushNotificationsEnabled: true,
+
+        // Security & Content Protection
+        preventExamScreenshots: true,
+        preventPdfScreenshots: true,
+        preventAllScreenshots: false
     });
 
     // Fetch initial settings
@@ -173,6 +178,34 @@ export default function AndroidConfigPage() {
                             <FeatureToggle icon={Wifi} label="Offline Mode" name="offlineModeEnabled" checked={config.offlineModeEnabled} onChange={handleChange} />
                             <FeatureToggle icon={Fingerprint} label="Biometric Login" name="biometricLoginEnabled" checked={config.biometricLoginEnabled} onChange={handleChange} />
                             <FeatureToggle icon={Bell} label="Push Notifications" name="pushNotificationsEnabled" checked={config.pushNotificationsEnabled} onChange={handleChange} />
+                        </div>
+                    </Section>
+
+                    {/* Security & Content Protection */}
+                    <Section title="🛡️ Security & Content Protection">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <Toggle
+                                label="Prevent Screenshots & Screen Recording in Exams"
+                                name="preventExamScreenshots"
+                                checked={config.preventExamScreenshots ?? true}
+                                onChange={handleChange}
+                                description="Disables screenshots and screen recording while students are taking tests or viewing question solutions"
+                            />
+                            <Toggle
+                                label="Prevent Screenshots in PDFs & Course Materials"
+                                name="preventPdfScreenshots"
+                                checked={config.preventPdfScreenshots ?? true}
+                                onChange={handleChange}
+                                description="Disables screenshots and screen recording while students are viewing PDFs and study notes"
+                            />
+                            <Toggle
+                                label="Block Screenshots Everywhere (App-Wide)"
+                                name="preventAllScreenshots"
+                                checked={config.preventAllScreenshots || false}
+                                onChange={handleChange}
+                                warning={config.preventAllScreenshots}
+                                description="Enforces strict screenshot and screen recording blocking across the entire application"
+                            />
                         </div>
                     </Section>
 

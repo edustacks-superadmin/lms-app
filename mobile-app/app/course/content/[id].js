@@ -9,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FeedbackModal from '../../../components/FeedbackModal';
 import { getApiUrl } from '../../../config/organization';
+import * as ScreenCapture from 'expo-screen-capture';
+import { isScreenshotProtectionEnabled } from '../../../lib/configService';
 
 export default function ContentPlayer() {
     const { id } = useLocalSearchParams();
@@ -38,6 +40,31 @@ export default function ContentPlayer() {
     useEffect(() => {
         fetchContent();
     }, [id]);
+
+    // Screenshot Protection for Course Materials & Content
+    useEffect(() => {
+        let isMounted = true;
+        const initProtection = async () => {
+            try {
+                const shouldBlock = await isScreenshotProtectionEnabled('pdf');
+                if (shouldBlock && isMounted) {
+                    await ScreenCapture.preventScreenCaptureAsync();
+                }
+            } catch (e) {
+                console.warn('Error setting content screen capture protection:', e);
+            }
+        };
+        initProtection();
+
+        return () => {
+            isMounted = false;
+            isScreenshotProtectionEnabled('global').then(isGlobal => {
+                if (!isGlobal) {
+                    ScreenCapture.allowScreenCaptureAsync().catch(() => {});
+                }
+            });
+        };
+    }, []);
 
 
 

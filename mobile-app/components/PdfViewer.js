@@ -5,6 +5,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Ionicons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import * as ScreenCapture from 'expo-screen-capture';
+import { isScreenshotProtectionEnabled } from '../lib/configService';
 
 import Constants from 'expo-constants';
 import Pdf from 'react-native-pdf';
@@ -39,6 +41,31 @@ export default function PdfViewer({ url, headers, ...props }) {
         // Cleanup: lock back to portrait when leaving PDF viewer
         return () => {
             ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => { });
+        };
+    }, []);
+
+    // Screenshot Protection for PDF Viewer
+    React.useEffect(() => {
+        let isMounted = true;
+        const initProtection = async () => {
+            try {
+                const shouldBlock = await isScreenshotProtectionEnabled('pdf');
+                if (shouldBlock && isMounted) {
+                    await ScreenCapture.preventScreenCaptureAsync();
+                }
+            } catch (e) {
+                console.warn('Error setting PDF screen capture protection:', e);
+            }
+        };
+        initProtection();
+
+        return () => {
+            isMounted = false;
+            isScreenshotProtectionEnabled('global').then(isGlobal => {
+                if (!isGlobal) {
+                    ScreenCapture.allowScreenCaptureAsync().catch(() => {});
+                }
+            });
         };
     }, []);
 

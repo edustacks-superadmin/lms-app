@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { supabase } from '../../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import MathWebView from '../../../components/MathWebView';
+import * as ScreenCapture from 'expo-screen-capture';
+import { isScreenshotProtectionEnabled } from '../../../lib/configService';
 
 export default function ExamReviewScreen() {
     const { id } = useLocalSearchParams();
@@ -40,6 +42,31 @@ export default function ExamReviewScreen() {
     }, []);
 
     const { attemptId } = useLocalSearchParams();
+
+    // Screenshot Protection for Exam Review
+    useEffect(() => {
+        let isMounted = true;
+        const initProtection = async () => {
+            try {
+                const shouldBlock = await isScreenshotProtectionEnabled('exam');
+                if (shouldBlock && isMounted) {
+                    await ScreenCapture.preventScreenCaptureAsync();
+                }
+            } catch (e) {
+                console.warn('Error setting screen capture protection:', e);
+            }
+        };
+        initProtection();
+
+        return () => {
+            isMounted = false;
+            isScreenshotProtectionEnabled('global').then(isGlobal => {
+                if (!isGlobal) {
+                    ScreenCapture.allowScreenCaptureAsync().catch(() => {});
+                }
+            });
+        };
+    }, []);
 
     // Reporting State
     const [reportModalVisible, setReportModalVisible] = useState(false);
