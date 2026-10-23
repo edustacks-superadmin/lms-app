@@ -650,27 +650,7 @@ const MyCourses = () => {
                                                     </div>
                                                 </div>
 
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0, paddingLeft: '8px' }}>
-                                                    <span style={{
-                                                        fontSize: '12px',
-                                                        fontWeight: '600',
-                                                        padding: '4px 12px',
-                                                        borderRadius: '16px',
-                                                        backgroundColor: isFree ? '#f0fdf4' : '#f8fafc',
-                                                        color: isFree ? '#16a34a' : '#475569',
-                                                        border: `1px solid ${isFree ? '#bbf7d0' : '#e2e8f0'}`,
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        gap: '6px'
-                                                    }}>
-                                                        <span style={{
-                                                            width: '6px',
-                                                            height: '6px',
-                                                            borderRadius: '50%',
-                                                            backgroundColor: isFree ? '#16a34a' : '#3b82f6'
-                                                        }}></span>
-                                                        {isFree ? 'Free Access' : 'Paid Course'}
-                                                    </span>
+                                                <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, paddingLeft: '8px' }}>
                                                     <ChevronRight size={18} color="#94a3b8" />
                                                 </div>
                                             </div>
