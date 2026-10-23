@@ -368,6 +368,8 @@ export default function SignupScreen() {
                         </View>
                         <TextInput
                             className="flex-1 py-3 px-3 text-slate-800"
+                            style={{ color: '#0f172a' }}
+                            cursorColor="#2563eb"
                             placeholder={field.placeholder || '1234567890'}
                             placeholderTextColor="#9ca3af"
                             value={formData[field.field_key]}
@@ -439,6 +441,8 @@ export default function SignupScreen() {
                         <Ionicons name="document-text-outline" size={20} color="#9ca3af" style={{ marginTop: 4 }} />
                         <TextInput
                             className="flex-1 px-3 text-slate-800 min-h-[80px]"
+                            style={{ color: '#0f172a' }}
+                            cursorColor="#2563eb"
                             placeholder={field.placeholder}
                             placeholderTextColor="#9ca3af"
                             value={formData[field.field_key]}
@@ -466,6 +470,8 @@ export default function SignupScreen() {
                     <Ionicons name={iconName} size={20} color="#9ca3af" />
                     <TextInput
                         className="flex-1 py-3 px-3 text-slate-800"
+                        style={{ color: '#0f172a' }}
+                        cursorColor="#2563eb"
                         placeholder={field.placeholder}
                         placeholderTextColor="#9ca3af"
                         value={formData[field.field_key]}
@@ -517,6 +523,8 @@ export default function SignupScreen() {
                                     <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" />
                                     <TextInput
                                         className="flex-1 py-3 px-3 text-slate-800"
+                                        style={{ color: '#0f172a' }}
+                                        cursorColor="#2563eb"
                                         placeholder="Create a password"
                                         placeholderTextColor="#9ca3af"
                                         value={formData.password}
@@ -536,6 +544,8 @@ export default function SignupScreen() {
                                     <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" />
                                     <TextInput
                                         className="flex-1 py-3 px-3 text-slate-800"
+                                        style={{ color: '#0f172a' }}
+                                        cursorColor="#2563eb"
                                         placeholder="Confirm your password"
                                         placeholderTextColor="#9ca3af"
                                         value={formData.confirmPassword}

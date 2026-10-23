@@ -6,11 +6,13 @@ import { StatusBar } from 'expo-status-bar';
 import { recordSession } from '../lib/sessionService';
 import { ORG_CONFIG } from '../config/organization';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -34,9 +36,14 @@ export default function LoginScreen() {
     }, []);
 
     async function signInWithEmail() {
+        if (!email.trim() || !password) {
+            Alert.alert("Missing Fields", "Please enter your email and password.");
+            return;
+        }
+
         setLoading(true);
         const { error, data } = await supabase.auth.signInWithPassword({
-            email: email,
+            email: email.trim(),
             password: password,
         });
 
@@ -86,28 +93,53 @@ export default function LoginScreen() {
                         <Text className="text-sm text-slate-500 mt-1">Sign in to your student account</Text>
                     </View>
 
+                    {/* Email Input */}
                     <View className="mb-4">
                         <Text className="mb-2 text-gray-700 font-medium">Email</Text>
-                        <TextInput
-                            className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-base"
-                            onChangeText={(text) => setEmail(text)}
-                            value={email}
-                            placeholder="student@example.com"
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
+                        <View className="relative flex-row items-center">
+                            <TextInput
+                                className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-base"
+                                style={{ color: '#0f172a' }}
+                                placeholderTextColor="#94a3b8"
+                                cursorColor="#2563eb"
+                                selectionColor="#93c5fd"
+                                onChangeText={(text) => setEmail(text)}
+                                value={email}
+                                placeholder="student@example.com"
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
+                        </View>
                     </View>
 
+                    {/* Password Input with Show/Hide Toggle */}
                     <View className="mb-6">
                         <Text className="mb-2 text-gray-700 font-medium">Password</Text>
-                        <TextInput
-                            className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-base"
-                            onChangeText={(text) => setPassword(text)}
-                            value={password}
-                            secureTextEntry={true}
-                            placeholder="Password"
-                            autoCapitalize="none"
-                        />
+                        <View className="relative flex-row items-center">
+                            <TextInput
+                                className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-base pr-11"
+                                style={{ color: '#0f172a' }}
+                                placeholderTextColor="#94a3b8"
+                                cursorColor="#2563eb"
+                                selectionColor="#93c5fd"
+                                onChangeText={(text) => setPassword(text)}
+                                value={password}
+                                secureTextEntry={!showPassword}
+                                placeholder="Password"
+                                autoCapitalize="none"
+                            />
+                            <TouchableOpacity
+                                onPress={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 p-1"
+                                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                            >
+                                <Ionicons
+                                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                    size={22}
+                                    color="#64748b"
+                                />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     <TouchableOpacity
