@@ -21,45 +21,91 @@ const ReportedQuestions = () => {
         setLoading(true);
         setError(null);
         try {
-            const { data, error } = await supabase
+            let data = null;
+            let { data: joinedData, error: joinedError } = await supabase
                 .from('question_reports')
                 .select(`
                     *,
-                    exam_questions:question_id (
+                    questions (
                         id,
-                        questions (
-                            question_text,
-                            question_type
-                        )
+                        question_text,
+                        question_type
                     )
                 `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (joinedError) {
+                console.warn('Nested questions relation query failed, falling back to base fetch:', joinedError);
+                const { data: baseData, error: baseError } = await supabase
+                    .from('question_reports')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            const userIds = [...new Set(data.map(r => r.user_id))];
+                if (baseError) throw baseError;
+                data = baseData || [];
+            } else {
+                data = joinedData || [];
+            }
 
-            let membersMap = {};
-            if (userIds.length > 0) {
-                const { data: members, error: membersError } = await supabase
-                    .from('members')
-                    .select('user_id, name, email')
-                    .in('user_id', userIds);
+            // Fetch questions for reports where nested data is missing
+            const missingQIds = [...new Set(data.filter(r => !r.questions && r.question_id).map(r => r.question_id))];
+            let questionsMap = {};
+            if (missingQIds.length > 0) {
+                const { data: qList, error: qError } = await supabase
+                    .from('questions')
+                    .select('id, question_text, question_type')
+                    .in('id', missingQIds);
 
-                if (!membersError && members) {
-                    members.forEach(m => {
-                        membersMap[m.user_id] = m;
+                if (!qError && qList) {
+                    qList.forEach(q => {
+                        questionsMap[q.id] = q;
                     });
                 }
             }
 
-            const enrichedReports = data.map(report => ({
-                ...report,
-                reporter: membersMap[report.user_id] ? {
-                    ...membersMap[report.user_id],
-                    full_name: membersMap[report.user_id].name // Map name to full_name for UI compatibility
-                } : { full_name: 'Unknown User', email: 'N/A' }
-            }));
+            // Fetch reporter members by ID or auth_user_id
+            const userIds = [...new Set(data.map(r => r.user_id).filter(Boolean))];
+            let membersMap = {};
+            if (userIds.length > 0) {
+                const isNumeric = userIds.every(id => Number.isInteger(Number(id)));
+                let membersQuery = supabase
+                    .from('members')
+                    .select('id, display_name, first_name, last_name, email, auth_user_id');
+
+                if (isNumeric) {
+                    membersQuery = membersQuery.in('id', userIds);
+                } else {
+                    membersQuery = membersQuery.in('auth_user_id', userIds);
+                }
+
+                const { data: members, error: membersError } = await membersQuery;
+
+                if (!membersError && members) {
+                    members.forEach(m => {
+                        const displayName = m.display_name || [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email || 'User';
+                        const mapped = {
+                            ...m,
+                            full_name: displayName
+                        };
+                        membersMap[m.id] = mapped;
+                        if (m.auth_user_id) membersMap[m.auth_user_id] = mapped;
+                    });
+                }
+            }
+
+            const enrichedReports = data.map(report => {
+                const questionObj = report.questions || questionsMap[report.question_id] || null;
+                const member = membersMap[report.user_id];
+                return {
+                    ...report,
+                    questions: questionObj,
+                    exam_questions: { questions: questionObj },
+                    reporter: member ? {
+                        ...member,
+                        full_name: member.full_name || member.display_name || member.email || 'User'
+                    } : { full_name: 'Unknown User', email: 'N/A' }
+                };
+            });
 
             setReports(enrichedReports);
 
