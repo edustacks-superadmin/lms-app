@@ -101,6 +101,7 @@ import SettingsHome from './components/SettingsHome';
 import SettingsQuotes from './components/SettingsQuotes';
 import SettingsSEO from './components/SettingsSEO';
 import SettingsIntegrations from './components/SettingsIntegrations';
+import SettingsMobileApp from './components/SettingsMobileApp';
 import ImportData from './components/ImportData';
 import SEO from './components/SEO';
 import RazorpayCheckoutTest from './components/RazorpayCheckoutTest';
@@ -742,6 +743,14 @@ function App() {
                                                       <SettingsSidebar />
                                                       <div className="content-area">
                                                         <SettingsIntegrations />
+                                                      </div>
+                                                    </AdminLayout>
+                                                  } />
+                                                  <Route path="/settings/mobile-app" element={
+                                                    <AdminLayout>
+                                                      <SettingsSidebar />
+                                                      <div className="content-area">
+                                                        <SettingsMobileApp />
                                                       </div>
                                                     </AdminLayout>
                                                   } />

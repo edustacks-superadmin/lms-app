@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { User, Building, CreditCard, DollarSign, List, Image, BarChart2, Home, MessageSquare, Tag, Quote, Globe, Download } from 'lucide-react';
+import { User, Building, CreditCard, DollarSign, List, Image, BarChart2, Home, MessageSquare, Tag, Quote, Globe, Download, Smartphone } from 'lucide-react';
 
 const SettingsSidebar = () => {
     const getLinkStyle = ({ isActive }) => ({
@@ -62,6 +62,9 @@ const SettingsSidebar = () => {
                 </NavLink>
                 <NavLink to="/settings/integrations" style={getLinkStyle}>
                     <List size={18} /> App Integrations
+                </NavLink>
+                <NavLink to="/settings/mobile-app" style={getLinkStyle}>
+                    <Smartphone size={18} /> Mobile App & Security
                 </NavLink>
                 <NavLink to="/settings/import-data" style={getLinkStyle}>
                     <Download size={18} /> Import Data
