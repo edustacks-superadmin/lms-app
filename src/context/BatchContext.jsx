@@ -307,10 +307,28 @@ export const BatchProvider = ({ children }) => {
 
     const forceLogoutBatchMembers = async (batchId) => {
         try {
+            // 1. Try via backend API (runs with service role to delete sessions and notify Realtime)
+            try {
+                const res = await fetch('/api/batch-members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchId, action: 'force-logout' })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success) {
+                        return { count: json.count || 0 };
+                    }
+                }
+            } catch (apiErr) {
+                console.warn('API force-logout call failed, attempting direct fallback:', apiErr);
+            }
+
+            // 2. Direct database fallback
             const { data: batchMembers, error: fetchError } = await supabase
                 .from('batch_members')
                 .select('member_id')
-                .eq('batch_id', batchId);
+                .eq('batch_id', parseInt(batchId));
 
             if (fetchError) throw fetchError;
 
@@ -320,12 +338,51 @@ export const BatchProvider = ({ children }) => {
 
             const memberIds = batchMembers.map(m => m.member_id);
 
-            const { error: updateError } = await supabase
+            // Fetch auth_user_id and id to delete active sessions
+            const { data: membersList, error: mError } = await supabase
                 .from('members')
-                .update({ force_logout_at: new Date().toISOString() })
+                .select('id, auth_user_id, custom_data')
                 .in('id', memberIds);
 
-            if (updateError) throw updateError;
+            if (mError) throw mError;
+
+            const allUserIds = [];
+            (membersList || []).forEach(m => {
+                if (m.auth_user_id) allUserIds.push(m.auth_user_id);
+                if (m.id) allUserIds.push(String(m.id));
+            });
+
+            // Delete user_sessions (triggers Realtime remote logout on all devices)
+            if (allUserIds.length > 0) {
+                try {
+                    await supabase
+                        .from('user_sessions')
+                        .delete()
+                        .in('user_id', allUserIds);
+                } catch (sessErr) {
+                    console.warn('Error deleting user_sessions:', sessErr);
+                }
+            }
+
+            // Clear custom_data.active_sessions
+            for (const member of (membersList || [])) {
+                const existingCustomData = member.custom_data || {};
+                if (existingCustomData.active_sessions && existingCustomData.active_sessions.length > 0) {
+                    try {
+                        await supabase
+                            .from('members')
+                            .update({
+                                custom_data: {
+                                    ...existingCustomData,
+                                    active_sessions: []
+                                }
+                            })
+                            .eq('id', member.id);
+                    } catch (cdErr) {
+                        console.warn('Error clearing active_sessions in custom_data:', cdErr);
+                    }
+                }
+            }
 
             return { count: memberIds.length };
         } catch (error) {

@@ -24,6 +24,70 @@ export default async function handler(req, res) {
         const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
         const { batchId, memberIds, instituteId = 10, action } = body;
 
+        // Support Force Logout for all users in a batch
+        if (action === 'force-logout') {
+            if (!batchId) {
+                return res.status(400).json({ error: 'batchId is required' });
+            }
+
+            // 1. Fetch batch members
+            const { data: batchMembers, error: bmError } = await supabaseAdmin
+                .from('batch_members')
+                .select('member_id')
+                .eq('batch_id', parseInt(batchId));
+
+            if (bmError) throw bmError;
+            if (!batchMembers || batchMembers.length === 0) {
+                return res.status(200).json({ success: true, count: 0, message: 'No members in this batch' });
+            }
+
+            const mIds = batchMembers.map(m => m.member_id);
+
+            // 2. Fetch members to get their auth_user_id and custom_data
+            const { data: membersList, error: mError } = await supabaseAdmin
+                .from('members')
+                .select('id, auth_user_id, custom_data')
+                .in('id', mIds);
+
+            if (mError) throw mError;
+
+            const allUserIds = [];
+            (membersList || []).forEach(m => {
+                if (m.auth_user_id) allUserIds.push(m.auth_user_id);
+                if (m.id) allUserIds.push(String(m.id));
+            });
+
+            // 3. Delete from user_sessions (triggers Realtime logout on devices)
+            if (allUserIds.length > 0) {
+                await supabaseAdmin
+                    .from('user_sessions')
+                    .delete()
+                    .in('user_id', allUserIds);
+            }
+
+            // 4. Clear active_sessions from members.custom_data
+            for (const member of (membersList || [])) {
+                const existingCustomData = member.custom_data || {};
+                if (existingCustomData.active_sessions && existingCustomData.active_sessions.length > 0) {
+                    await supabaseAdmin
+                        .from('members')
+                        .update({
+                            custom_data: {
+                                ...existingCustomData,
+                                active_sessions: []
+                            }
+                        })
+                        .eq('id', member.id);
+                }
+            }
+
+            return res.status(200).json({
+                success: true,
+                count: mIds.length,
+                message: `Force logout applied to ${mIds.length} user(s)`
+            });
+        }
+
         // Support DELETE method or POST with action='remove'
         if (req.method === 'DELETE' || action === 'remove') {
             if (!batchId || !memberIds || !Array.isArray(memberIds)) {
