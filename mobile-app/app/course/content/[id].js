@@ -225,14 +225,17 @@ export default function ContentPlayer() {
             if (!content?.course_id) return;
             const endpoint = getApiUrl(`/api/courses/${content.course_id}/feedback/check`);
             const response = await fetch(endpoint);
-            const data = await response.json();
+            if (!response.ok) return;
+            const text = await response.text();
+            if (!text) return;
+            const data = JSON.parse(text);
 
             if (data.should_trigger && data.form) {
                 setFeedbackForm(data.form);
                 setShowFeedbackModal(true);
             }
         } catch (error) {
-            console.error('Error checking feedback:', error);
+            console.warn("Feedback check skipped:", error?.message || error);
         }
     };
 

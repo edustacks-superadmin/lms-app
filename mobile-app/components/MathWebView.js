@@ -59,63 +59,50 @@ const MathWebView = ({ content, style }) => {
               margin-bottom: 0;
             }
 
-            /* === KaTeX Automatic Line-Wrapping === */
+            /* === KaTeX Equations & Presentation === */
+            .katex {
+              font-size: 1.08em;
+              text-rendering: auto;
+              white-space: nowrap;
+            }
+
+            .katex-html {
+              white-space: nowrap;
+            }
+
+            /* Display equations (block formulas): centered with smooth horizontal scroll if wide */
             .katex-display {
               display: block !important;
-              margin: 0.6em 0 !important;
+              margin: 0.75em 0 !important;
               text-align: center !important;
               max-width: 100% !important;
-              white-space: normal !important;
               overflow-x: auto !important;
               overflow-y: hidden !important;
-              -webkit-overflow-scrolling: touch;
+              -webkit-overflow-scrolling: touch !important;
+              padding: 4px 0 !important;
             }
 
             .katex-display > .katex {
               display: inline-block !important;
-              white-space: normal !important;
               text-align: initial !important;
-              max-width: 100% !important;
+              white-space: nowrap !important;
             }
 
             .katex-display > .katex > .katex-html {
-              display: inline !important;
-              white-space: normal !important;
-              max-width: 100% !important;
-              word-wrap: break-word !important;
-            }
-
-            .katex {
-              font-size: 1.05em;
-              white-space: normal !important;
-              text-rendering: auto;
-            }
-
-            .katex-html {
-              white-space: normal !important;
-            }
-
-            /* Allow KaTeX operator and relation segments to break onto new lines */
-            .katex .base {
               display: inline-block !important;
-              white-space: normal !important;
-              margin-top: 2px !important;
-              margin-bottom: 2px !important;
+              white-space: nowrap !important;
             }
 
-            .katex .mbin,
-            .katex .mrel,
-            .katex .mpunct {
-              white-space: normal !important;
-            }
-
-            /* Scrollbar for irreducible elements like wide matrices */
+            /* Subtle horizontal scrollbar indicator when display equations overflow on small screens */
             .katex-display::-webkit-scrollbar {
-              height: 2px;
+              height: 3px;
+            }
+            .katex-display::-webkit-scrollbar-track {
+              background: transparent;
             }
             .katex-display::-webkit-scrollbar-thumb {
-              background-color: rgba(0, 0, 0, 0.15);
-              border-radius: 2px;
+              background-color: rgba(0, 0, 0, 0.18);
+              border-radius: 3px;
             }
           </style>
         </head>
