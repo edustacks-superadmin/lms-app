@@ -187,18 +187,70 @@ const MemberDetails = () => {
 
             setLoadingSessions(true);
             try {
-                let query = supabase.from('user_sessions').select('*');
-                if (authUserId && memberId) {
-                    query = query.or(`user_id.eq.${authUserId},user_id.eq.${memberId}`);
-                } else if (authUserId) {
-                    query = query.eq('user_id', authUserId);
-                } else {
-                    query = query.eq('user_id', memberId);
+                let dbSessions = [];
+                // 1. Fetch from user_sessions table
+                try {
+                    let query = supabase.from('user_sessions').select('*');
+                    if (authUserId && memberId) {
+                        query = query.or(`user_id.eq.${authUserId},user_id.eq.${memberId}`);
+                    } else if (authUserId) {
+                        query = query.eq('user_id', authUserId);
+                    } else {
+                        query = query.eq('user_id', memberId);
+                    }
+
+                    const { data, error } = await query.order('last_active', { ascending: false });
+                    if (!error && data) {
+                        dbSessions = data;
+                    }
+                } catch (e) {
+                    console.warn('Could not query user_sessions directly:', e);
                 }
 
-                const { data, error } = await query.order('last_active', { ascending: false });
-                if (error) throw error;
-                setSessions(data || []);
+                // 2. Fetch from members.custom_data.active_sessions
+                let memberActiveSessions = [];
+                try {
+                    const { data: memberData } = await supabase
+                        .from('members')
+                        .select('custom_data')
+                        .eq('id', memberId)
+                        .maybeSingle();
+
+                    if (memberData?.custom_data?.active_sessions && Array.isArray(memberData.custom_data.active_sessions)) {
+                        memberActiveSessions = memberData.custom_data.active_sessions;
+                    }
+                } catch (e) {
+                    console.warn('Could not query member custom_data sessions:', e);
+                }
+
+                // 3. Merge sessions avoiding duplicates
+                const sessionMap = new Map();
+                // Add dbSessions first
+                dbSessions.forEach(s => {
+                    const key = s.id || s.device_name;
+                    sessionMap.set(key, s);
+                });
+                // Merge/add memberActiveSessions
+                memberActiveSessions.forEach(s => {
+                    const key = s.id || s.device_id || s.device_name;
+                    if (sessionMap.has(key)) {
+                        sessionMap.set(key, { ...sessionMap.get(key), ...s });
+                    } else {
+                        sessionMap.set(key, s);
+                    }
+                });
+
+                const allSessions = Array.from(sessionMap.values());
+                // Only keep sessions that are marked as currently active
+                const activeOnly = allSessions.filter(s => s.is_current !== false);
+
+                activeOnly.sort((a, b) => {
+                    const timeA = new Date(a.last_active || a.login_time || a.created_at || 0).getTime();
+                    const timeB = new Date(b.last_active || b.login_time || b.created_at || 0).getTime();
+                    return timeB - timeA;
+                });
+
+                setSessions(activeOnly);
             } catch (err) {
                 console.error('Error fetching user sessions:', err);
             } finally {
@@ -235,13 +287,48 @@ const MemberDetails = () => {
 
         setLoggingOut(true);
         try {
-            const sessionIds = sessions.map(s => s.id);
-            const { error } = await supabase
-                .from('user_sessions')
-                .delete()
-                .in('id', sessionIds);
+            const memberId = user?.id || id;
+            const authUserId = user?.auth_user_id;
 
-            if (error) throw error;
+            // 1. Delete all user_sessions
+            try {
+                let deleteQuery = supabase.from('user_sessions').delete();
+                if (authUserId && memberId) {
+                    deleteQuery = deleteQuery.or(`user_id.eq.${authUserId},user_id.eq.${memberId}`);
+                } else if (authUserId) {
+                    deleteQuery = deleteQuery.eq('user_id', authUserId);
+                } else {
+                    deleteQuery = deleteQuery.eq('user_id', memberId);
+                }
+                await deleteQuery;
+            } catch (e) {
+                console.warn('Error deleting user_sessions:', e);
+            }
+
+            // 2. Clear from members.custom_data
+            if (memberId) {
+                try {
+                    const { data: memberData } = await supabase
+                        .from('members')
+                        .select('custom_data')
+                        .eq('id', memberId)
+                        .maybeSingle();
+
+                    const existingCustomData = memberData?.custom_data || {};
+                    await supabase
+                        .from('members')
+                        .update({
+                            custom_data: {
+                                ...existingCustomData,
+                                active_sessions: []
+                            }
+                        })
+                        .eq('id', memberId);
+                } catch (e) {
+                    console.warn('Error updating member custom_data on logout all:', e);
+                }
+            }
+
             setSessions([]);
             alert('All devices have been successfully logged out.');
         } catch (err) {
@@ -258,13 +345,46 @@ const MemberDetails = () => {
         }
 
         try {
-            const { error } = await supabase
-                .from('user_sessions')
-                .delete()
-                .eq('id', sessionId);
+            const memberId = user?.id || id;
 
-            if (error) throw error;
-            setSessions(prev => prev.filter(s => s.id !== sessionId));
+            // 1. Delete from user_sessions if UUID
+            try {
+                await supabase
+                    .from('user_sessions')
+                    .delete()
+                    .eq('id', sessionId);
+            } catch (e) {
+                console.warn('Error deleting single user_session:', e);
+            }
+
+            // 2. Remove from members.custom_data
+            if (memberId) {
+                try {
+                    const { data: memberData } = await supabase
+                        .from('members')
+                        .select('custom_data')
+                        .eq('id', memberId)
+                        .maybeSingle();
+
+                    const existingCustomData = memberData?.custom_data || {};
+                    const updatedSessions = (existingCustomData.active_sessions || []).filter(
+                        s => s.id !== sessionId && s.device_id !== sessionId
+                    );
+                    await supabase
+                        .from('members')
+                        .update({
+                            custom_data: {
+                                ...existingCustomData,
+                                active_sessions: updatedSessions
+                            }
+                        })
+                        .eq('id', memberId);
+                } catch (e) {
+                    console.warn('Error updating member custom_data on logout device:', e);
+                }
+            }
+
+            setSessions(prev => prev.filter(s => s.id !== sessionId && s.device_id !== sessionId));
         } catch (err) {
             console.error('Error logging out device:', err);
             alert('Failed to logout device: ' + err.message);

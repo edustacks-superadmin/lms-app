@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import { recordWebSession } from '../utils/sessionTracker';
 
 // Create the Auth context
 const AuthContext = createContext();
@@ -113,6 +114,9 @@ export const AuthProvider = ({ children }) => {
 
                     // Fetch real role and WAIT for it on initial load
                     await fetchUserRole(session.user.email);
+
+                    // Record active device session
+                    recordWebSession(session.user);
 
                     // Now set loading to false
                     setLoading(false);
@@ -232,6 +236,9 @@ export const AuthProvider = ({ children }) => {
                 password,
             });
             if (error) throw error;
+            if (data?.user) {
+                recordWebSession(data.user);
+            }
             // onAuthStateChange will update user/role automatically
             return { data, error: null };
         } catch (error) {
