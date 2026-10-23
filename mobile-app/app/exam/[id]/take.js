@@ -10,8 +10,6 @@ import ConfirmationModal from '../../../components/ConfirmationModal';
 import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withTiming } from 'react-native-reanimated';
 
-const { width } = Dimensions.get('window');
-
 // Helper: Shuffle Array
 const shuffleArray = (array) => {
     const shuffled = [...array];
@@ -131,7 +129,7 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
 export default function NativeExamScreen() {
     const { id, courseId, quizMode: quizModeParam } = useLocalSearchParams();
     const router = useRouter();
-    const { width: contentWidth } = useWindowDimensions();
+    const { width } = useWindowDimensions();
 
     // Data State
     const [loading, setLoading] = useState(true);
@@ -712,10 +710,17 @@ export default function NativeExamScreen() {
     };
 
     // Manual Navigation
-    const scrollToQuestion = (index) => {
+    const scrollToQuestion = (index, animated = true) => {
         if (index < 0 || index >= questions.length) return;
-        flatListRef.current?.scrollToIndex({ index, animated: true });
         setCurrentIndex(index);
+        try {
+            flatListRef.current?.scrollToIndex({ index, animated });
+        } catch (e) {
+            flatListRef.current?.scrollToOffset({
+                offset: index * width,
+                animated
+            });
+        }
     };
 
     // Safe Haptics Helper - now defined outside render loop
@@ -913,12 +918,19 @@ export default function NativeExamScreen() {
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                initialNumToRender={2}
-                maxToRenderPerBatch={2}
-                windowSize={3}
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={7}
                 onMomentumScrollEnd={onScrollEnd}
                 getItemLayout={(data, index) => ({ length: width, offset: width * index, index })}
                 removeClippedSubviews={false}
+                onScrollToIndexFailed={(info) => {
+                    const offset = info.index * width;
+                    flatListRef.current?.scrollToOffset({ offset, animated: false });
+                    setTimeout(() => {
+                        flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+                    }, 50);
+                }}
             />
 
             {/* Bottom Bar: Navigation Palette */}
@@ -1060,8 +1072,10 @@ export default function NativeExamScreen() {
                                     <TouchableOpacity
                                         key={idx}
                                         onPress={() => {
-                                            scrollToQuestion(idx);
                                             setShowPalette(false);
+                                            setTimeout(() => {
+                                                scrollToQuestion(idx, false);
+                                            }, 50);
                                         }}
                                         className={`w-12 h-12 rounded-xl items-center justify-center border-2 ${bgColor} ${borderColor} ${isCurrent ? 'border-blue-600' : 'border-transparent'}`}
                                     >

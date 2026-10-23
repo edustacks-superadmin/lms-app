@@ -6,12 +6,10 @@ import { supabase } from '../../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import MathWebView from '../../../components/MathWebView';
 
-const { width } = Dimensions.get('window');
-
 export default function ExamReviewScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const { width: contentWidth } = useWindowDimensions();
+    const { width } = useWindowDimensions();
 
     const [loading, setLoading] = useState(true);
     const [exam, setExam] = useState(null);
@@ -259,10 +257,17 @@ export default function ExamReviewScreen() {
         }
     };
 
-    const scrollToQuestion = (index) => {
+    const scrollToQuestion = (index, animated = true) => {
         if (index < 0 || index >= questions.length) return;
-        flatListRef.current?.scrollToIndex({ index, animated: true });
         setCurrentIndex(index);
+        try {
+            flatListRef.current?.scrollToIndex({ index, animated });
+        } catch (e) {
+            flatListRef.current?.scrollToOffset({
+                offset: index * width,
+                animated
+            });
+        }
     };
 
     const [bookmarks, setBookmarks] = useState(new Set());
@@ -545,11 +550,19 @@ export default function ExamReviewScreen() {
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                initialNumToRender={2}
-                maxToRenderPerBatch={2}
-                windowSize={3}
+                initialNumToRender={3}
+                maxToRenderPerBatch={3}
+                windowSize={7}
+                removeClippedSubviews={false}
                 onMomentumScrollEnd={onScrollEnd}
                 getItemLayout={(data, index) => ({ length: width, offset: width * index, index })}
+                onScrollToIndexFailed={(info) => {
+                    const offset = info.index * width;
+                    flatListRef.current?.scrollToOffset({ offset, animated: false });
+                    setTimeout(() => {
+                        flatListRef.current?.scrollToIndex({ index: info.index, animated: false });
+                    }, 50);
+                }}
             />
 
             {/* Footer Navigation */}
@@ -619,8 +632,10 @@ export default function ExamReviewScreen() {
                                     <TouchableOpacity
                                         key={idx}
                                         onPress={() => {
-                                            scrollToQuestion(idx);
                                             setShowPalette(false);
+                                            setTimeout(() => {
+                                                scrollToQuestion(idx, false);
+                                            }, 50);
                                         }}
                                         className={`w-12 h-12 rounded-xl items-center justify-center border-2 ${isCurrent ? 'border-blue-600' : 'border-transparent'} ${bgColor}`}
                                     >
