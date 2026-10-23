@@ -339,22 +339,35 @@ const MemberDetails = () => {
         }
     };
 
-    const handleLogoutDevice = async (sessionId) => {
+    const handleLogoutDevice = async (sessionTarget) => {
         if (!window.confirm('Are you sure you want to log out this device?')) {
             return;
         }
 
+        const sessionId = typeof sessionTarget === 'object' ? sessionTarget.id : sessionTarget;
+        const sessionDeviceName = typeof sessionTarget === 'object' ? sessionTarget.device_name : null;
+
         try {
             const memberId = user?.id || id;
+            const authUserId = user?.auth_user_id;
 
-            // 1. Delete from user_sessions if UUID
+            // 1. Delete from user_sessions
             try {
-                await supabase
-                    .from('user_sessions')
-                    .delete()
-                    .eq('id', sessionId);
+                if (sessionId) {
+                    await supabase
+                        .from('user_sessions')
+                        .delete()
+                        .eq('id', sessionId);
+                }
+                if (authUserId && sessionDeviceName) {
+                    await supabase
+                        .from('user_sessions')
+                        .delete()
+                        .eq('user_id', authUserId)
+                        .eq('device_name', sessionDeviceName);
+                }
             } catch (e) {
-                console.warn('Error deleting single user_session:', e);
+                console.warn('Error deleting user_session:', e);
             }
 
             // 2. Remove from members.custom_data
@@ -368,7 +381,7 @@ const MemberDetails = () => {
 
                     const existingCustomData = memberData?.custom_data || {};
                     const updatedSessions = (existingCustomData.active_sessions || []).filter(
-                        s => s.id !== sessionId && s.device_id !== sessionId
+                        s => s.id !== sessionId && s.device_id !== sessionId && (!sessionDeviceName || s.device_name !== sessionDeviceName)
                     );
                     await supabase
                         .from('members')
@@ -384,7 +397,7 @@ const MemberDetails = () => {
                 }
             }
 
-            setSessions(prev => prev.filter(s => s.id !== sessionId && s.device_id !== sessionId));
+            setSessions(prev => prev.filter(s => s.id !== sessionId && (!sessionDeviceName || s.device_name !== sessionDeviceName)));
         } catch (err) {
             console.error('Error logging out device:', err);
             alert('Failed to logout device: ' + err.message);
@@ -790,7 +803,7 @@ const MemberDetails = () => {
                                                             </td>
                                                             <td style={{ padding: '14px', textAlign: 'center' }}>
                                                                 <button
-                                                                    onClick={() => handleLogoutDevice(session.id)}
+                                                                    onClick={() => handleLogoutDevice(session)}
                                                                     style={{
                                                                         backgroundColor: '#c82333',
                                                                         border: 'none',

@@ -1,11 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { checkWebSessionValidity } from '../utils/sessionTracker';
 import Header from './Header';
 import StudentHeader from './StudentHeader';
 
 const ProtectedLayout = ({ children, allowedRoles = [] }) => {
-    const { user, role, loading } = useAuth();
+    const { user, role, loading, signOut } = useAuth();
+
+    useEffect(() => {
+        if (!user || role !== 'student') return;
+
+        const verify = async () => {
+            const isValid = await checkWebSessionValidity(user);
+            if (!isValid) {
+                console.log('ProtectedLayout: session invalid, signing out');
+                localStorage.removeItem('lms_session_db_id');
+                await signOut();
+                alert('You have been logged out by an administrator.');
+                window.location.href = '/login';
+            }
+        };
+
+        verify();
+    }, [user, role, signOut]);
 
     console.log('ProtectedLayout render:', { user: !!user, role, loading });
 

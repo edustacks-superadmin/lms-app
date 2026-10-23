@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { recordWebSession } from '../utils/sessionTracker';
+import { recordWebSession, checkWebSessionValidity, clearWebSession, getWebDeviceInfo } from '../utils/sessionTracker';
 
 // Create the Auth context
 const AuthContext = createContext();
@@ -226,6 +226,91 @@ export const AuthProvider = ({ children }) => {
         };
     }, []); // Empty deps - only run once on mount
 
+
+    // Realtime & Periodic session enforcement (handles remote logout by admin)
+    useEffect(() => {
+        if (!user?.id) return;
+
+        let isTerminated = false;
+
+        const performRemoteLogout = async (reason = 'Your session has been logged out remotely by an administrator.') => {
+            if (isTerminated) return;
+            isTerminated = true;
+            console.log('🔴 Remote logout triggered:', reason);
+            try {
+                localStorage.removeItem('lms_session_db_id');
+                await supabase.auth.signOut();
+            } catch (err) {
+                console.error('Error during remote logout:', err);
+            }
+            alert(reason);
+            window.location.href = '/login';
+        };
+
+        // 1. Supabase Realtime channel on user_sessions
+        const channelName = `session-watch-${user.id}-${Date.now()}`;
+        const channel = supabase
+            .channel(channelName)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'user_sessions',
+                    filter: `user_id=eq.${user.id}`
+                },
+                (payload) => {
+                    const currentSessionDbId = localStorage.getItem('lms_session_db_id');
+                    const dev = getWebDeviceInfo();
+
+                    if (payload.eventType === 'DELETE') {
+                        const deletedId = payload.old?.id;
+                        const deletedDevice = payload.old?.device_name;
+                        if (!deletedId || deletedId === currentSessionDbId || (deletedDevice && dev && deletedDevice.includes(dev.deviceName))) {
+                            performRemoteLogout();
+                        }
+                    } else if (payload.eventType === 'UPDATE') {
+                        const updatedId = payload.new?.id;
+                        if ((!updatedId || updatedId === currentSessionDbId) && payload.new?.is_current === false) {
+                            performRemoteLogout();
+                        }
+                    }
+                }
+            )
+            .subscribe();
+
+        // 2. Heartbeat check every 10 seconds
+        const checkInterval = setInterval(async () => {
+            const isValid = await checkWebSessionValidity(user);
+            if (!isValid) {
+                performRemoteLogout();
+            }
+        }, 10000);
+
+        // 3. Tab focus / visibility check
+        const handleFocus = async () => {
+            const isValid = await checkWebSessionValidity(user);
+            if (!isValid) {
+                performRemoteLogout();
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                handleFocus();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(checkInterval);
+            window.removeEventListener('focus', handleFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [user?.id]);
+
     // -------------------------------------------------------------
     // Sign‑in helper
     // -------------------------------------------------------------
@@ -251,6 +336,7 @@ export const AuthProvider = ({ children }) => {
     // -------------------------------------------------------------
     const signOut = async () => {
         try {
+            await clearWebSession(user);
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
             // onAuthStateChange will clear user/role
