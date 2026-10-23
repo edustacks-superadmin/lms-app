@@ -4,7 +4,7 @@ import { useUsers } from '../context/UserContext';
 import { useInstitute } from '../context/InstituteContext';
 import { useTransactions } from '../context/TransactionContext';
 import { supabase } from '../supabaseClient';
-import { ChevronLeft, Edit, Mail, Phone, MapPin, Calendar, User, Shield, Layers, Plus, TrendingUp, Search, Award } from 'lucide-react';
+import { ChevronLeft, Edit, Mail, Phone, MapPin, Calendar, User, Shield, Layers, Plus, TrendingUp } from 'lucide-react';
 import { getStateName } from '../utils/indianStates';
 
 const MemberDetails = () => {
@@ -19,16 +19,13 @@ const MemberDetails = () => {
     const [directOrders, setDirectOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
 
-    // Exam stats & history states
+    // Exam stats states
     const [loadingExams, setLoadingExams] = useState(false);
     const [examStats, setExamStats] = useState({
         totalTestsTaken: 0,
         totalQuestionsAttempted: 0,
         totalCorrectAnswers: 0
     });
-    const [memberAttempts, setMemberAttempts] = useState([]);
-    const [examSearch, setExamSearch] = useState('');
-    const [showExamsTable, setShowExamsTable] = useState(true);
 
     const orderPrefix = useMemo(() => {
         if (!institute?.name) return 'ORD';
@@ -119,7 +116,7 @@ const MemberDetails = () => {
         fetchOrders();
     }, [user, id]);
 
-    // Fetch Exams data for this member
+    // Fetch Exams summary for this member
     useEffect(() => {
         const fetchExamData = async () => {
             const memberId = user?.id || id;
@@ -127,131 +124,44 @@ const MemberDetails = () => {
 
             setLoadingExams(true);
             try {
-                // 1. Fetch attempts for this member
+                // 1. Fetch attempts count for this member
                 const { data: attempts, error: attError } = await supabase
                     .from('exam_attempts')
-                    .select('*')
-                    .eq('member_id', memberId)
-                    .order('started_at', { ascending: false });
+                    .select('id')
+                    .eq('member_id', memberId);
 
                 if (attError) throw attError;
                 if (!attempts || attempts.length === 0) {
-                    setMemberAttempts([]);
                     setExamStats({ totalTestsTaken: 0, totalQuestionsAttempted: 0, totalCorrectAnswers: 0 });
                     return;
                 }
 
-                // 2. Fetch exams & courses
-                const examIds = [...new Set(attempts.map(a => a.exam_id).filter(Boolean))];
-                let examsMap = {};
-                if (examIds.length > 0) {
-                    const { data: examsData } = await supabase
-                        .from('exams')
-                        .select('id, title, total_marks, passing_marks, number_of_questions, course_id, courses(id, title)')
-                        .in('id', examIds);
-
-                    (examsData || []).forEach(e => { examsMap[e.id] = e; });
-                }
-
-                // 3. Fetch answers for all attempts of this member
+                // 2. Fetch answers to compute attempted and correct questions
                 const attemptIds = attempts.map(a => a.id);
-                let answersByAttempt = {};
+                let totalAttempted = 0;
+                let totalCorrect = 0;
+
                 if (attemptIds.length > 0) {
                     const { data: answersData } = await supabase
                         .from('exam_answers')
-                        .select('attempt_id, is_correct, selected_option_index, marks_obtained')
+                        .select('is_correct, selected_option_index')
                         .in('attempt_id', attemptIds);
 
-                    (answersData || []).forEach(ans => {
-                        if (!answersByAttempt[ans.attempt_id]) answersByAttempt[ans.attempt_id] = [];
-                        answersByAttempt[ans.attempt_id].push(ans);
-                    });
-                }
-
-                // 4. Fetch ranks (all attempts for these exams to rank the member)
-                let ranksByExam = {};
-                if (examIds.length > 0) {
-                    const { data: allAttemptsForExams } = await supabase
-                        .from('exam_attempts')
-                        .select('id, exam_id, score')
-                        .in('exam_id', examIds);
-
-                    (allAttemptsForExams || []).forEach(a => {
-                        if (!ranksByExam[a.exam_id]) ranksByExam[a.exam_id] = [];
-                        ranksByExam[a.exam_id].push(a);
-                    });
-                    Object.keys(ranksByExam).forEach(eid => {
-                        ranksByExam[eid].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
-                    });
-                }
-
-                // 5. Compute stats and row items
-                let totalAttemptedAll = 0;
-                let totalCorrectAll = 0;
-
-                const processedAttempts = attempts.map(att => {
-                    const exam = examsMap[att.exam_id] || {};
-                    const answers = answersByAttempt[att.id] || [];
-
-                    let correct = 0;
-                    let incorrect = 0;
-                    let attempted = 0;
-
-                    answers.forEach(a => {
+                    (answersData || []).forEach(a => {
                         const hasChosen = a.selected_option_index !== null && a.selected_option_index !== undefined && a.selected_option_index >= 0;
                         if (hasChosen) {
-                            attempted++;
+                            totalAttempted++;
                             if (a.is_correct) {
-                                correct++;
-                            } else {
-                                incorrect++;
+                                totalCorrect++;
                             }
                         }
                     });
+                }
 
-                    const totalQ = exam.number_of_questions || answers.length || 0;
-                    const unanswered = Math.max(0, totalQ - attempted);
-
-                    totalAttemptedAll += attempted;
-                    totalCorrectAll += correct;
-
-                    const maxScore = att.total_marks || exam.total_marks || 0;
-                    const score = Number(att.score || 0);
-                    const percentage = maxScore > 0
-                        ? ((score / maxScore) * 100).toFixed(1)
-                        : (totalQ > 0 ? ((correct / totalQ) * 100).toFixed(1) : '0.0');
-
-                    const passMarks = exam.passing_marks || 0;
-                    const isPassed = passMarks > 0 ? score >= passMarks : (Number(percentage) >= 40);
-
-                    // Rank
-                    const examAttemptsList = ranksByExam[att.exam_id] || [];
-                    const rankIdx = examAttemptsList.findIndex(a => a.id === att.id);
-                    const rankDisplay = rankIdx !== -1 ? `${rankIdx + 1}` : '--';
-
-                    return {
-                        id: att.id,
-                        examId: att.exam_id,
-                        examTitle: exam.title || 'Untitled Exam',
-                        totalQuestions: totalQ,
-                        courseTitle: exam.courses?.title || '--',
-                        correct,
-                        incorrect,
-                        unanswered,
-                        percentage: `${percentage}%`,
-                        score: `${score} / ${maxScore}`,
-                        rawScore: score,
-                        rank: rankDisplay,
-                        result: isPassed ? 'Passed' : 'Failed',
-                        startDate: att.started_at ? new Date(att.started_at) : null
-                    };
-                });
-
-                setMemberAttempts(processedAttempts);
                 setExamStats({
                     totalTestsTaken: attempts.length,
-                    totalQuestionsAttempted: totalAttemptedAll,
-                    totalCorrectAnswers: totalCorrectAll
+                    totalQuestionsAttempted: totalAttempted,
+                    totalCorrectAnswers: totalCorrect
                 });
             } catch (err) {
                 console.error('Error fetching member exam details:', err);
@@ -262,30 +172,6 @@ const MemberDetails = () => {
 
         fetchExamData();
     }, [user, id]);
-
-    const formatExamDate = (date) => {
-        if (!date) return '--';
-        const d = new Date(date);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        let hours = d.getHours();
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
-    };
-
-    const filteredAttempts = useMemo(() => {
-        if (!examSearch.trim()) return memberAttempts;
-        const q = examSearch.toLowerCase();
-        return memberAttempts.filter(a =>
-            a.examTitle?.toLowerCase().includes(q) ||
-            a.courseTitle?.toLowerCase().includes(q) ||
-            a.result?.toLowerCase().includes(q)
-        );
-    }, [memberAttempts, examSearch]);
 
     // Combine transactions context and direct orders
     const memberOrders = useMemo(() => {
@@ -588,163 +474,28 @@ const MemberDetails = () => {
                                         </div>
 
                                         <div>
-                                            <a
-                                                href="#exams-list-section"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setShowExamsTable(true);
-                                                    setTimeout(() => {
-                                                        const el = document.getElementById('exams-list-section');
-                                                        if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                                    }, 50);
-                                                }}
+                                            <button
+                                                onClick={() => navigate(`/members/${id}/progress`)}
                                                 style={{
+                                                    background: 'none',
+                                                    border: 'none',
                                                     color: '#2563eb',
                                                     fontSize: '14px',
                                                     fontWeight: '500',
                                                     textDecoration: 'none',
-                                                    cursor: 'pointer'
+                                                    cursor: 'pointer',
+                                                    padding: 0
                                                 }}
                                                 onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
                                                 onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
                                             >
                                                 View all {user?.email || user?.display_name || 'student'}'s Exams
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
-
-                        {/* List of Student's Test Section matching Image 3 */}
-                        {showExamsTable && (
-                            <div id="exams-list-section" className="card" style={{ maxWidth: '900px', margin: '32px auto' }}>
-                                <div className="card-body" style={{ padding: '32px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
-                                        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>
-                                            List of {user?.first_name || user?.display_name || user?.username || 'Student'}'s Test
-                                        </h3>
-                                        <div style={{ position: 'relative', width: '240px' }}>
-                                            <input
-                                                type="text"
-                                                placeholder="Search..."
-                                                value={examSearch}
-                                                onChange={(e) => setExamSearch(e.target.value)}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '8px 12px 8px 34px',
-                                                    fontSize: '13px',
-                                                    border: '1px solid #d1d5db',
-                                                    borderRadius: '6px',
-                                                    outline: 'none',
-                                                    boxSizing: 'border-box'
-                                                }}
-                                            />
-                                            <Search size={15} color="#9ca3af" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-                                        </div>
-                                    </div>
-
-                                    <div className="table-container" style={{ overflowX: 'auto' }}>
-                                        <table className="table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '920px' }}>
-                                            <thead>
-                                                <tr style={{ borderBottom: '1px solid #eee' }}>
-                                                    <th style={{ textAlign: 'left', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Exam</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>No. of questions</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Course</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Correct</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Incorrect</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Unanswered</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Percentage</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Score</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Rank</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Result</th>
-                                                    <th style={{ textAlign: 'left', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Start Date</th>
-                                                    <th style={{ textAlign: 'center', padding: '12px 12px', fontSize: '13px', fontWeight: '600', color: '#333' }}>Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filteredAttempts.length > 0 ? (
-                                                    filteredAttempts.map((attempt) => (
-                                                        <tr key={attempt.id} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', fontWeight: '500', color: '#2563eb' }}>
-                                                                <Link
-                                                                    to={`/exams/result/${attempt.id}`}
-                                                                    style={{ color: '#2563eb', textDecoration: 'none' }}
-                                                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                                                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
-                                                                >
-                                                                    {attempt.examTitle}
-                                                                </Link>
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', color: '#555' }}>
-                                                                {attempt.totalQuestions}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', color: '#555' }}>
-                                                                {attempt.courseTitle}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', color: '#16a34a', fontWeight: '600' }}>
-                                                                {attempt.correct}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', color: '#dc2626', fontWeight: '600' }}>
-                                                                {attempt.incorrect}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', color: '#666' }}>
-                                                                {attempt.unanswered}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', fontWeight: '600', color: '#1a1a1a' }}>
-                                                                {attempt.percentage}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', fontWeight: '500', color: '#333', whiteSpace: 'nowrap' }}>
-                                                                {attempt.score}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center', color: '#555' }}>
-                                                                {attempt.rank}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', textAlign: 'center' }}>
-                                                                <span style={{
-                                                                    padding: '4px 10px',
-                                                                    borderRadius: '12px',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '600',
-                                                                    backgroundColor: attempt.result === 'Passed' ? '#e8f5e9' : '#ffebee',
-                                                                    color: attempt.result === 'Passed' ? '#2e7d32' : '#c62828'
-                                                                }}>
-                                                                    {attempt.result}
-                                                                </span>
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', fontSize: '13px', color: '#555', whiteSpace: 'nowrap' }}>
-                                                                {formatExamDate(attempt.startDate)}
-                                                            </td>
-                                                            <td style={{ padding: '14px 12px', textAlign: 'center' }}>
-                                                                <button
-                                                                    onClick={() => navigate(`/exams/result/${attempt.id}`, { state: { fromAdmin: true } })}
-                                                                    className="btn btn-primary"
-                                                                    style={{
-                                                                        padding: '5px 14px',
-                                                                        fontSize: '12px',
-                                                                        fontWeight: '500',
-                                                                        borderRadius: '4px',
-                                                                        cursor: 'pointer'
-                                                                    }}
-                                                                >
-                                                                    Review
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    ))
-                                                ) : (
-                                                    <tr>
-                                                        <td colSpan="12" style={{ textAlign: 'center', padding: '32px', color: '#666', fontSize: '14px' }}>
-                                                            {loadingExams ? 'Loading exams...' : 'No exams found for this member'}
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Orders Section */}
                         <div className="card" style={{ maxWidth: '900px', margin: '32px auto' }}>
