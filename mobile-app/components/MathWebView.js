@@ -20,7 +20,29 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
     };
 
     const katexHtml = useMemo(() => {
-        const safeContent = content || '';
+        let safeContent = content || '';
+
+        // 1. Move trailing punctuation into the math expression so it never wraps to a separate line alone
+        safeContent = safeContent.replace(/\\\(([\s\S]*?)\\\)\s*([.,;:!?])/g, (match, formula, punct) => {
+            return `\\(${formula.trim()}\\text{${punct}}\\)`;
+        });
+        safeContent = safeContent.replace(/\\\[([\s\S]*?)\\\]\s*([.,;:!?])/g, (match, formula, punct) => {
+            return `\\[${formula.trim()}\\text{${punct}}\\]`;
+        });
+        safeContent = safeContent.replace(/\$\$([\s\S]*?)\$\$\s*([.,;:!?])/g, (match, formula, punct) => {
+            return `$$${formula.trim()}\\text{${punct}}$$`;
+        });
+
+        // 2. Promote standalone paragraph formulas (<p>\( ... \)</p> or <div>\( ... \)</div>)
+        // to display equations (\[ ... \]) so they get proper block display, operator wrapping,
+        // and dedicated equation-only horizontal scrolling.
+        safeContent = safeContent.replace(/<p(\s*[^>]*)>\s*\\\(([\s\S]*?)\\\)\s*<\/p>/gi, (match, attrs, formula) => {
+            return `<p${attrs}>\\[ ${formula.trim()} \\]</p>`;
+        });
+        safeContent = safeContent.replace(/<div(\s*[^>]*)>\s*\\\(([\s\S]*?)\\\)\s*<\/div>/gi, (match, attrs, formula) => {
+            return `<div${attrs}>\\[ ${formula.trim()} \\]</div>`;
+        });
+
         return `
       <!DOCTYPE html>
       <html>
@@ -48,9 +70,11 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
               line-height: 1.45;
               word-wrap: break-word;
               overflow-wrap: break-word;
+              overflow-x: hidden;
             }
             #content {
               width: 100%;
+              max-width: 100%;
             }
             img {
               max-width: 100% !important;
@@ -156,6 +180,27 @@ const MathWebView = ({ content, style, onScrollStatusChange }) => {
                 throwOnError: false,
                 strict: false
               });
+
+              // Prevent orphan punctuation (. , : ; ! ?) from dropping onto a separate line alone after any math
+              try {
+                var katexSpans = document.querySelectorAll('.katex');
+                for (var j = 0; j < katexSpans.length; j++) {
+                  var k = katexSpans[j];
+                  if (k.nextSibling && k.nextSibling.nodeType === 3) {
+                    var m = k.nextSibling.nodeValue.match(/^([.,;:!?])(\s*)/);
+                    if (m) {
+                      var wrapper = document.createElement('span');
+                      wrapper.style.whiteSpace = 'nowrap';
+                      wrapper.style.display = 'inline-block';
+                      k.parentNode.insertBefore(wrapper, k);
+                      wrapper.appendChild(k);
+                      var punctNode = document.createTextNode(m[1]);
+                      wrapper.appendChild(punctNode);
+                      k.nextSibling.nodeValue = k.nextSibling.nodeValue.substring(m[0].length);
+                    }
+                  }
+                }
+              } catch (e) {}
 
               postHeight();
             }
