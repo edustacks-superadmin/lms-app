@@ -229,7 +229,7 @@ export const AuthProvider = ({ children }) => {
 
     // Realtime & Periodic session enforcement (handles remote logout by admin)
     useEffect(() => {
-        if (!user?.id) return;
+        if (!user?.id || role !== 'student') return;
 
         let isTerminated = false;
 
@@ -239,6 +239,7 @@ export const AuthProvider = ({ children }) => {
             console.log('🔴 Remote logout triggered:', reason);
             try {
                 localStorage.removeItem('lms_session_db_id');
+                localStorage.removeItem('lms_session_login_time');
                 await supabase.auth.signOut();
             } catch (err) {
                 console.error('Error during remote logout:', err);
@@ -322,7 +323,7 @@ export const AuthProvider = ({ children }) => {
             });
             if (error) throw error;
             if (data?.user) {
-                recordWebSession(data.user);
+                await recordWebSession(data.user);
             }
             // onAuthStateChange will update user/role automatically
             return { data, error: null };

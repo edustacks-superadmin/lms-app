@@ -50,14 +50,16 @@ export function getWebDeviceInfo() {
     };
 }
 
-// Get IP and Location
+// Get IP and Location (cached or async fallback)
 export async function getWebIPInfo() {
+    const cachedIp = localStorage.getItem('lms_cached_ip');
     try {
-        const res = await fetch('https://ipapi.co/json/');
+        const res = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
         if (res.ok) {
             const data = await res.json();
+            if (data.ip) localStorage.setItem('lms_cached_ip', data.ip);
             return {
-                ip: data.ip || 'Unknown',
+                ip: data.ip || cachedIp || 'Unknown',
                 city: data.city || null,
                 region: data.region || null,
                 country: data.country_name || 'India',
@@ -69,11 +71,12 @@ export async function getWebIPInfo() {
     }
 
     try {
-        const res = await fetch('https://api.ipify.org?format=json');
+        const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(2000) });
         if (res.ok) {
             const data = await res.json();
+            if (data.ip) localStorage.setItem('lms_cached_ip', data.ip);
             return {
-                ip: data.ip || 'Unknown',
+                ip: data.ip || cachedIp || 'Unknown',
                 city: null,
                 region: null,
                 country: 'India',
@@ -85,7 +88,7 @@ export async function getWebIPInfo() {
     }
 
     return {
-        ip: 'Unknown',
+        ip: cachedIp || 'Unknown',
         city: null,
         region: null,
         country: 'India',
@@ -104,26 +107,30 @@ export async function recordWebSession(authUser) {
         const dev = getWebDeviceInfo();
         if (!dev) return null;
 
-        const ipInfo = await getWebIPInfo();
+        // Use cached IP for instant DB insert
+        const cachedIp = localStorage.getItem('lms_cached_ip') || 'Unknown';
         const nowIso = new Date().toISOString();
+
+        // Mark login time for grace period
+        localStorage.setItem('lms_session_login_time', Date.now().toString());
 
         let dbSessionId = localStorage.getItem('lms_session_db_id');
 
-        const dbSessionData = {
+        const initialSessionData = {
             user_id: authUserId,
             device_name: dev.deviceName,
             os_name: dev.osName,
             os_version: dev.osVersion || '',
             browser_name: dev.browserName,
-            ip_address: ipInfo.ip,
+            ip_address: cachedIp,
             location: {
-                city: ipInfo.city,
-                region: ipInfo.region,
-                country: ipInfo.country,
-                country_code: ipInfo.country_code
+                city: null,
+                region: null,
+                country: 'India',
+                country_code: 'IN'
             },
             device_info: {
-                userAgent: navigator.userAgent,
+                userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
                 deviceId: dev.deviceId,
                 screen: typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : ''
             },
@@ -132,7 +139,7 @@ export async function recordWebSession(authUser) {
             last_active: nowIso
         };
 
-        // 1. Try to record in user_sessions table
+        // 1. Immediately create or update record in user_sessions
         try {
             let existingSession = null;
             if (dbSessionId) {
@@ -158,12 +165,12 @@ export async function recordWebSession(authUser) {
                 dbSessionId = existingSession.id;
                 await supabase
                     .from('user_sessions')
-                    .update(dbSessionData)
+                    .update(initialSessionData)
                     .eq('id', dbSessionId);
             } else {
                 const { data: newSession, error: insErr } = await supabase
                     .from('user_sessions')
-                    .insert([dbSessionData])
+                    .insert([initialSessionData])
                     .select('id')
                     .single();
 
@@ -179,7 +186,7 @@ export async function recordWebSession(authUser) {
             console.warn('user_sessions table write notice:', dbErr);
         }
 
-        // 2. Also record in members.custom_data.active_sessions (guaranteed admin visibility)
+        // 2. Also record in members.custom_data.active_sessions
         try {
             let memberQuery = supabase.from('members').select('id, custom_data');
             if (authUserId) {
@@ -197,8 +204,8 @@ export async function recordWebSession(authUser) {
                     os_name: dev.osName,
                     os_version: dev.osVersion,
                     browser_name: dev.browserName,
-                    ip_address: ipInfo.ip,
-                    location: dbSessionData.location,
+                    ip_address: cachedIp,
+                    location: initialSessionData.location,
                     is_current: true,
                     login_time: nowIso,
                     last_active: nowIso
@@ -217,7 +224,7 @@ export async function recordWebSession(authUser) {
                             ...customData,
                             active_sessions: updatedSessions,
                             last_device: dev.deviceName,
-                            last_ip: ipInfo.ip
+                            last_ip: cachedIp
                         }
                     })
                     .eq('id', member.id);
@@ -225,6 +232,29 @@ export async function recordWebSession(authUser) {
         } catch (memberErr) {
             console.warn('members custom_data session update notice:', memberErr);
         }
+
+        // 3. Background IP and location enrichment (non-blocking)
+        getWebIPInfo().then(async (ipInfo) => {
+            if (!ipInfo?.ip || ipInfo.ip === cachedIp) return;
+            try {
+                if (dbSessionId) {
+                    await supabase
+                        .from('user_sessions')
+                        .update({
+                            ip_address: ipInfo.ip,
+                            location: {
+                                city: ipInfo.city,
+                                region: ipInfo.region,
+                                country: ipInfo.country,
+                                country_code: ipInfo.country_code
+                            }
+                        })
+                        .eq('id', dbSessionId);
+                }
+            } catch (e) {
+                // Ignore background update error
+            }
+        }).catch(() => {});
 
         return dbSessionId;
     } catch (err) {
@@ -238,36 +268,39 @@ export async function checkWebSessionValidity(authUser) {
     if (!authUser?.id) return true;
     try {
         const sessionDbId = localStorage.getItem('lms_session_db_id');
-        const dev = getWebDeviceInfo();
-
-        // 1. Check in user_sessions table
-        let query = supabase
-            .from('user_sessions')
-            .select('id, is_current')
-            .eq('user_id', authUser.id);
-
-        if (sessionDbId) {
-            query = query.eq('id', sessionDbId);
-        } else if (dev?.deviceName) {
-            query = query.eq('device_name', dev.deviceName);
-        } else {
+        
+        // If sessionDbId has not been stored yet (new login in progress), do NOT kick out
+        if (!sessionDbId) {
             return true;
         }
 
-        const { data, error } = await query.maybeSingle();
+        // Grace period: Within first 15 seconds after login, avoid race conditions
+        const loginTime = parseInt(localStorage.getItem('lms_session_login_time') || '0', 10);
+        if (loginTime > 0 && Date.now() - loginTime < 15000) {
+            return true;
+        }
+
+        // Query user_sessions specifically for this session ID
+        const { data, error } = await supabase
+            .from('user_sessions')
+            .select('id, is_current')
+            .eq('id', sessionDbId)
+            .maybeSingle();
 
         if (error) {
             // Network issue or RLS error: don't kick user out on temporary blip
             return true;
         }
 
-        // If no row exists at all in user_sessions, admin deleted it!
+        // If no row exists at all for this sessionDbId, the admin deleted this session!
         if (!data) {
+            console.log('Session ID was removed from user_sessions by admin:', sessionDbId);
             return false;
         }
 
         // If is_current was explicitly flipped to false
         if (data.is_current === false) {
+            console.log('Session was marked is_current: false:', sessionDbId);
             return false;
         }
 
@@ -285,6 +318,7 @@ export async function clearWebSession(authUser) {
             await supabase.from('user_sessions').delete().eq('id', sessionDbId);
             localStorage.removeItem('lms_session_db_id');
         }
+        localStorage.removeItem('lms_session_login_time');
     } catch (e) {
         console.warn('clearWebSession error:', e);
     }
