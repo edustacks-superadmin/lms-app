@@ -12,6 +12,28 @@
     <meta name="apple-mobile-web-app-title" content="Mahesh IES" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>MAHESH IES ACADEMY</title>
+    <script>
+      // Automatically refresh when a new deployment invalidates cached chunks
+      window.addEventListener('vite:preloadError', function (event) {
+        event.preventDefault();
+        window.location.reload();
+      });
+      window.addEventListener('error', function (event) {
+        var msg = (event && event.message) || '';
+        if (
+          msg.indexOf('Failed to fetch dynamically imported module') !== -1 ||
+          msg.indexOf('error loading dynamically imported module') !== -1 ||
+          msg.indexOf('Importing a module script failed') !== -1
+        ) {
+          var now = Date.now();
+          var last = sessionStorage.getItem('chunk_reload_ts');
+          if (!last || now - parseInt(last, 10) > 8000) {
+            sessionStorage.setItem('chunk_reload_ts', String(now));
+            window.location.reload();
+          }
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
