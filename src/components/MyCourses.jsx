@@ -423,19 +423,19 @@ const MyCourses = () => {
     return (
         <div className="my-courses-container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
             {/* Header */}
-            <div className="my-courses-header" style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+            <div className="my-courses-header" style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                        <h2 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
+                        <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '2px', color: '#1a1a1a' }}>
                             My Courses
                         </h2>
-                        <p style={{ fontSize: '14px', color: '#666' }}>
+                        <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
                             {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} enrolled
                         </p>
                     </div>
 
                     {/* Search Bar */}
-                    <div className="my-courses-search-wrap" style={{ position: 'relative', minWidth: '300px' }}>
+                    <div className="my-courses-search-wrap" style={{ position: 'relative', minWidth: '240px', flex: 1, maxWidth: '100%' }}>
                         <input
                             type="text"
                             placeholder="Search courses..."
@@ -443,11 +443,10 @@ const MyCourses = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '12px 16px',
-                                paddingLeft: '40px',
+                                padding: '8px 12px 8px 34px',
                                 borderRadius: '8px',
                                 border: '1px solid #e5e7eb',
-                                fontSize: '14px',
+                                fontSize: '13px',
                                 outline: 'none',
                                 transition: 'border-color 0.2s',
                                 backgroundColor: 'white'
@@ -457,56 +456,59 @@ const MyCourses = () => {
                         />
                         <div style={{
                             position: 'absolute',
-                            left: '12px',
+                            left: '10px',
                             top: '50%',
                             transform: 'translateY(-50%)',
                             color: '#9ca3af'
                         }}>
-                            <Search size={16} />
+                            <Search size={15} />
                         </div>
                         {searchTerm && (
                             <button
                                 onClick={() => setSearchTerm('')}
                                 style={{
                                     position: 'absolute',
-                                    right: '12px',
+                                    right: '10px',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
                                     background: 'none',
                                     border: 'none',
                                     color: '#9ca3af',
                                     cursor: 'pointer',
-                                    padding: '4px',
+                                    padding: '2px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}
                             >
-                                <X size={14} />
+                                <X size={13} />
                             </button>
                         )}
                     </div>
                 </div>
 
-                {/* Filters and Sort Toolbar */}
-                <div style={{ display: 'flex', gap: '16px', marginTop: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* Filters and Sort Toolbar - Compact Single Row */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center', width: '100%' }}>
                     {/* Status Filter */}
-                    <div style={{ position: 'relative' }}>
-                        <Filter size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                        <Filter size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', pointerEvents: 'none' }} />
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                             style={{
-                                padding: '10px 16px 10px 36px',
+                                width: '100%',
+                                padding: '7px 8px 7px 28px',
                                 borderRadius: '8px',
                                 border: '1px solid #e5e7eb',
-                                fontSize: '14px',
+                                fontSize: '12px',
                                 color: '#374151',
                                 backgroundColor: 'white',
                                 cursor: 'pointer',
                                 outline: 'none',
-                                minWidth: '160px',
-                                appearance: 'none'
+                                appearance: 'none',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden'
                             }}
                         >
                             <option value="all">All Status</option>
@@ -517,22 +519,25 @@ const MyCourses = () => {
                     </div>
 
                     {/* Sort By */}
-                    <div style={{ position: 'relative' }}>
-                        <ArrowUpDown size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                        <ArrowUpDown size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280', pointerEvents: 'none' }} />
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             style={{
-                                padding: '10px 16px 10px 36px',
+                                width: '100%',
+                                padding: '7px 8px 7px 28px',
                                 borderRadius: '8px',
                                 border: '1px solid #e5e7eb',
-                                fontSize: '14px',
+                                fontSize: '12px',
                                 color: '#374151',
                                 backgroundColor: 'white',
                                 cursor: 'pointer',
                                 outline: 'none',
-                                minWidth: '180px',
-                                appearance: 'none'
+                                appearance: 'none',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden'
                             }}
                         >
                             <option value="newest">Newest Enrolled</option>
@@ -614,37 +619,38 @@ const MyCourses = () => {
                                         style={{ cursor: 'pointer' }}
                                     >
                                         <td>
-                                            <div className="course-info-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', minWidth: 0, flex: 1 }}>
+                                            <div className="course-info-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '10px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
                                                     <CourseThumbnail
                                                         src={enrollment.courses?.image}
                                                         alt={enrollment.courses?.title}
                                                         isCompleted={isCompleted}
                                                     />
-                                                    <div style={{ minWidth: 0 }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                                                            <div className="course-list-title" style={{ margin: 0 }}>{enrollment.courses?.title}</div>
+                                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '2px' }}>
+                                                            <div className="course-list-title" style={{ margin: 0, fontSize: '14px', lineHeight: 1.3 }}>{enrollment.courses?.title}</div>
                                                             <span style={{
-                                                                fontSize: '11px',
+                                                                fontSize: '10px',
                                                                 fontWeight: '700',
-                                                                padding: '2px 8px',
-                                                                borderRadius: '12px',
+                                                                padding: '1px 6px',
+                                                                borderRadius: '10px',
                                                                 backgroundColor: isFree ? '#ecfdf5' : '#eff6ff',
                                                                 color: isFree ? '#059669' : '#2563eb',
                                                                 border: `1px solid ${isFree ? '#a7f3d0' : '#bfdbfe'}`,
-                                                                letterSpacing: '0.04em',
+                                                                letterSpacing: '0.03em',
                                                                 display: 'inline-flex',
-                                                                alignItems: 'center'
+                                                                alignItems: 'center',
+                                                                flexShrink: 0
                                                             }}>
                                                                 {isFree ? 'FREE' : 'PAID'}
                                                             </span>
                                                         </div>
-                                                        <div className="course-list-meta">
+                                                        <div className="course-list-meta" style={{ marginTop: '2px', fontSize: '11px', gap: '10px' }}>
                                                             <span>
-                                                                <Book size={12} /> {enrollment.totalChapters || 0} Chapters
+                                                                <Book size={11} /> {enrollment.totalChapters || 0} Chapters
                                                             </span>
                                                             <span>
-                                                                <FileText size={12} /> {enrollment.totalContents || 0} Lessons
+                                                                <FileText size={11} /> {enrollment.totalContents || 0} Lessons
                                                             </span>
                                                         </div>
                                                     </div>
