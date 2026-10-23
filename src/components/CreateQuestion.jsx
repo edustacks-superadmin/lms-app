@@ -12,7 +12,7 @@ const CreateQuestion = () => {
     const [searchParams] = useSearchParams();
     const folderId = searchParams.get('folderId');
 
-    const { addQuestion, updateQuestion, questions, fetchQuestions } = useQuestions();
+    const { addQuestion, updateQuestion, getQuestionById } = useQuestions();
     const { subjects, fetchSubjects } = useSubjects();
     const { folders, fetchFolders, addQuestionToFolder, removeQuestionFromFolder, getQuestionUsage } = useQuestionFolders();
 
@@ -54,22 +54,14 @@ const CreateQuestion = () => {
         const loadQuestion = async () => {
             if (id) {
                 setLoading(true);
-                await fetchQuestions({ page: 1, perPage: 1000 });
-                setLoading(false);
-            }
-        };
-        loadQuestion();
-    }, [id]);
-
-    useEffect(() => {
-        const loadQuestionData = async () => {
-            if (id && questions.length > 0) {
-                const question = questions.find(q => q.id === id);
-                if (question) {
+                setError(null);
+                const res = await getQuestionById(id);
+                if (res.success && res.data) {
+                    const question = res.data;
                     setFormData({
                         question_text: question.question_text || '',
                         question_type: question.question_type || 'MCQ, Single Correct Question',
-                        subject_id: question.subject_id || '',
+                        subject_id: question.subject_id !== null && question.subject_id !== undefined ? String(question.subject_id) : '',
                         difficulty_level: question.difficulty_level || '',
                         explanation: question.explanation || ''
                     });
@@ -78,7 +70,7 @@ const CreateQuestion = () => {
                         setOptions(question.options.map(opt => ({
                             option_label: opt.option_label,
                             option_text: opt.option_text,
-                            is_correct: opt.is_correct
+                            is_correct: !!opt.is_correct
                         })));
                     }
 
@@ -90,11 +82,14 @@ const CreateQuestion = () => {
                     if (usageResult.success && usageResult.data) {
                         setSelectedFolders(usageResult.data.map(item => item.folder_id));
                     }
+                } else {
+                    setError('Failed to load question: ' + (res.error || 'Question not found'));
                 }
+                setLoading(false);
             }
         };
-        loadQuestionData();
-    }, [id, questions]);
+        loadQuestion();
+    }, [id]);
 
     const handleOptionChange = (index, field, value) => {
         const newOptions = [...options];

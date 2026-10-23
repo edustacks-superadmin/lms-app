@@ -165,38 +165,57 @@ export const QuestionProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            // Sanitize data: convert empty strings to null for UUID fields
+            const numericId = parseInt(id, 10);
+            const targetId = isNaN(numericId) ? id : numericId;
+
+            // Sanitize data: convert empty strings to null for UUID/int fields
             const sanitizedData = { ...questionData };
-            if (sanitizedData.subject_id === '') sanitizedData.subject_id = null;
+            delete sanitizedData.subjects; // Remove join object if present
+            delete sanitizedData.options;
+            delete sanitizedData.tags;
+            delete sanitizedData.percentage_correct;
+
+            if (sanitizedData.subject_id === '' || sanitizedData.subject_id === undefined) {
+                sanitizedData.subject_id = null;
+            } else if (sanitizedData.subject_id !== null) {
+                const subId = parseInt(sanitizedData.subject_id, 10);
+                sanitizedData.subject_id = isNaN(subId) ? sanitizedData.subject_id : subId;
+            }
 
             // Update question
             const { error: questionError } = await supabase
                 .from('questions')
                 .update({ ...sanitizedData, updated_at: new Date() })
-                .eq('id', id);
+                .eq('id', targetId);
 
             if (questionError) throw questionError;
 
             // Delete existing options and insert new ones
-            await supabase.from('question_options').delete().eq('question_id', id);
+            await supabase.from('question_options').delete().eq('question_id', targetId);
 
-            const optionsWithQuestionId = options.map(opt => ({
-                ...opt,
-                question_id: id
-            }));
+            if (options && options.length > 0) {
+                const optionsWithQuestionId = options.map((opt, index) => ({
+                    option_label: opt.option_label,
+                    option_text: opt.option_text,
+                    is_correct: !!opt.is_correct,
+                    option_order: index + 1,
+                    question_id: targetId,
+                    institute_id: 10
+                }));
 
-            const { error: optionsError } = await supabase
-                .from('question_options')
-                .insert(optionsWithQuestionId);
+                const { error: optionsError } = await supabase
+                    .from('question_options')
+                    .insert(optionsWithQuestionId);
 
-            if (optionsError) throw optionsError;
+                if (optionsError) throw optionsError;
+            }
 
             // Update tags
-            await supabase.from('question_tags').delete().eq('question_id', id);
+            await supabase.from('question_tags').delete().eq('question_id', targetId);
 
             if (tags.length > 0) {
                 const tagsWithQuestionId = tags.map(tag => ({
-                    question_id: id,
+                    question_id: targetId,
                     tag_name: tag
                 }));
 
@@ -210,6 +229,54 @@ export const QuestionProvider = ({ children }) => {
             return { success: true };
         } catch (err) {
             console.error('Error updating question:', err);
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getQuestionById = async (id) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const numericId = parseInt(id, 10);
+            const targetId = isNaN(numericId) ? id : numericId;
+
+            const { data: question, error: questionError } = await supabase
+                .from('questions')
+                .select('*, subjects(name, parent_id)')
+                .eq('id', targetId)
+                .single();
+
+            if (questionError) throw questionError;
+            if (!question) throw new Error('Question not found');
+
+            const { data: options, error: optionsError } = await supabase
+                .from('question_options')
+                .select('*')
+                .eq('question_id', targetId)
+                .order('option_order', { ascending: true });
+
+            if (optionsError) console.error('Error fetching options:', optionsError);
+
+            const { data: tags, error: tagsError } = await supabase
+                .from('question_tags')
+                .select('*')
+                .eq('question_id', targetId);
+
+            if (tagsError) console.error('Error fetching tags:', tagsError);
+
+            return {
+                success: true,
+                data: {
+                    ...question,
+                    options: options || [],
+                    tags: tags || []
+                }
+            };
+        } catch (err) {
+            console.error('Error fetching question by id:', err);
             setError(err.message);
             return { success: false, error: err.message };
         } finally {
@@ -268,6 +335,7 @@ export const QuestionProvider = ({ children }) => {
                 setQuestions,
                 totalCount,
                 fetchQuestions,
+                getQuestionById,
                 addQuestion,
                 updateQuestion,
                 updateQuestionSubject,
