@@ -4,7 +4,7 @@ import { useUsers } from '../context/UserContext';
 import { useInstitute } from '../context/InstituteContext';
 import { useTransactions } from '../context/TransactionContext';
 import { supabase } from '../supabaseClient';
-import { ChevronLeft, Edit, Mail, Phone, MapPin, Calendar, User, Shield, Layers, Plus, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Edit, Mail, Phone, MapPin, Calendar, User, Shield, Layers, Plus, TrendingUp, Trash2 } from 'lucide-react';
 import { getStateName } from '../utils/indianStates';
 
 const MemberDetails = () => {
@@ -26,6 +26,11 @@ const MemberDetails = () => {
         totalQuestionsAttempted: 0,
         totalCorrectAnswers: 0
     });
+
+    // Device sessions states
+    const [sessions, setSessions] = useState([]);
+    const [loadingSessions, setLoadingSessions] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     const orderPrefix = useMemo(() => {
         if (!institute?.name) return 'ORD';
@@ -172,6 +177,99 @@ const MemberDetails = () => {
 
         fetchExamData();
     }, [user, id]);
+
+    // Fetch currently logged in devices for this member
+    useEffect(() => {
+        const fetchSessions = async () => {
+            const authUserId = user?.auth_user_id;
+            const memberId = user?.id || id;
+            if (!authUserId && !memberId) return;
+
+            setLoadingSessions(true);
+            try {
+                let query = supabase.from('user_sessions').select('*');
+                if (authUserId && memberId) {
+                    query = query.or(`user_id.eq.${authUserId},user_id.eq.${memberId}`);
+                } else if (authUserId) {
+                    query = query.eq('user_id', authUserId);
+                } else {
+                    query = query.eq('user_id', memberId);
+                }
+
+                const { data, error } = await query.order('last_active', { ascending: false });
+                if (error) throw error;
+                setSessions(data || []);
+            } catch (err) {
+                console.error('Error fetching user sessions:', err);
+            } finally {
+                setLoadingSessions(false);
+            }
+        };
+
+        fetchSessions();
+    }, [user, id]);
+
+    const formatLastUsed = (dateString) => {
+        if (!dateString) return '--';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '--';
+        const months = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+        const month = months[date.getMonth()];
+        const day = date.getDate();
+        const year = date.getFullYear();
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+        hours = hours % 12 || 12;
+        return `${month} ${day}, ${year}, ${hours}:${minutes} ${ampm}`;
+    };
+
+    const handleLogoutAllDevices = async () => {
+        if (!sessions || sessions.length === 0) {
+            alert('No active devices to logout.');
+            return;
+        }
+        if (!window.confirm('Are you sure you want to log out all devices for this member?')) {
+            return;
+        }
+
+        setLoggingOut(true);
+        try {
+            const sessionIds = sessions.map(s => s.id);
+            const { error } = await supabase
+                .from('user_sessions')
+                .delete()
+                .in('id', sessionIds);
+
+            if (error) throw error;
+            setSessions([]);
+            alert('All devices have been successfully logged out.');
+        } catch (err) {
+            console.error('Error logging out all devices:', err);
+            alert('Failed to logout all devices: ' + err.message);
+        } finally {
+            setLoggingOut(false);
+        }
+    };
+
+    const handleLogoutDevice = async (sessionId) => {
+        if (!window.confirm('Are you sure you want to log out this device?')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('user_sessions')
+                .delete()
+                .eq('id', sessionId);
+
+            if (error) throw error;
+            setSessions(prev => prev.filter(s => s.id !== sessionId));
+        } catch (err) {
+            console.error('Error logging out device:', err);
+            alert('Failed to logout device: ' + err.message);
+        }
+    };
 
     // Combine transactions context and direct orders
     const memberOrders = useMemo(() => {
@@ -494,6 +592,117 @@ const MemberDetails = () => {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Currently Logged in devices Section */}
+                        <div className="card" style={{ maxWidth: '900px', margin: '32px auto' }}>
+                            <div className="card-body" style={{ padding: '32px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '16px' }}>
+                                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>
+                                        Currently Logged in devices
+                                    </h3>
+                                    <button
+                                        onClick={handleLogoutAllDevices}
+                                        disabled={loggingOut || sessions.length === 0}
+                                        style={{
+                                            backgroundColor: sessions.length === 0 ? '#e0e0e0' : '#c82333',
+                                            color: sessions.length === 0 ? '#888' : 'white',
+                                            fontWeight: '600',
+                                            fontSize: '13px',
+                                            padding: '8px 16px',
+                                            borderRadius: '4px',
+                                            border: 'none',
+                                            cursor: sessions.length === 0 ? 'not-allowed' : 'pointer',
+                                            transition: 'background-color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (sessions.length > 0) e.currentTarget.style.backgroundColor = '#a71d2a';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (sessions.length > 0) e.currentTarget.style.backgroundColor = '#c82333';
+                                        }}
+                                    >
+                                        {loggingOut ? 'Logging out...' : 'Logout of all devices'}
+                                    </button>
+                                </div>
+
+                                <div className="table-container" style={{ overflowX: 'auto' }}>
+                                    <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
+                                                <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: '#555' }}>S.No</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: '#555' }}>Device name</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: '#555' }}>Last used</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: '#555' }}>Location</th>
+                                                <th style={{ textAlign: 'left', padding: '12px 14px', fontSize: '13px', fontWeight: '600', color: '#555' }}>IP Address</th>
+                                                <th style={{ textAlign: 'center', padding: '12px 14px', width: '60px' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sessions.length > 0 ? (
+                                                sessions.map((session, index) => {
+                                                    const deviceIcon = session.os_name?.toLowerCase().includes('android') || session.os_name?.toLowerCase().includes('ios') || session.browser_name?.toLowerCase().includes('mobile') ? '📱' : '💻';
+                                                    const deviceDisplay = `${deviceIcon} ${session.device_name || session.browser_name || 'Device'} ${session.os_name ? `(${session.os_name} ${session.os_version || ''})`.trim() : ''} ${session.device_info?.appVersion ? `v${session.device_info.appVersion}` : ''}`.trim();
+                                                    const locationDisplay = session.location?.country || session.location?.city || (typeof session.location === 'string' ? session.location : 'India');
+
+                                                    return (
+                                                        <tr key={session.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                                            <td style={{ padding: '14px', fontSize: '13px', color: '#555' }}>{index + 1}</td>
+                                                            <td style={{ padding: '14px', fontSize: '13px', color: '#333', fontWeight: '500' }}>{deviceDisplay}</td>
+                                                            <td style={{ padding: '14px', fontSize: '13px', color: '#555' }}>{formatLastUsed(session.last_active || session.login_time || session.created_at)}</td>
+                                                            <td style={{ padding: '14px', fontSize: '13px', color: '#555' }}>{locationDisplay}</td>
+                                                            <td style={{ padding: '14px', fontSize: '13px' }}>
+                                                                {session.ip_address && session.ip_address !== 'Unknown' ? (
+                                                                    <a
+                                                                        href={`https://whatismyipaddress.com/ip/${session.ip_address}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        style={{ color: '#2563eb', textDecoration: 'none' }}
+                                                                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                                                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                                                    >
+                                                                        {session.ip_address}
+                                                                    </a>
+                                                                ) : (
+                                                                    <span style={{ color: '#888' }}>--</span>
+                                                                )}
+                                                            </td>
+                                                            <td style={{ padding: '14px', textAlign: 'center' }}>
+                                                                <button
+                                                                    onClick={() => handleLogoutDevice(session.id)}
+                                                                    style={{
+                                                                        backgroundColor: '#c82333',
+                                                                        border: 'none',
+                                                                        borderRadius: '4px',
+                                                                        padding: '6px 8px',
+                                                                        color: 'white',
+                                                                        cursor: 'pointer',
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        transition: 'background-color 0.2s'
+                                                                    }}
+                                                                    title="Logout this device"
+                                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#a71d2a'}
+                                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
+                                                                >
+                                                                    <Trash2 size={15} />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="6" style={{ textAlign: 'center', padding: '28px', color: '#777', fontSize: '14px' }}>
+                                                        {loadingSessions ? 'Loading devices...' : 'No currently logged in devices'}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
