@@ -6,11 +6,7 @@ import { useProductCategories } from '../context/ProductCategoryContext';
 const CreateProductCategory = () => {
     const navigate = useNavigate();
     const { addCategory } = useProductCategories();
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        color: '#0055aa'
-    });
+    const [name, setName] = useState('');
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
@@ -19,7 +15,7 @@ const CreateProductCategory = () => {
         setError(null);
         setSubmitting(true);
 
-        const result = await addCategory(formData);
+        const result = await addCategory({ name });
 
         if (result.success) {
             navigate('/store/categories');
@@ -58,7 +54,7 @@ const CreateProductCategory = () => {
 
             <form onSubmit={handleSubmit} style={{ maxWidth: '800px', paddingBottom: '40px' }}>
                 {error && (
-                    <div style={{ padding: '10px', marginBottom: '20px', backgroundColor: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', borderRadius: '4px' }}>
+                    <div style={{ padding: '12px 16px', marginBottom: '20px', backgroundColor: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a', borderRadius: '6px', fontSize: '14px' }}>
                         {error}
                     </div>
                 )}
@@ -70,59 +66,18 @@ const CreateProductCategory = () => {
                     </label>
                     <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         required
                         style={{
                             flex: 1,
-                            padding: '10px',
+                            padding: '10px 14px',
                             border: '1px solid #ddd',
-                            borderRadius: '4px',
+                            borderRadius: '6px',
                             fontSize: '14px',
                             maxWidth: '600px'
                         }}
-                        placeholder="e.g., 538, 400, 543"
-                    />
-                </div>
-
-                {/* Description */}
-                <div style={{ display: 'flex', marginBottom: '24px', alignItems: 'flex-start' }}>
-                    <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px', marginTop: '10px' }}>
-                        Description
-                    </label>
-                    <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        style={{
-                            flex: 1,
-                            padding: '10px',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            maxWidth: '600px',
-                            minHeight: '100px',
-                            resize: 'vertical'
-                        }}
-                        placeholder="Optional description"
-                    />
-                </div>
-
-                {/* Color */}
-                <div style={{ display: 'flex', marginBottom: '24px', alignItems: 'center' }}>
-                    <label style={{ width: '180px', fontWeight: 'bold', color: '#555', textAlign: 'right', marginRight: '20px' }}>
-                        Color
-                    </label>
-                    <input
-                        type="color"
-                        value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        style={{
-                            width: '600px',
-                            height: '40px',
-                            border: '1px solid #ddd',
-                            borderRadius: '4px',
-                            cursor: 'pointer'
-                        }}
+                        placeholder="e.g., APPSC AEE, PG TRB, GATE CE"
                     />
                 </div>
 
@@ -131,7 +86,7 @@ const CreateProductCategory = () => {
                     <button
                         type="submit"
                         className="btn btn-success"
-                        style={{ padding: '10px 24px', fontSize: '16px' }}
+                        style={{ padding: '10px 24px', fontSize: '15px', fontWeight: '600' }}
                         disabled={submitting}
                     >
                         {submitting ? 'Creating...' : 'Create'}
@@ -140,7 +95,7 @@ const CreateProductCategory = () => {
                         type="button"
                         onClick={() => navigate('/store/categories')}
                         className="btn"
-                        style={{ padding: '10px 24px', fontSize: '16px', backgroundColor: '#e0e0e0', color: '#333', border: '1px solid #ccc' }}
+                        style={{ padding: '10px 24px', fontSize: '15px', backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db' }}
                     >
                         Cancel
                     </button>

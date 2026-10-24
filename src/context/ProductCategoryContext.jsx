@@ -52,9 +52,16 @@ export const ProductCategoryProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
+            const dbData = {
+                name: categoryData.name ? categoryData.name.trim() : ''
+            };
+            if (categoryData.institute_id) {
+                dbData.institute_id = categoryData.institute_id;
+            }
+
             const { data, error } = await supabase
                 .from('product_categories')
-                .insert([categoryData])
+                .insert([dbData])
                 .select();
 
             if (error) throw error;
@@ -75,9 +82,13 @@ export const ProductCategoryProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
+            const dbData = {
+                name: categoryData.name ? categoryData.name.trim() : ''
+            };
+
             const { data, error } = await supabase
                 .from('product_categories')
-                .update(categoryData)
+                .update(dbData)
                 .eq('id', id)
                 .select();
 
