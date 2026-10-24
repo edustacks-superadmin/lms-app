@@ -1,5 +1,18 @@
 import React from 'react';
-import { Platform, View, Text, TouchableOpacity, Alert, ActivityIndicator, StyleSheet, StatusBar, useWindowDimensions } from 'react-native';
+import { 
+    Platform, 
+    View, 
+    Text, 
+    TouchableOpacity, 
+    Alert, 
+    ActivityIndicator, 
+    StyleSheet, 
+    StatusBar, 
+    useWindowDimensions, 
+    PanResponder, 
+    Modal, 
+    TextInput 
+} from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -13,6 +26,15 @@ import Pdf from 'react-native-pdf';
 
 export default function PdfViewer({ url, headers, ...props }) {
     // ====== ALL HOOKS AT THE TOP ======
+    const pdfRef = React.useRef(null);
+    const [currentPage, setCurrentPage] = React.useState(props.initialPage || 1);
+    const [totalPages, setTotalPages] = React.useState(1);
+    const [isScrubbing, setIsScrubbing] = React.useState(false);
+    const [scrubPage, setScrubPage] = React.useState(props.initialPage || 1);
+    const [jumpModalVisible, setJumpModalVisible] = React.useState(false);
+    const [jumpInput, setJumpInput] = React.useState('');
+    const lastCalledPageRef = React.useRef(props.initialPage || 1);
+
     const [isDownloading, setIsDownloading] = React.useState(false);
     const [localPdfPath, setLocalPdfPath] = React.useState(null);
     const [downloadError, setDownloadError] = React.useState(null);
@@ -25,6 +47,62 @@ export default function PdfViewer({ url, headers, ...props }) {
 
     const isExpoGo = Constants.appOwnership === 'expo';
     const isAndroidProd = !isExpoGo && Platform.OS === 'android';
+
+    // Fast-scroll track layout calculation
+    const TRACK_TOP = 80;
+    const TRACK_BOTTOM = 80;
+    const THUMB_HEIGHT = 44;
+    const trackHeight = Math.max(160, height - TRACK_TOP - TRACK_BOTTOM);
+    const maxTravel = Math.max(1, trackHeight - THUMB_HEIGHT);
+
+    // Update page when dragging along the right edge
+    const updateScrubFromY = React.useCallback((touchY) => {
+        const relativeY = touchY - TRACK_TOP;
+        const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
+        const ratio = clampedY / maxTravel;
+        const targetPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
+        
+        setScrubPage(targetPage);
+
+        if (pdfRef.current && targetPage !== lastCalledPageRef.current) {
+            lastCalledPageRef.current = targetPage;
+            pdfRef.current.setPage(targetPage);
+        }
+    }, [totalPages, maxTravel]);
+
+    // PanResponder for vertical scrubber track on the right edge
+    const panResponder = React.useMemo(() => {
+        return PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt, gestureState) => {
+                setIsScrubbing(true);
+                const touchY = gestureState.y0 || evt.nativeEvent.pageY;
+                updateScrubFromY(touchY);
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                const touchY = gestureState.moveY || gestureState.y0 || evt.nativeEvent.pageY;
+                updateScrubFromY(touchY);
+            },
+            onPanResponderRelease: (evt, gestureState) => {
+                setIsScrubbing(false);
+                const touchY = gestureState.moveY || gestureState.y0 || evt.nativeEvent.pageY;
+                const relativeY = touchY - TRACK_TOP;
+                const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
+                const ratio = clampedY / maxTravel;
+                const finalPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
+                
+                setScrubPage(finalPage);
+                setCurrentPage(finalPage);
+                if (pdfRef.current) {
+                    pdfRef.current.setPage(finalPage);
+                }
+            },
+            onPanResponderTerminate: () => {
+                setIsScrubbing(false);
+            },
+        });
+    }, [totalPages, maxTravel, height, updateScrubFromY]);
 
     // Enable auto-rotate when PDF viewer mounts, lock back when unmounting
     React.useEffect(() => {
@@ -242,6 +320,31 @@ export default function PdfViewer({ url, headers, ...props }) {
         setRetryCount(prev => prev + 1);
     };
 
+    const jumpByPages = (delta) => {
+        const targetPage = Math.max(1, Math.min(totalPages, currentPage + delta));
+        setCurrentPage(targetPage);
+        setScrubPage(targetPage);
+        if (pdfRef.current) {
+            lastCalledPageRef.current = targetPage;
+            pdfRef.current.setPage(targetPage);
+        }
+    };
+
+    const handleJumpToPage = () => {
+        const pageNum = parseInt(jumpInput, 10);
+        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+            setCurrentPage(pageNum);
+            setScrubPage(pageNum);
+            if (pdfRef.current) {
+                lastCalledPageRef.current = pageNum;
+                pdfRef.current.setPage(pageNum);
+            }
+            setJumpModalVisible(false);
+        } else {
+            Alert.alert('Invalid Page', `Please enter a valid page number between 1 and ${totalPages}.`);
+        }
+    };
+
     // ====== RENDER LOGIC ======
 
     // No URL provided
@@ -296,15 +399,25 @@ export default function PdfViewer({ url, headers, ...props }) {
             );
         }
 
-        // Render PDF from local file - FULL SCREEN with auto-rotate
+        // Render PDF from local file - FULL SCREEN with fast scrollbar scrubber
+        const activePage = isScrubbing ? scrubPage : currentPage;
+        const currentThumbProgress = totalPages > 1 ? (activePage - 1) / (totalPages - 1) : 0;
+        const thumbTop = Math.max(0, Math.min(maxTravel, currentThumbProgress * maxTravel));
+
         return (
             <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
                 <StatusBar hidden={true} />
                 <Pdf
+                    ref={pdfRef}
                     source={{ uri: localPdfPath }}
                     page={props.initialPage || 1}
                     onPageChanged={(page, numberOfPages) => {
                         console.log(`[PdfViewer] Page changed: ${page} / ${numberOfPages}`);
+                        if (!isScrubbing) {
+                            setCurrentPage(page);
+                            setScrubPage(page);
+                        }
+                        setTotalPages(numberOfPages);
                         if (props.onPageChanged) {
                             props.onPageChanged(page);
                         }
@@ -312,11 +425,13 @@ export default function PdfViewer({ url, headers, ...props }) {
                     style={{ flex: 1, width: width, height: height, backgroundColor: '#0f172a' }}
                     enablePaging={false}
                     horizontal={false}
+                    showsVerticalScrollIndicator={true}
                     onLoadProgress={(percent) => {
                         console.log(`PDF Rendering: ${Math.round(percent * 100)}%`);
                     }}
                     onLoadComplete={(numberOfPages, filePath) => {
                         console.log(`PDF Rendered: ${numberOfPages} pages`);
+                        setTotalPages(numberOfPages);
                         setIsRendering(false);
                     }}
                     onError={(error) => {
@@ -333,6 +448,123 @@ export default function PdfViewer({ url, headers, ...props }) {
                         );
                     }}
                 />
+
+                {/* Right-Side Fast-Scroller Track & Thumb */}
+                {totalPages > 1 && !isRendering && (
+                    <View 
+                        style={[styles.scrubberContainer, { top: TRACK_TOP, height: trackHeight }]}
+                        {...panResponder.panHandlers}
+                    >
+                        {/* Subtle vertical track rail */}
+                        <View style={styles.scrubberRail} />
+
+                        {/* Floating Tooltip Callout on Left while dragging */}
+                        {isScrubbing && (
+                            <View style={[styles.scrubberTooltip, { top: Math.max(0, Math.min(trackHeight - 38, thumbTop - 4)) }]}>
+                                <Text style={styles.scrubberTooltipText}>
+                                    Page {scrubPage} of {totalPages}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Draggable Scrubber Thumb */}
+                        <View 
+                            style={[
+                                styles.scrubberThumb, 
+                                { top: thumbTop },
+                                isScrubbing && styles.scrubberThumbActive
+                            ]}
+                        >
+                            <Ionicons name="swap-vertical" size={12} color="#ffffff" style={{ opacity: 0.9 }} />
+                            <Text style={styles.scrubberThumbText} numberOfLines={1}>
+                                {isScrubbing ? scrubPage : currentPage}
+                            </Text>
+                        </View>
+                    </View>
+                )}
+
+                {/* Quick Navigation Pill at Bottom */}
+                {totalPages > 1 && !isRendering && (
+                    <View style={styles.bottomNavPill}>
+                        <TouchableOpacity
+                            style={styles.navPageButton}
+                            onPress={() => jumpByPages(-5)}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="play-back" size={13} color="#94a3b8" />
+                            <Text style={styles.navButtonSubText}>-5</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.pageInfoButton}
+                            onPress={() => {
+                                setJumpInput(String(currentPage));
+                                setJumpModalVisible(true);
+                            }}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.pageInfoText}>
+                                Page <Text style={{ color: '#60a5fa', fontWeight: 'bold' }}>{currentPage}</Text> of {totalPages}
+                            </Text>
+                            <Ionicons name="search-outline" size={12} color="#60a5fa" style={{ marginLeft: 5 }} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.navPageButton}
+                            onPress={() => jumpByPages(5)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.navButtonSubText}>+5</Text>
+                            <Ionicons name="play-forward" size={13} color="#94a3b8" />
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Jump to Page Modal */}
+                <Modal
+                    visible={jumpModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setJumpModalVisible(false)}
+                >
+                    <TouchableOpacity 
+                        style={styles.modalBackdrop} 
+                        activeOpacity={1} 
+                        onPress={() => setJumpModalVisible(false)}
+                    >
+                        <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+                            <Text style={styles.modalTitle}>Jump to Page</Text>
+                            <Text style={styles.modalSubtitle}>Enter page number (1 - {totalPages})</Text>
+
+                            <TextInput
+                                style={styles.modalInput}
+                                keyboardType="number-pad"
+                                value={jumpInput}
+                                onChangeText={setJumpInput}
+                                autoFocus={true}
+                                selectTextOnFocus={true}
+                                placeholder="1"
+                                placeholderTextColor="#64748b"
+                            />
+
+                            <View style={styles.modalButtonRow}>
+                                <TouchableOpacity
+                                    style={styles.modalCancelButton}
+                                    onPress={() => setJumpModalVisible(false)}
+                                >
+                                    <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.modalJumpButton}
+                                    onPress={handleJumpToPage}
+                                >
+                                    <Text style={styles.modalJumpButtonText}>Go to Page</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
 
                 {isRendering && (
                     <View style={styles.overlay}>
@@ -457,5 +689,184 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         backgroundColor: '#475569',
+    },
+    // Fast Scroller Styles
+    scrubberContainer: {
+        position: 'absolute',
+        right: 0,
+        width: 48,
+        zIndex: 50,
+        alignItems: 'center',
+    },
+    scrubberRail: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        right: 15,
+        width: 3,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderRadius: 2,
+    },
+    scrubberThumb: {
+        position: 'absolute',
+        right: 4,
+        width: 38,
+        height: 44,
+        backgroundColor: '#1e293b',
+        borderColor: '#3b82f6',
+        borderWidth: 1.5,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.35,
+        shadowRadius: 4,
+    },
+    scrubberThumbActive: {
+        backgroundColor: '#2563eb',
+        borderColor: '#93c5fd',
+        transform: [{ scale: 1.08 }],
+        elevation: 10,
+    },
+    scrubberThumbText: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginTop: 1,
+    },
+    scrubberTooltip: {
+        position: 'absolute',
+        right: 50,
+        backgroundColor: '#0f172a',
+        borderColor: '#3b82f6',
+        borderWidth: 1.5,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+    },
+    scrubberTooltipText: {
+        color: '#ffffff',
+        fontSize: 13,
+        fontWeight: 'bold',
+    },
+    // Bottom Navigator Pill
+    bottomNavPill: {
+        position: 'absolute',
+        bottom: 24,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(15, 23, 42, 0.90)',
+        borderColor: 'rgba(148, 163, 184, 0.25)',
+        borderWidth: 1,
+        borderRadius: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        zIndex: 40,
+    },
+    pageInfoButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+    },
+    pageInfoText: {
+        color: '#e2e8f0',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    navPageButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    navButtonSubText: {
+        color: '#cbd5e1',
+        fontSize: 11,
+        fontWeight: 'bold',
+        marginHorizontal: 2,
+    },
+    // Jump Modal
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    modalContent: {
+        width: '100%',
+        maxWidth: 320,
+        backgroundColor: '#1e293b',
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#334155',
+        elevation: 12,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#f8fafc',
+        marginBottom: 4,
+    },
+    modalSubtitle: {
+        fontSize: 13,
+        color: '#94a3b8',
+        marginBottom: 16,
+    },
+    modalInput: {
+        backgroundColor: '#0f172a',
+        borderWidth: 1.5,
+        borderColor: '#3b82f6',
+        borderRadius: 10,
+        color: '#ffffff',
+        fontSize: 20,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        paddingVertical: 10,
+        marginBottom: 20,
+    },
+    modalButtonRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        gap: 10,
+    },
+    modalCancelButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    },
+    modalCancelButtonText: {
+        color: '#94a3b8',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    modalJumpButton: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: '#2563eb',
+    },
+    modalJumpButtonText: {
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontSize: 14,
     },
 });
