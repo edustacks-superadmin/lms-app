@@ -98,7 +98,23 @@ export async function POST(req) {
                 });
 
                 if (pastOrders === 0) {
-                    return NextResponse.json({ valid: false, message: 'This offer is only for renewing/repurchasing users.' });
+                    try {
+                        const linkedCourseEnrollments = await prisma.$queryRawUnsafe(
+                            `SELECT count(*)::int as count 
+                             FROM enrollments e 
+                             JOIN courses c ON e.course_id = c.id 
+                             WHERE e.member_id = $1 
+                             AND c.allowed_products ?| $2::text[]`,
+                            memberId,
+                            idsToProcess.map(String)
+                        );
+                        const pastEnrollments = linkedCourseEnrollments[0]?.count || 0;
+                        if (pastEnrollments === 0) {
+                            return NextResponse.json({ valid: false, message: 'This offer is only for renewing/repurchasing users.' });
+                        }
+                    } catch (e) {
+                        return NextResponse.json({ valid: false, message: 'This offer is only for renewing/repurchasing users.' });
+                    }
                 }
             }
         } else if (coupon.is_renewal_offer) {

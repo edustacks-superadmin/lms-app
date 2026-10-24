@@ -156,26 +156,89 @@ export default function Checkout() {
 
             // Check validity dates
             const now = new Date();
-            const validFrom = new Date(offer.valid_from);
-            const validTo = new Date(offer.valid_to);
+            const startDate = offer.start_date ? new Date(offer.start_date) : (offer.valid_from ? new Date(offer.valid_from) : null);
+            const endDate = offer.end_date ? new Date(offer.end_date) : (offer.valid_to ? new Date(offer.valid_to) : null);
 
-            if (now < validFrom || now > validTo) {
+            if (startDate && now < startDate) {
+                setCouponError('Coupon is not yet active');
+                setValidatingCoupon(false);
+                return;
+            }
+            if (endDate && now > endDate) {
                 setCouponError('Coupon has expired');
                 setValidatingCoupon(false);
                 return;
             }
 
             // Check minimum purchase
-            if (subtotal < (offer.min_purchase_amount || 0)) {
-                setCouponError(`Minimum purchase of ₹${offer.min_purchase_amount} required`);
+            const minAmount = offer.min_order_value ? parseFloat(offer.min_order_value) : (offer.min_purchase_amount || 0);
+            if (subtotal < minAmount) {
+                setCouponError(`Minimum purchase of ₹${minAmount} required`);
                 setValidatingCoupon(false);
                 return;
+            }
+
+            // Check product applicability (restricted to specific products)
+            if (offer.applicable_products && Array.isArray(offer.applicable_products) && offer.applicable_products.length > 0) {
+                const currentPid = parseInt(productId);
+                if (!offer.applicable_products.includes(currentPid)) {
+                    setCouponError('This coupon is not valid for this product');
+                    setValidatingCoupon(false);
+                    return;
+                }
+            }
+
+            // Check if coupon is restricted to renewing / repurchasing students
+            if (offer.is_renewal_offer) {
+                const currentPid = parseInt(productId);
+                let isPriorStudent = false;
+
+                if (memberData?.id) {
+                    // 1. Check past orders
+                    const { data: pastOrders } = await supabase
+                        .from('orders')
+                        .select('id')
+                        .eq('member_id', memberData.id)
+                        .eq('product_id', currentPid)
+                        .eq('status', 'completed')
+                        .limit(1);
+
+                    if (pastOrders && pastOrders.length > 0) {
+                        isPriorStudent = true;
+                    } else {
+                        // 2. Check if member ever enrolled in courses linked to this product
+                        const { data: linkedCourses } = await supabase
+                            .from('courses')
+                            .select('id')
+                            .contains('allowed_products', [currentPid]);
+
+                        if (linkedCourses && linkedCourses.length > 0) {
+                            const courseIds = linkedCourses.map(c => c.id);
+                            const { data: pastEnrollment } = await supabase
+                                .from('enrollments')
+                                .select('id')
+                                .eq('member_id', memberData.id)
+                                .in('course_id', courseIds)
+                                .limit(1);
+
+                            if (pastEnrollment && pastEnrollment.length > 0) {
+                                isPriorStudent = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!isPriorStudent) {
+                    setCouponError('This offer is strictly for returning students renewing/repurchasing this course.');
+                    setValidatingCoupon(false);
+                    return;
+                }
             }
 
             // Coupon is valid
             setAppliedCoupon(offer);
             setCouponError('');
-            Alert.alert('Success', 'Coupon applied successfully!');
+            Alert.alert('Success', 'Renewal coupon applied successfully!');
 
         } catch (error) {
             console.error('Error validating coupon:', error);

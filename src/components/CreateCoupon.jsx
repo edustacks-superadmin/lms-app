@@ -18,7 +18,8 @@ const CreateCoupon = () => {
         discount_value: '',
         start_date: '',
         end_date: '',
-        applicable_products: preselectedProduct ? [preselectedProduct] : []
+        applicable_products: preselectedProduct ? [preselectedProduct] : [],
+        is_renewal_offer: false
     });
 
     const [loading, setLoading] = useState(false);
@@ -56,6 +57,7 @@ const CreateCoupon = () => {
             start_date: formData.start_date ? new Date(formData.start_date).toISOString() : new Date().toISOString(),
             end_date: formData.end_date ? new Date(formData.end_date + 'T23:59:59').toISOString() : null,
             applicable_products: formData.applicable_products,
+            is_renewal_offer: Boolean(formData.is_renewal_offer),
             status: 'active',
             institute_id: 10
         };
@@ -176,6 +178,22 @@ const CreateCoupon = () => {
                     <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
                         Selected: {formData.applicable_products.length} products
                     </div>
+                </div>
+
+                <div style={{ marginBottom: '25px', padding: '14px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: '500', color: '#1e293b' }}>
+                        <input
+                            type="checkbox"
+                            name="is_renewal_offer"
+                            checked={formData.is_renewal_offer || false}
+                            onChange={(e) => setFormData(prev => ({ ...prev, is_renewal_offer: e.target.checked }))}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <span>Renewal / Repurchase Offer Only</span>
+                    </label>
+                    <p style={{ margin: '6px 0 0 28px', fontSize: '12px', color: '#64748b', lineHeight: 1.4 }}>
+                        When checked, this discount is <strong>strictly reserved</strong> for students who previously purchased or enrolled in the selected product(s). New students will be blocked from using it.
+                    </p>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '30px' }}>
