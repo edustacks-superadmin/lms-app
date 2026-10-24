@@ -10,7 +10,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import HorizontalScrollSection from '../../../components/HorizontalScrollSection';
 import ContentCard from '../../../components/ContentCard';
 import BannerCard from '../../../components/BannerCard';
+import SoftUpdateBanner from '../../../components/SoftUpdateBanner';
 import { ORG_CONFIG, getApiUrl } from '../../../config/organization';
+import { fetchAppConfig } from '../../../lib/configService';
 import Constants from 'expo-constants';
 
 export default function Dashboard() {
@@ -32,6 +34,7 @@ export default function Dashboard() {
     const [bannerAds, setBannerAds] = useState([]);
     const [monthlyLeaders, setMonthlyLeaders] = useState([]);
     const [pausedExams, setPausedExams] = useState([]);
+    const [appConfig, setAppConfig] = useState(null);
 
     const [loadingStep, setLoadingStep] = useState('Checking session...');
 
@@ -78,6 +81,16 @@ export default function Dashboard() {
 
             // Prepare all non-blocking fetches
             const dashboardFetches = [
+                // App Configuration (for version check & soft update banner)
+                (async () => {
+                    try {
+                        const cfg = await fetchAppConfig();
+                        if (cfg) setAppConfig(cfg);
+                    } catch (e) {
+                        console.log('App config fetch error in dashboard:', e);
+                    }
+                })(),
+
                 // Stats Fetch (Updated: Count courses from ALL sources like mylearning.js)
                 (async () => {
                     if (!memberId) return;
@@ -417,6 +430,13 @@ export default function Dashboard() {
 
     const renderHeader = () => (
         <View className="pt-4">
+
+            {/* Soft In-App Update Banner */}
+            {appConfig && (
+                <View className="mb-2">
+                    <SoftUpdateBanner config={appConfig} />
+                </View>
+            )}
 
             {/* Welcome Greeting */}
             {userName && (

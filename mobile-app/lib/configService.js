@@ -109,9 +109,9 @@ export const needsForceUpdate = (config) => {
 /**
  * Compare version strings (returns -1, 0, or 1)
  */
-const compareVersions = (v1, v2) => {
-    const parts1 = v1.split('.').map(Number);
-    const parts2 = v2.split('.').map(Number);
+export const compareVersions = (v1, v2) => {
+    const parts1 = String(v1 || '0').split('.').map(Number);
+    const parts2 = String(v2 || '0').split('.').map(Number);
 
     for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
         const p1 = parts1[i] || 0;
@@ -120,6 +120,25 @@ const compareVersions = (v1, v2) => {
         if (p1 > p2) return 1;
     }
     return 0;
+};
+
+/**
+ * Check if a soft (non-blocking) update is available
+ */
+export const hasSoftUpdate = (config) => {
+    if (!config?.version) {
+        return false;
+    }
+
+    // If force update is active, soft update banner is not needed
+    if (needsForceUpdate(config)) {
+        return false;
+    }
+
+    const currentVersion = getAppVersion();
+    const latestVersion = config.version.latest || config.version.current || '0.0.0';
+
+    return compareVersions(currentVersion, latestVersion) < 0;
 };
 
 /**

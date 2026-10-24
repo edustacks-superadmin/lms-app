@@ -21,6 +21,7 @@ const SettingsMobileApp = () => {
         currentVersion: '1.0.4',
         minimumVersion: '1.0.0',
         forceUpdate: false,
+        updateMessage: '',
         playStoreUrl: ''
     });
 
@@ -40,6 +41,7 @@ const SettingsMobileApp = () => {
                 currentVersion: parsedConfig.currentVersion || parsedConfig.version || '1.0.4',
                 minimumVersion: parsedConfig.minimumVersion || '1.0.0',
                 forceUpdate: parsedConfig.forceUpdate || false,
+                updateMessage: parsedConfig.updateMessage || '',
                 playStoreUrl: parsedConfig.playStoreUrl || ''
             }));
         }
@@ -302,6 +304,20 @@ const SettingsMobileApp = () => {
                                 style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
                             />
                         </div>
+                    </div>
+
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+                            Update Announcement Message (Soft Banner)
+                        </label>
+                        <input
+                            type="text"
+                            name="updateMessage"
+                            value={config.updateMessage}
+                            onChange={handleChange}
+                            placeholder="A new version with performance improvements is available on Google Play."
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
+                        />
                     </div>
 
                     <div>
