@@ -113,7 +113,7 @@ const ProductCard = ({ product, dragHandleProps, isDragging }) => {
                 style={{ padding: '12px 0' }}
             >
                 <h3 style={{ fontSize: '14px', fontWeight: '400', color: 'var(--primary-color)', textAlign: 'center' }}>
-                    {product.short_description || product.title}
+                    {product.title}
                 </h3>
                 {product.price && (
                     <p style={{ fontSize: '16px', fontWeight: '600', color: '#333', textAlign: 'center', marginTop: '8px' }}>
