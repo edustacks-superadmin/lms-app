@@ -26,7 +26,7 @@ const StudentStore = () => {
 
         // Filter by category
         if (selectedCategory !== 'all') {
-            result = result.filter(product => product.category_id === selectedCategory);
+            result = result.filter(product => String(product.category_id) === String(selectedCategory));
         }
 
         // Filter by search query

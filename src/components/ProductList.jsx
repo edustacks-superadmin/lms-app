@@ -191,7 +191,7 @@ const ProductList = () => {
     // Apply both category and status filters
     const filteredProducts = products.filter(product => {
         // Category filter
-        if (categoryFilter && product.category_id !== categoryFilter) {
+        if (categoryFilter && String(product.category_id) !== String(categoryFilter)) {
             return false;
         }
 
