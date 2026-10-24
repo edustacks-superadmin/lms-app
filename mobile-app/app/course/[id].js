@@ -313,7 +313,7 @@ export default function CoursePlayer() {
         <TouchableOpacity
             key={`${exam.id}-${exam.content_id || index}`}
             onPress={() => handleExamPress(exam)}
-            className="bg-white rounded-xl p-4 mb-3 border border-gray-100 shadow-sm"
+            className="p-4 bg-white"
         >
             <View className="flex-row items-center justify-between">
                 <View className="flex-1">
@@ -548,7 +548,9 @@ export default function CoursePlayer() {
                     <View>
                         <Text className="text-lg font-bold text-slate-800 mb-4">Running Exams</Text>
                         {runningExams.length > 0 ? (
-                            runningExams.map((exam, index) => renderExamCard(exam, 'running', index))
+                            <View className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                                {runningExams.map((exam, index) => renderExamCard(exam, 'running', index))}
+                            </View>
                         ) : (
                             <View className="items-center py-12">
                                 <Ionicons name="play-circle-outline" size={48} color="#cbd5e1" />
@@ -562,7 +564,9 @@ export default function CoursePlayer() {
                     <View>
                         <Text className="text-lg font-bold text-slate-800 mb-4">Upcoming Exams</Text>
                         {upcomingExams.length > 0 ? (
-                            upcomingExams.map((exam, index) => renderExamCard(exam, 'upcoming', index))
+                            <View className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                                {upcomingExams.map((exam, index) => renderExamCard(exam, 'upcoming', index))}
+                            </View>
                         ) : (
                             <View className="items-center py-12">
                                 <Ionicons name="time-outline" size={48} color="#cbd5e1" />

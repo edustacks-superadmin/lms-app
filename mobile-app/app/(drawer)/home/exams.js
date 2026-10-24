@@ -320,7 +320,7 @@ export default function Exams() {
         const isAvailable = item.status === 'available';
 
         return (
-            <View className="bg-white rounded-xl p-3 mb-2 border border-slate-100 shadow-sm">
+            <View className="bg-white px-4 py-3.5 border-b border-slate-200">
                 {/* Header Row: Course Tag & Status / Score Badge */}
                 <View className="flex-row items-center justify-between mb-1.5">
                     {item.course_title ? (
@@ -365,12 +365,12 @@ export default function Exams() {
                 </View>
 
                 {/* Exam Title */}
-                <Text className="text-sm font-bold text-slate-800 leading-snug mb-1">
+                <Text className="text-[15px] font-bold text-slate-800 leading-snug mb-1">
                     {item.title}
                 </Text>
 
                 {/* Single-line Metadata row */}
-                <View className="flex-row items-center flex-wrap mb-2">
+                <View className="flex-row items-center flex-wrap mb-2.5">
                     <Text className="text-xs text-slate-500">
                         {item.duration_minutes ? `${item.duration_minutes}m` : ''}
                         {item.duration_minutes && item.number_of_questions ? '  •  ' : ''}
@@ -387,7 +387,7 @@ export default function Exams() {
 
                 {/* Upcoming Schedule Info (if applicable) */}
                 {isUpcoming && item.start_date && (
-                    <View className="flex-row items-center bg-purple-50 px-2.5 py-1.5 rounded-lg mb-2 border border-purple-100">
+                    <View className="flex-row items-center bg-purple-50 px-2.5 py-1.5 rounded-lg mb-2.5 border border-purple-100">
                         <Ionicons name="calendar-outline" size={13} color="#7c3aed" />
                         <Text className="text-xs font-medium text-purple-800 ml-1.5">
                             Starts {new Date(item.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -396,7 +396,7 @@ export default function Exams() {
                 )}
 
                 {/* Action Buttons Row */}
-                <View className="flex-row items-center gap-2 pt-1 border-t border-slate-100">
+                <View className="flex-row items-center gap-2 pt-0.5">
                     {isCompleted ? (
                         <>
                             <TouchableOpacity
@@ -538,7 +538,8 @@ export default function Exams() {
                     data={filteredExams}
                     renderItem={renderExamCard}
                     keyExtractor={item => item.id.toString()}
-                    contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 8, paddingBottom: 16 }}
+                    className="bg-white"
+                    contentContainerStyle={{ paddingHorizontal: 0, paddingBottom: 24 }}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563EB']} />
                     }
