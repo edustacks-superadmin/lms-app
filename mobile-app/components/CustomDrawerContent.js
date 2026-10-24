@@ -9,7 +9,7 @@ import { cartService } from '../lib/cartService';
 import { useIsFocused } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import * as StoreReview from 'expo-store-review';
-import { fetchAppConfig, isFeatureEnabled } from '../lib/configService';
+import { fetchAppConfig, isFeatureEnabled, getAppVersion } from '../lib/configService';
 
 export default function CustomDrawerContent(props) {
     const router = useRouter();
@@ -280,7 +280,7 @@ export default function CustomDrawerContent(props) {
                     <View style={styles.versionContainer}>
                         <Ionicons name="information-circle-outline" size={20} color="#64748b" style={{ marginRight: 12 }} />
                         <Text style={styles.versionText}>
-                            Version - {appConfig?.version?.current || '1.0.2'}
+                            Version - {getAppVersion()}
                         </Text>
                     </View>
                 </View>

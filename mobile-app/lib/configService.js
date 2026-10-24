@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ORG_CONFIG, getApiUrl } from '../config/organization';
+import { supabase } from './supabase';
 import Constants from 'expo-constants';
 
 const CONFIG_CACHE_KEY = '@app_config';
@@ -24,9 +25,82 @@ export const fetchAppConfig = async (forceRefresh = false) => {
         return cachedConfig;
     }
 
+    // 1. Primary: Direct Supabase Fetch (Instant, Real-time from institute_settings)
+    try {
+        const { data: instData, error: instError } = await supabase
+            .from('institute_settings')
+            .select('id, name, logo_url, theme_color, android_app_config, feature_flags')
+            .or(`id.eq.${ORG_CONFIG.id || 10},slug.eq.maheshiesacademy`)
+            .single();
+
+        if (!instError && instData) {
+            const rawConfig = instData.android_app_config || {};
+            const androidConfig = typeof rawConfig === 'string' ? JSON.parse(rawConfig || '{}') : rawConfig;
+            const featureFlags = instData.feature_flags || {};
+
+            const config = {
+                appName: instData.name || ORG_CONFIG.name,
+                logoUrl: instData.logo_url,
+                platform: 'android',
+                primaryColor: androidConfig.primaryColor || instData.theme_color || ORG_CONFIG.colors.primary,
+                secondaryColor: androidConfig.secondaryColor || ORG_CONFIG.colors.secondary,
+                tertiaryColor: androidConfig.tertiaryColor || ORG_CONFIG.colors.accent,
+                maintenance: {
+                    enabled: androidConfig.maintenanceEnabled || false,
+                    title: androidConfig.maintenanceTitle || 'Under Maintenance',
+                    message: androidConfig.maintenanceMessage || 'We are upgrading our servers. Please check back soon.',
+                    estimatedTime: androidConfig.maintenanceEstimatedTime || ''
+                },
+                version: {
+                    current: androidConfig.currentVersion || androidConfig.version || getAppVersion(),
+                    minimum: androidConfig.minimumVersion || '1.0.0',
+                    forceUpdate: androidConfig.forceUpdate === true,
+                    updateMessage: androidConfig.updateMessage || 'A new version is available. Please update to continue.',
+                    storeUrl: androidConfig.playStoreUrl || `https://play.google.com/store/apps/details?id=${ORG_CONFIG.bundleId}`,
+                    playStoreUrl: androidConfig.playStoreUrl || `https://play.google.com/store/apps/details?id=${ORG_CONFIG.bundleId}`
+                },
+                mobileFeatures: {
+                    darkMode: androidConfig.darkModeEnabled || false,
+                    offlineMode: androidConfig.offlineModeEnabled || false,
+                    biometricLogin: androidConfig.biometricLoginEnabled !== false,
+                    pushNotifications: androidConfig.pushNotificationsEnabled !== false,
+                    preventExamScreenshots: androidConfig.preventExamScreenshots !== undefined ? androidConfig.preventExamScreenshots : true,
+                    preventPdfScreenshots: androidConfig.preventPdfScreenshots !== undefined ? androidConfig.preventPdfScreenshots : true,
+                    preventAllScreenshots: androidConfig.preventAllScreenshots || false,
+                    zoom: androidConfig.zoomEnabled || false
+                },
+                security: {
+                    preventExamScreenshots: androidConfig.preventExamScreenshots !== undefined ? androidConfig.preventExamScreenshots : true,
+                    preventPdfScreenshots: androidConfig.preventPdfScreenshots !== undefined ? androidConfig.preventPdfScreenshots : true,
+                    preventAllScreenshots: androidConfig.preventAllScreenshots || false
+                },
+                features: {
+                    aiChat: featureFlags.aiChatEnabled !== false,
+                    leaderboard: featureFlags.leaderboardEnabled !== false,
+                    examMode: featureFlags.examModeEnabled !== false,
+                    bookmarks: featureFlags.bookmarksEnabled !== false,
+                    posts: featureFlags.postsEnabled !== false
+                }
+            };
+
+            cachedConfig = config;
+            lastFetchTime = now;
+
+            await AsyncStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify({
+                config,
+                timestamp: now
+            }));
+
+            return config;
+        }
+    } catch (dbErr) {
+        console.warn('[configService] Supabase config query failed, attempting HTTP fallback:', dbErr);
+    }
+
+    // 2. Secondary Fallback: HTTP Endpoint
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased to 15 seconds for slow connections
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
 
         const response = await fetch(getApiUrl('/api/public/config?platform=android'), {
             method: 'GET',
@@ -37,27 +111,22 @@ export const fetchAppConfig = async (forceRefresh = false) => {
         });
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch config');
+        if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const config = await response.json();
+                cachedConfig = config;
+                lastFetchTime = now;
+                await AsyncStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify({
+                    config,
+                    timestamp: now
+                }));
+                return config;
+            }
         }
-
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            return getDefaultConfig();
-        }
-        const config = await response.json();
-
-        // Cache the config
-        cachedConfig = config;
-        lastFetchTime = now;
-
-        // Also store in AsyncStorage for offline access
-        await AsyncStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify({
-            config,
-            timestamp: now
-        }));
-
-        return config;
+    } catch (httpError) {
+        console.warn('[configService] HTTP config fetch failed:', httpError);
+    }
     } catch (error) {
         console.error('Error fetching config:', error);
 
@@ -176,31 +245,37 @@ export const isScreenshotProtectionEnabled = async (screenType = 'global') => {
 /**
  * Get default config for offline/error scenarios
  */
-const getDefaultConfig = () => ({
-    appName: ORG_CONFIG.name,
-    primaryColor: ORG_CONFIG.colors.primary,
-    secondaryColor: ORG_CONFIG.colors.secondary,
-    maintenance: { enabled: false },
-    version: {
-        current: '1.0.0',
-        minimum: '1.0.0',
-        forceUpdate: false
-    },
-    mobileFeatures: {
-        darkMode: false,
-        offlineMode: false,
-        biometricLogin: false,
-        pushNotifications: true,
-        zoom: false
-    },
-    features: {
-        aiChat: true,
-        leaderboard: true,
-        examMode: true,
-        bookmarks: true,
-        posts: true
-    }
-});
+const getDefaultConfig = () => {
+    const ver = getAppVersion();
+    return {
+        appName: ORG_CONFIG.name,
+        primaryColor: ORG_CONFIG.colors.primary,
+        secondaryColor: ORG_CONFIG.colors.secondary,
+        maintenance: { enabled: false },
+        version: {
+            current: ver,
+            minimum: '1.0.0',
+            forceUpdate: false,
+            updateMessage: 'A new version is available. Please update to continue.',
+            storeUrl: `https://play.google.com/store/apps/details?id=${ORG_CONFIG.bundleId}`,
+            playStoreUrl: `https://play.google.com/store/apps/details?id=${ORG_CONFIG.bundleId}`
+        },
+        mobileFeatures: {
+            darkMode: false,
+            offlineMode: false,
+            biometricLogin: false,
+            pushNotifications: true,
+            zoom: false
+        },
+        features: {
+            aiChat: true,
+            leaderboard: true,
+            examMode: true,
+            bookmarks: true,
+            posts: true
+        }
+    };
+};
 
 /**
  * Clear config cache
