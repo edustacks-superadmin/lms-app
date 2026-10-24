@@ -48,6 +48,8 @@ export default function PdfViewer({ url, headers, ...props }) {
     const isExpoGo = Constants.appOwnership === 'expo';
     const isAndroidProd = !isExpoGo && Platform.OS === 'android';
 
+    const scrubTimeoutRef = React.useRef(null);
+
     // Fast-scroll track layout calculation
     const TRACK_TOP = 80;
     const TRACK_BOTTOM = 80;
@@ -56,18 +58,33 @@ export default function PdfViewer({ url, headers, ...props }) {
     const maxTravel = Math.max(1, trackHeight - THUMB_HEIGHT);
 
     // Update page when dragging along the right edge
+    // NOTE: We update the visual thumb & tooltip in real-time, but DEBOUNCE native setPage
+    // to prevent flooding PdfiumAndroid's RenderingHandler which causes "IllegalStateException: Already closed" crashes.
     const updateScrubFromY = React.useCallback((touchY) => {
         const relativeY = touchY - TRACK_TOP;
         const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
         const ratio = clampedY / maxTravel;
         const targetPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
         
+        // Update visual scrubber UI immediately (smooth 60fps tracking)
         setScrubPage(targetPage);
 
-        if (pdfRef.current && targetPage !== lastCalledPageRef.current) {
-            lastCalledPageRef.current = targetPage;
-            pdfRef.current.setPage(targetPage);
+        // Cancel previous pending jump
+        if (scrubTimeoutRef.current) {
+            clearTimeout(scrubTimeoutRef.current);
         }
+
+        // Debounce native jump while dragging - only jump if user pauses for 250ms
+        scrubTimeoutRef.current = setTimeout(() => {
+            if (pdfRef.current && targetPage !== lastCalledPageRef.current) {
+                lastCalledPageRef.current = targetPage;
+                try {
+                    pdfRef.current.setPage(targetPage);
+                } catch (e) {
+                    console.warn('[PdfViewer] setPage debounced error:', e);
+                }
+            }
+        }, 250);
     }, [totalPages, maxTravel]);
 
     // PanResponder for vertical scrubber track on the right edge
@@ -86,6 +103,11 @@ export default function PdfViewer({ url, headers, ...props }) {
             },
             onPanResponderRelease: (evt, gestureState) => {
                 setIsScrubbing(false);
+                if (scrubTimeoutRef.current) {
+                    clearTimeout(scrubTimeoutRef.current);
+                    scrubTimeoutRef.current = null;
+                }
+
                 const touchY = gestureState.moveY || gestureState.y0 || evt.nativeEvent.pageY;
                 const relativeY = touchY - TRACK_TOP;
                 const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
@@ -94,15 +116,35 @@ export default function PdfViewer({ url, headers, ...props }) {
                 
                 setScrubPage(finalPage);
                 setCurrentPage(finalPage);
-                if (pdfRef.current) {
-                    pdfRef.current.setPage(finalPage);
+                lastCalledPageRef.current = finalPage;
+
+                // Final single jump on release
+                try {
+                    if (pdfRef.current) {
+                        pdfRef.current.setPage(finalPage);
+                    }
+                } catch (e) {
+                    console.warn('[PdfViewer] setPage on release error:', e);
                 }
             },
             onPanResponderTerminate: () => {
                 setIsScrubbing(false);
+                if (scrubTimeoutRef.current) {
+                    clearTimeout(scrubTimeoutRef.current);
+                    scrubTimeoutRef.current = null;
+                }
             },
         });
     }, [totalPages, maxTravel, height, updateScrubFromY]);
+
+    // Cleanup scrub timer on unmount
+    React.useEffect(() => {
+        return () => {
+            if (scrubTimeoutRef.current) {
+                clearTimeout(scrubTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Enable auto-rotate when PDF viewer mounts, lock back when unmounting
     React.useEffect(() => {
@@ -326,7 +368,11 @@ export default function PdfViewer({ url, headers, ...props }) {
         setScrubPage(targetPage);
         if (pdfRef.current) {
             lastCalledPageRef.current = targetPage;
-            pdfRef.current.setPage(targetPage);
+            try {
+                pdfRef.current.setPage(targetPage);
+            } catch (e) {
+                console.warn('[PdfViewer] jumpByPages error:', e);
+            }
         }
     };
 
@@ -337,7 +383,11 @@ export default function PdfViewer({ url, headers, ...props }) {
             setScrubPage(pageNum);
             if (pdfRef.current) {
                 lastCalledPageRef.current = pageNum;
-                pdfRef.current.setPage(pageNum);
+                try {
+                    pdfRef.current.setPage(pageNum);
+                } catch (e) {
+                    console.warn('[PdfViewer] handleJumpToPage error:', e);
+                }
             }
             setJumpModalVisible(false);
         } else {
