@@ -49,6 +49,7 @@ export default function PdfViewer({ url, headers, ...props }) {
     const isAndroidProd = !isExpoGo && Platform.OS === 'android';
 
     const scrubTimeoutRef = React.useRef(null);
+    const startThumbTopRef = React.useRef(0);
 
     // Fast-scroll track layout calculation
     const TRACK_TOP = 80;
@@ -57,49 +58,45 @@ export default function PdfViewer({ url, headers, ...props }) {
     const trackHeight = Math.max(160, height - TRACK_TOP - TRACK_BOTTOM);
     const maxTravel = Math.max(1, trackHeight - THUMB_HEIGHT);
 
-    // Update page when dragging along the right edge
-    // NOTE: We update the visual thumb & tooltip in real-time, but DEBOUNCE native setPage
-    // to prevent flooding PdfiumAndroid's RenderingHandler which causes "IllegalStateException: Already closed" crashes.
-    const updateScrubFromY = React.useCallback((touchY) => {
-        const relativeY = touchY - TRACK_TOP;
-        const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
-        const ratio = clampedY / maxTravel;
-        const targetPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
-        
-        // Update visual scrubber UI immediately (smooth 60fps tracking)
-        setScrubPage(targetPage);
-
-        // Cancel previous pending jump
-        if (scrubTimeoutRef.current) {
-            clearTimeout(scrubTimeoutRef.current);
-        }
-
-        // Debounce native jump while dragging - only jump if user pauses for 250ms
-        scrubTimeoutRef.current = setTimeout(() => {
-            if (pdfRef.current && targetPage !== lastCalledPageRef.current) {
-                lastCalledPageRef.current = targetPage;
-                try {
-                    pdfRef.current.setPage(targetPage);
-                } catch (e) {
-                    console.warn('[PdfViewer] setPage debounced error:', e);
-                }
-            }
-        }, 250);
-    }, [totalPages, maxTravel]);
-
     // PanResponder for vertical scrubber track on the right edge
+    // Uses relative delta (gestureState.dy) anchored to current position when touched,
+    // so tapping/grabbing the thumb never suddenly jumps away from the current page!
     const panResponder = React.useMemo(() => {
         return PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: (evt, gestureState) => {
+            onPanResponderGrant: () => {
                 setIsScrubbing(true);
-                const touchY = gestureState.y0 || evt.nativeEvent.pageY;
-                updateScrubFromY(touchY);
+                // Anchor to current page's thumb position so touching NEVER jumps
+                const currentProgress = totalPages > 1 ? (currentPage - 1) / (totalPages - 1) : 0;
+                startThumbTopRef.current = currentProgress * maxTravel;
+                setScrubPage(currentPage);
             },
             onPanResponderMove: (evt, gestureState) => {
-                const touchY = gestureState.moveY || gestureState.y0 || evt.nativeEvent.pageY;
-                updateScrubFromY(touchY);
+                // Calculate new position relative to where the thumb was when pressed
+                const newThumbTop = Math.max(0, Math.min(maxTravel, startThumbTopRef.current + gestureState.dy));
+                const ratio = maxTravel > 0 ? newThumbTop / maxTravel : 0;
+                const targetPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
+                
+                // Update thumb visual number immediately
+                setScrubPage(targetPage);
+
+                // Cancel previous debounced jump
+                if (scrubTimeoutRef.current) {
+                    clearTimeout(scrubTimeoutRef.current);
+                }
+
+                // Debounce native setPage so Pdfium background thread doesn't crash
+                scrubTimeoutRef.current = setTimeout(() => {
+                    if (pdfRef.current && targetPage !== lastCalledPageRef.current) {
+                        lastCalledPageRef.current = targetPage;
+                        try {
+                            pdfRef.current.setPage(targetPage);
+                        } catch (e) {
+                            console.warn('[PdfViewer] setPage debounced error:', e);
+                        }
+                    }
+                }, 250);
             },
             onPanResponderRelease: (evt, gestureState) => {
                 setIsScrubbing(false);
@@ -108,10 +105,8 @@ export default function PdfViewer({ url, headers, ...props }) {
                     scrubTimeoutRef.current = null;
                 }
 
-                const touchY = gestureState.moveY || gestureState.y0 || evt.nativeEvent.pageY;
-                const relativeY = touchY - TRACK_TOP;
-                const clampedY = Math.max(0, Math.min(maxTravel, relativeY - (THUMB_HEIGHT / 2)));
-                const ratio = clampedY / maxTravel;
+                const newThumbTop = Math.max(0, Math.min(maxTravel, startThumbTopRef.current + gestureState.dy));
+                const ratio = maxTravel > 0 ? newThumbTop / maxTravel : 0;
                 const finalPage = Math.max(1, Math.min(totalPages, Math.round(ratio * (totalPages - 1)) + 1));
                 
                 setScrubPage(finalPage);
@@ -135,7 +130,7 @@ export default function PdfViewer({ url, headers, ...props }) {
                 }
             },
         });
-    }, [totalPages, maxTravel, height, updateScrubFromY]);
+    }, [totalPages, maxTravel, height, currentPage]);
 
     // Cleanup scrub timer on unmount
     React.useEffect(() => {
