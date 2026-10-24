@@ -565,11 +565,11 @@ export default function ExamReviewScreen() {
                 )}
                 {/* Subject Info */}
                 {item.subjectInfo && (
-                    <View className="mt-4 pt-4 border-t border-gray-200">
+                    <View className="mt-4 mx-4 pt-4 border-t border-gray-200">
                         <Text className="text-gray-500 text-xs font-medium">Subject:</Text>
                         <Text className="text-slate-700 text-sm font-medium mt-1">
                             {item.subjectInfo.parentName ? `${item.subjectInfo.parentName} > ` : ''}
-                            <Text className="text-blue-600">{item.subjectInfo.name}</Text>
+                            <Text className="text-blue-600 font-semibold">{item.subjectInfo.name}</Text>
                         </Text>
                     </View>
                 )}
