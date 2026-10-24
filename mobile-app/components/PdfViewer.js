@@ -508,16 +508,7 @@ export default function PdfViewer({ url, headers, ...props }) {
                         {/* Subtle vertical track rail */}
                         <View style={styles.scrubberRail} />
 
-                        {/* Floating Tooltip Callout on Left while dragging */}
-                        {isScrubbing && (
-                            <View style={[styles.scrubberTooltip, { top: Math.max(0, Math.min(trackHeight - 38, thumbTop - 4)) }]}>
-                                <Text style={styles.scrubberTooltipText}>
-                                    Page {scrubPage} of {totalPages}
-                                </Text>
-                            </View>
-                        )}
-
-                        {/* Draggable Scrubber Thumb */}
+                        {/* Draggable Scrubber Thumb with Page Number */}
                         <View 
                             style={[
                                 styles.scrubberThumb, 
@@ -785,26 +776,6 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         marginTop: 1,
-    },
-    scrubberTooltip: {
-        position: 'absolute',
-        right: 50,
-        backgroundColor: '#0f172a',
-        borderColor: '#3b82f6',
-        borderWidth: 1.5,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.4,
-        shadowRadius: 5,
-    },
-    scrubberTooltipText: {
-        color: '#ffffff',
-        fontSize: 13,
-        fontWeight: 'bold',
     },
     // Bottom Navigator Pill
     bottomNavPill: {
