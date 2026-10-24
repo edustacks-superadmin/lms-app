@@ -276,6 +276,10 @@ const StudentProductDetail = () => {
     };
 
     const handleBuyClick = () => {
+        if (product && product.is_active === false) {
+            alert('This package is currently inactive and unavailable for purchase.');
+            return;
+        }
         if (!user) {
             alert('Please login to purchase');
             return;
@@ -999,7 +1003,21 @@ const StudentProductDetail = () => {
                             </div>
                         )}
 
-                        {!showPayment ? (
+                        {product.is_active === false ? (
+                            <div style={{
+                                padding: '16px',
+                                backgroundColor: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                borderRadius: '8px',
+                                textAlign: 'center',
+                                color: '#dc2626',
+                                fontWeight: '600',
+                                fontSize: '14px',
+                                marginBottom: '20px'
+                            }}>
+                                🚫 This package is currently inactive and unavailable for purchase.
+                            </div>
+                        ) : !showPayment ? (
                             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
                                 <button
                                     onClick={() => {

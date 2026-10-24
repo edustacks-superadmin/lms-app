@@ -1,15 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Plus, MoreVertical, Package } from 'lucide-react';
+import { ArrowLeft, Edit, Plus, MoreVertical, Package, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react';
 import { useProducts } from '../context/ProductContext';
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { getProductById, loading } = useProducts();
+    const { getProductById, toggleProductActive, loading } = useProducts();
     const [product, setProduct] = useState(null);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [showAddMenu, setShowAddMenu] = useState(false);
+    const [toggling, setToggling] = useState(false);
+
+    const handleToggleStatus = async () => {
+        if (!product || toggling) return;
+        const currentActive = product.is_active !== false;
+        const confirmMsg = currentActive
+            ? 'Are you sure you want to make this package INACTIVE? It will be hidden from the student store and cannot be purchased.'
+            : 'Make this package ACTIVE? It will become visible in the student store for students to purchase.';
+
+        if (!window.confirm(confirmMsg)) return;
+
+        setToggling(true);
+        const res = await toggleProductActive(product.id, currentActive);
+        setToggling(false);
+
+        if (res.success) {
+            setProduct(prev => ({ ...prev, is_active: res.is_active }));
+        } else {
+            alert('Failed to update product status: ' + (res.error || 'Unknown error'));
+        }
+    };
 
     useEffect(() => {
         const loadProduct = async () => {
@@ -45,12 +66,68 @@ const ProductDetail = () => {
                     >
                         <ArrowLeft size={24} color="#333" />
                     </button>
-                    <h1 style={{ fontSize: '24px', fontWeight: '400', margin: 0, color: '#1a1a1a' }}>
-                        {product.title}
-                    </h1>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: '400', margin: 0, color: '#1a1a1a' }}>
+                            {product.title}
+                        </h1>
+                        {product.is_active !== false ? (
+                            <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                backgroundColor: '#dcfce7',
+                                color: '#15803d',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                            }}>
+                                <CheckCircle2 size={13} /> Active (In Store)
+                            </span>
+                        ) : (
+                            <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                backgroundColor: '#fee2e2',
+                                color: '#b91c1c',
+                                padding: '4px 10px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                            }}>
+                                <XCircle size={13} /> Inactive (Hidden)
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={handleToggleStatus}
+                        disabled={toggling}
+                        className="btn"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '8px 14px',
+                            backgroundColor: product.is_active !== false ? '#fff1f2' : '#f0fdf4',
+                            color: product.is_active !== false ? '#e11d48' : '#16a34a',
+                            border: product.is_active !== false ? '1px solid #fecdd3' : '1px solid #bbf7d0',
+                            fontWeight: '600',
+                            fontSize: '13px',
+                            cursor: toggling ? 'not-allowed' : 'pointer',
+                            opacity: toggling ? 0.6 : 1,
+                            borderRadius: '4px',
+                            transition: 'all 0.2s'
+                        }}
+                        title={product.is_active !== false ? "Hide this package from student store" : "Make this package active in student store"}
+                    >
+                        {product.is_active !== false ? <EyeOff size={15} /> : <Eye size={15} />}
+                        {product.is_active !== false ? 'Make Inactive' : 'Make Active'}
+                    </button>
+
                     <button
                         onClick={() => navigate(`/store/product/${id}/edit`)}
                         className="btn btn-outline"

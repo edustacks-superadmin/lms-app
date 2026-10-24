@@ -50,6 +50,25 @@ const ProductCard = ({ product, dragHandleProps, isDragging }) => {
                 </div>
             )}
 
+            {/* Inactive Badge */}
+            {product.is_active === false && (
+                <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    backgroundColor: '#ef4444',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    zIndex: 10,
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                    Inactive
+                </div>
+            )}
+
             {/* Card Image Area */}
             <div
                 onClick={() => navigate(`/store/product/${product.id}`)}
@@ -177,7 +196,8 @@ const ProductList = () => {
         }
 
         // Status filter
-        const productStatus = product.status || 'approved';
+        const isInactive = product.is_active === false || product.status === 'inactive';
+        const productStatus = isInactive ? 'inactive' : (product.status || 'approved');
         if (productStatus !== statusFilter) {
             return false;
         }

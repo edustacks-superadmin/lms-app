@@ -21,7 +21,8 @@ const StudentStore = () => {
     }, []);
 
     useEffect(() => {
-        let result = products;
+        // Only show active products to students
+        let result = products.filter(product => product.is_active !== false);
 
         // Filter by category
         if (selectedCategory !== 'all') {

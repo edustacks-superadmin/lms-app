@@ -35,7 +35,8 @@ const EditProduct = () => {
         validityType: 'Relative (in days)',
         validity: '',
         pricingStartDate: '',
-        pricingEndDate: ''
+        pricingEndDate: '',
+        isActive: true
     });
 
     useEffect(() => {
@@ -63,7 +64,8 @@ const EditProduct = () => {
                     validityType: product.validity_type || 'Relative (in days)',
                     validity: product.validity || '',
                     pricingStartDate: product.pricing_start_date || '',
-                    pricingEndDate: product.pricing_end_date || ''
+                    pricingEndDate: product.pricing_end_date || '',
+                    isActive: product.is_active !== false
                 });
                 setImagePreview(product.image);
                 setLoading(false);
@@ -174,6 +176,37 @@ const EditProduct = () => {
                         {submitError}
                     </div>
                 )}
+
+                {/* Product Status (Active / Inactive) */}
+                <div style={{
+                    ...inputContainerStyle,
+                    backgroundColor: formData.isActive ? '#f0fdf4' : '#fef2f2',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: formData.isActive ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                    alignItems: 'center'
+                }}>
+                    <label style={{ ...labelStyle, color: formData.isActive ? '#15803d' : '#991b1b', fontWeight: '600' }}>
+                        Product Status
+                    </label>
+                    <div style={{ flex: 1, maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '15px', color: formData.isActive ? '#166534' : '#991b1b' }}>
+                            <input
+                                type="checkbox"
+                                name="isActive"
+                                checked={formData.isActive}
+                                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#16a34a' }}
+                            />
+                            {formData.isActive ? 'Active (Visible in Student Store)' : 'Inactive (Hidden from Student Store)'}
+                        </label>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#6b7280' }}>
+                            {formData.isActive
+                                ? '✓ This package is live and can be viewed and purchased by students.'
+                                : '✗ Hidden from students. Students cannot browse or purchase this package.'}
+                        </p>
+                    </div>
+                </div>
 
                 {/* Product Title */}
                 <div style={inputContainerStyle}>

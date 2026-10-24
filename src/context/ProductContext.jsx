@@ -115,7 +115,8 @@ export const ProductProvider = ({ children }) => {
                 validity: productData.validity,
                 pricing_start_date: productData.pricingStartDate || null,
                 pricing_end_date: productData.pricingEndDate || null,
-                display_order: nextOrder
+                display_order: nextOrder,
+                is_active: productData.isActive !== undefined ? productData.isActive : (productData.is_active !== undefined ? productData.is_active : true)
             };
 
             const { data, error } = await supabase
@@ -249,7 +250,8 @@ export const ProductProvider = ({ children }) => {
                 validity_type: productData.validityType,
                 validity: productData.validity,
                 pricing_start_date: productData.pricingStartDate || null,
-                pricing_end_date: productData.pricingEndDate || null
+                pricing_end_date: productData.pricingEndDate || null,
+                is_active: productData.isActive !== undefined ? productData.isActive : (productData.is_active !== undefined ? productData.is_active : true)
             };
 
             const { data, error } = await supabase
@@ -309,8 +311,36 @@ export const ProductProvider = ({ children }) => {
         }
     };
 
+    const toggleProductActive = async (id, currentIsActive) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const newStatus = !currentIsActive;
+            const { data, error } = await supabase
+                .from('products')
+                .update({ is_active: newStatus, updated_at: new Date().toISOString() })
+                .eq('id', id)
+                .select();
+
+            if (error) throw error;
+
+            // Update local state
+            setProducts(prev =>
+                prev.map(p => p.id === id ? { ...p, is_active: newStatus } : p)
+            );
+
+            return { success: true, is_active: newStatus, data: data?.[0] };
+        } catch (err) {
+            console.error('Error toggling product status:', err);
+            setError(err.message);
+            return { success: false, error: err.message };
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <ProductContext.Provider value={{ products, fetchProducts, addProduct, updateProductOrder, getProductById, updateProduct, loading, error }}>
+        <ProductContext.Provider value={{ products, fetchProducts, addProduct, updateProductOrder, getProductById, updateProduct, toggleProductActive, loading, error }}>
             {children}
         </ProductContext.Provider>
     );

@@ -35,9 +35,13 @@ export default async function handler(req, res) {
             try {
                 const { data: prod } = await supabase
                     .from('products')
-                    .select('price, institute_id')
+                    .select('price, institute_id, is_active')
                     .eq('id', effectiveProductId)
                     .maybeSingle();
+
+                if (prod && prod.is_active === false) {
+                    return res.status(400).json({ error: 'This package is currently inactive and cannot be purchased.' });
+                }
 
                 if (prod && prod.price) {
                     amount = Math.round(Number(prod.price) * 100);
