@@ -175,8 +175,10 @@ const CreateCoupon = () => {
                             </div>
                         ))}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                        Selected: {formData.applicable_products.length} products
+                    <div style={{ fontSize: '12px', color: formData.applicable_products.length === 0 ? '#059669' : '#2563eb', fontWeight: '500', marginTop: '6px' }}>
+                        {formData.applicable_products.length === 0 
+                            ? '✨ All Store Products: Leave unselected to apply this festival offer across all products.' 
+                            : `Selected: ${formData.applicable_products.length} product(s) (Restricted to these only)`}
                     </div>
                 </div>
 
