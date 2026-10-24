@@ -40,11 +40,11 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
     }));
 
     return (
-        <View className="mb-3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <View className="bg-white">
             <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={onToggle}
-                className={`p-4 flex-row items-center justify-between ${isExpanded ? 'bg-blue-50/50' : 'bg-white'}`}
+                className={`p-4 flex-row items-center justify-between ${isExpanded ? 'bg-blue-50/40' : 'bg-white'}`}
             >
                 <View className="flex-row items-center flex-1 pr-4">
                     <View className={`w-8 h-8 rounded-lg items-center justify-center mr-3 ${isExpanded ? 'bg-blue-100' : 'bg-gray-100'}`}>
@@ -67,7 +67,7 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
             </TouchableOpacity>
 
             <Animated.View style={animatedStyle}>
-                <View className="pb-2">
+                <View className="bg-slate-50/50 divide-y divide-slate-100 border-t border-slate-100">
                     {chapter.contents?.length > 0 ? (
                         chapter.contents.map((content, idx) => {
                             const isSelected = currentContentId === content.id;
@@ -89,10 +89,11 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
                                 <TouchableOpacity
                                     key={content.id}
                                     onPress={() => onContentPress(content)}
-                                    className={`flex-row items-center py-3 px-4 ml-4 border-l-2 ${isSelected ? 'border-blue-500 bg-blue-50/30' : 'border-gray-200'}`}
+                                    className={`flex-row items-center py-3.5 px-4 pl-6 ${isSelected ? 'bg-blue-50/60' : 'bg-white'}`}
                                 >
+                                    <View className="w-1.5 h-6 rounded-full bg-slate-200 mr-3" />
                                     <Ionicons name={iconName} size={18} color={iconColor} style={{ marginRight: 12 }} />
-                                    <Text className={`text-sm flex-1 ${isSelected ? 'text-blue-700 font-medium' : 'text-slate-600'}`}>
+                                    <Text className={`text-sm flex-1 ${isSelected ? 'text-blue-700 font-semibold' : 'text-slate-700'}`}>
                                         {content.title}
                                     </Text>
                                     {content.type === 'video' && (
@@ -345,7 +346,7 @@ export default function CoursePlayer() {
     );
 
     const renderLeaderboardItem = (item) => (
-        <View key={item.member_id} className="bg-white rounded-xl p-4 mb-2 flex-row items-center border border-gray-100">
+        <View key={item.member_id} className="p-4 bg-white flex-row items-center">
             <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${item.rank <= 3 ? 'bg-yellow-100' : 'bg-gray-100'}`}>
                 <Text className={`font-bold text-sm ${item.rank <= 3 ? 'text-yellow-600' : 'text-gray-600'}`}>{item.rank}</Text>
             </View>
@@ -414,24 +415,10 @@ export default function CoursePlayer() {
             </View>
 
             {/* Tab Content */}
-            <ScrollView className="flex-1 px-4 pt-4" contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView className="flex-1 pt-3" contentContainerStyle={{ paddingBottom: 40 }}>
                 {activeTab === 'learn' && (
-                    <>
-                        {/* Course Metadata */}
-                        <View className="mb-6">
-                            <Text className="text-sm text-slate-500 mb-2">
-                                {course?.instructor_name || 'Instructor'} • {chapters.reduce((acc, ch) => acc + (ch.contents?.length || 0), 0)} Lessons
-                            </Text>
-
-                            {/* Progress Bar */}
-                            <View className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                                <View className="h-full bg-green-500 w-[15%]" />
-                            </View>
-                            <Text className="text-xs text-slate-400 mt-1">15% Completed</Text>
-                        </View>
-
-                        {/* Chapters List */}
-                        <View className="pb-8">
+                    <View className="pb-8">
+                        <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
                             {/* Breadcrumb when drilled into a parent chapter */}
                             {currentParentChapter && (
                                 <TouchableOpacity
@@ -440,9 +427,9 @@ export default function CoursePlayer() {
                                         setActiveChapterId(null);
                                     }}
                                     activeOpacity={0.7}
-                                    className="flex-row items-center mb-4 p-3.5 bg-white rounded-2xl border border-blue-100 shadow-sm"
+                                    className="flex-row items-center p-3.5 bg-blue-50/60"
                                 >
-                                    <View className="w-8 h-8 rounded-full bg-blue-50 items-center justify-center mr-2.5">
+                                    <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-2.5">
                                         <Ionicons name="arrow-back" size={18} color="#2563EB" />
                                     </View>
                                     <View className="flex-1">
@@ -458,22 +445,14 @@ export default function CoursePlayer() {
 
                             {/* Parent Chapter direct contents (if any) */}
                             {currentParentChapter && currentParentChapter.contents?.length > 0 && (
-                                <View className="mb-4">
-                                    <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">
-                                        Chapter Material
-                                    </Text>
-                                    <ChapterAccordion
-                                        index={0}
-                                        chapter={currentParentChapter}
-                                        isExpanded={activeChapterId === currentParentChapter.id}
-                                        onToggle={() => setActiveChapterId(activeChapterId === currentParentChapter.id ? null : currentParentChapter.id)}
-                                        onContentPress={handleContentPress}
-                                        currentContentId={null}
-                                    />
-                                    <Text className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2 ml-1">
-                                        Sub-Chapters
-                                    </Text>
-                                </View>
+                                <ChapterAccordion
+                                    index={0}
+                                    chapter={currentParentChapter}
+                                    isExpanded={activeChapterId === currentParentChapter.id}
+                                    onToggle={() => setActiveChapterId(activeChapterId === currentParentChapter.id ? null : currentParentChapter.id)}
+                                    onContentPress={handleContentPress}
+                                    currentContentId={null}
+                                />
                             )}
 
                             {/* Render Visible Chapters or Sub-chapters */}
@@ -484,7 +463,7 @@ export default function CoursePlayer() {
 
                                 if (visibleList.length === 0) {
                                     return (
-                                        <View className="p-8 items-center bg-white rounded-2xl border border-gray-100">
+                                        <View className="p-8 items-center bg-white">
                                             <Ionicons name="folder-open-outline" size={40} color="#94a3b8" />
                                             <Text className="text-slate-400 text-sm mt-2 font-medium">No contents available</Text>
                                         </View>
@@ -494,7 +473,7 @@ export default function CoursePlayer() {
                                 return visibleList.map((chapter, index) => {
                                     const subChapters = chapters.filter(c => c.parent_id === chapter.id);
 
-                                    // If chapter has sub-chapters, render as Folder Card
+                                    // If chapter has sub-chapters, render as Folder Row
                                     if (subChapters.length > 0) {
                                         return (
                                             <TouchableOpacity
@@ -504,11 +483,11 @@ export default function CoursePlayer() {
                                                     setCurrentParentChapter(chapter);
                                                     setActiveChapterId(null);
                                                 }}
-                                                className="mb-3 bg-white rounded-2xl p-4 flex-row items-center justify-between border border-blue-100 shadow-sm"
+                                                className="p-4 bg-white flex-row items-center justify-between"
                                             >
                                                 <View className="flex-row items-center flex-1 pr-3">
-                                                    <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3.5 border border-blue-100">
-                                                        <Ionicons name="folder" size={24} color="#2563EB" />
+                                                    <View className="w-10 h-10 rounded-lg bg-blue-50 items-center justify-center mr-3 border border-blue-100">
+                                                        <Ionicons name="folder" size={22} color="#2563EB" />
                                                     </View>
                                                     <View className="flex-1">
                                                         <Text className="font-bold text-slate-800 text-[15px]">
@@ -541,14 +520,16 @@ export default function CoursePlayer() {
                                 });
                             })()}
                         </View>
-                    </>
+                    </View>
                 )}
 
                 {activeTab === 'running' && (
                     <View>
-                        <Text className="text-lg font-bold text-slate-800 mb-4">Running Exams</Text>
+                        <View className="px-4 mb-3">
+                            <Text className="text-lg font-bold text-slate-800">Running Exams</Text>
+                        </View>
                         {runningExams.length > 0 ? (
-                            <View className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
                                 {runningExams.map((exam, index) => renderExamCard(exam, 'running', index))}
                             </View>
                         ) : (
@@ -562,9 +543,11 @@ export default function CoursePlayer() {
 
                 {activeTab === 'upcoming' && (
                     <View>
-                        <Text className="text-lg font-bold text-slate-800 mb-4">Upcoming Exams</Text>
+                        <View className="px-4 mb-3">
+                            <Text className="text-lg font-bold text-slate-800">Upcoming Exams</Text>
+                        </View>
                         {upcomingExams.length > 0 ? (
-                            <View className="bg-white rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
                                 {upcomingExams.map((exam, index) => renderExamCard(exam, 'upcoming', index))}
                             </View>
                         ) : (
@@ -578,11 +561,15 @@ export default function CoursePlayer() {
 
                 {activeTab === 'leaderboard' && (
                     <View>
-                        <Text className="text-lg font-bold text-slate-800 mb-4">Course Leaderboard</Text>
+                        <View className="px-4 mb-3">
+                            <Text className="text-lg font-bold text-slate-800">Course Leaderboard</Text>
+                        </View>
                         {leaderboardLoading ? (
                             <ActivityIndicator size="large" color="#2563EB" />
                         ) : leaderboard.length > 0 ? (
-                            leaderboard.slice(0, 50).map(item => renderLeaderboardItem(item))
+                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
+                                {leaderboard.slice(0, 50).map(item => renderLeaderboardItem(item))}
+                            </View>
                         ) : (
                             <View className="items-center py-12">
                                 <Ionicons name="trophy-outline" size={48} color="#cbd5e1" />
