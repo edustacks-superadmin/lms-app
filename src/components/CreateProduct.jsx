@@ -28,7 +28,7 @@ const CreateProduct = () => {
         enableEmailNotification: false,
         offerName: '',
         price: '0.0',
-        validityType: 'Relative (in days)',
+        validityType: 'Fixed (calendar date)',
         validity: '',
         pricingStartDate: '',
         pricingEndDate: ''
@@ -385,24 +385,44 @@ const CreateProduct = () => {
                             onChange={handleChange}
                             style={inputStyle}
                         >
+                            <option value="Fixed (calendar date)">Fixed (calendar date)</option>
                             <option value="Relative (in days)">Relative (in days)</option>
                             <option value="Lifetime">Lifetime</option>
                         </select>
                     </div>
 
-                    <div style={inputContainerStyle}>
-                        <label style={labelStyle}>Validity</label>
-                        <div style={{ flex: 1, maxWidth: '600px' }}>
-                            <input
-                                type="text"
-                                name="validity"
-                                value={formData.validity}
-                                onChange={handleChange}
-                                style={{ ...inputStyle, width: '100%' }}
-                            />
-                            <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>User's product purchase validity will expire after the specified number of days. Leave blank for lifetime access.</p>
+                    {formData.validityType === 'Fixed (calendar date)' && (
+                        <div style={inputContainerStyle}>
+                            <label style={labelStyle}>Fixed Expiry Date</label>
+                            <div style={{ flex: 1, maxWidth: '600px' }}>
+                                <input
+                                    type="date"
+                                    name="validity"
+                                    value={formData.validity}
+                                    onChange={handleChange}
+                                    style={{ ...inputStyle, width: '100%' }}
+                                />
+                                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>All enrolled students' course access will expire on this exact calendar date (e.g. exam date).</p>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {formData.validityType === 'Relative (in days)' && (
+                        <div style={inputContainerStyle}>
+                            <label style={labelStyle}>Validity (in days)</label>
+                            <div style={{ flex: 1, maxWidth: '600px' }}>
+                                <input
+                                    type="number"
+                                    name="validity"
+                                    placeholder="e.g. 90"
+                                    value={formData.validity}
+                                    onChange={handleChange}
+                                    style={{ ...inputStyle, width: '100%' }}
+                                />
+                                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Student's product access will expire after the specified number of days from their purchase.</p>
+                            </div>
+                        </div>
+                    )}
 
                     <div style={inputContainerStyle}>
                         <label style={labelStyle}>Start Date</label>

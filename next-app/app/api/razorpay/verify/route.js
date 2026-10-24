@@ -77,21 +77,61 @@ export async function POST(request) {
                             .select('id')
                             .contains('allowed_products', [order.product_id]);
 
+                        // Fetch product validity details
+                        const { data: product } = await supabaseAdmin
+                            .from('products')
+                            .select('validity_type, validity')
+                            .eq('id', order.product_id)
+                            .maybeSingle();
+
+                        let expiresAt = null;
+                        if (product?.validity_type === 'Fixed (calendar date)' && product.validity) {
+                            expiresAt = new Date(`${product.validity}T23:59:59.999Z`).toISOString();
+                        } else if (product?.validity_type === 'Relative (in days)' && product.validity) {
+                            const days = parseInt(product.validity, 10);
+                            if (!isNaN(days) && days > 0) {
+                                expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+                            }
+                        }
+
                         if (linkedCourses && linkedCourses.length > 0) {
-                            const enrollmentData = linkedCourses.map(course => ({
-                                student_id: member.id,
-                                course_id: course.id,
-                                status: 'active',
-                                progress: 0,
-                                enrolled_at: new Date().toISOString()
-                            }));
+                            for (const course of linkedCourses) {
+                                const { data: existing } = await supabaseAdmin
+                                    .from('enrollments')
+                                    .select('id, cycle_number')
+                                    .or(`member_id.eq.${member.id},student_id.eq.${member.id}`)
+                                    .eq('course_id', course.id)
+                                    .maybeSingle();
 
-                            const { error: enrollError } = await supabaseAdmin
-                                .from('enrollments')
-                                .insert(enrollmentData);
+                                if (!existing) {
+                                    const { error: enrollError } = await supabaseAdmin
+                                        .from('enrollments')
+                                        .insert({
+                                            member_id: member.id,
+                                            student_id: member.id,
+                                            course_id: course.id,
+                                            status: 'active',
+                                            progress: 0,
+                                            enrolled_at: new Date().toISOString(),
+                                            expires_at: expiresAt,
+                                            cycle_number: 1
+                                        });
 
-                            if (enrollError && enrollError.code !== '23505') {
-                                console.error(`Enrollment error for product ${order.product_id}:`, enrollError);
+                                    if (enrollError && enrollError.code !== '23505') {
+                                        console.error(`Enrollment error for product ${order.product_id}:`, enrollError);
+                                    }
+                                } else {
+                                    // Repurchase renewal
+                                    await supabaseAdmin
+                                        .from('enrollments')
+                                        .update({
+                                            status: 'active',
+                                            enrolled_at: new Date().toISOString(),
+                                            expires_at: expiresAt,
+                                            cycle_number: (existing.cycle_number || 1) + 1
+                                        })
+                                        .eq('id', existing.id);
+                                }
                             }
                         }
                     });

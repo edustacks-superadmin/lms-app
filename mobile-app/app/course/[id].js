@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, Dimensions, Linking, Platform, FlatList } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, Dimensions, Linking, Platform, FlatList, Alert } from 'react-native';
 import PdfViewer from '../../components/PdfViewer';
 import ExamViewer from '../../components/ExamViewer';
 import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
@@ -163,6 +163,36 @@ export default function CoursePlayer() {
                     navigateToMyCourses();
                 }
                 return;
+            }
+
+            // Check Enrollment Expiry for non-public courses
+            if (!courseData.is_public) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user?.email) {
+                    const { data: member } = await supabase
+                        .from('members')
+                        .select('id')
+                        .ilike('email', user.email)
+                        .maybeSingle();
+
+                    if (member) {
+                        const { data: enrollment } = await supabase
+                            .from('enrollments')
+                            .select('expires_at, status')
+                            .or(`member_id.eq.${member.id},student_id.eq.${member.id}`)
+                            .eq('course_id', id)
+                            .maybeSingle();
+
+                        if (enrollment?.expires_at && new Date(enrollment.expires_at) < new Date()) {
+                            Alert.alert(
+                                '🔒 Access Expired',
+                                'Your validity for this course has expired. Please repurchase from the store to renew access.',
+                                [{ text: 'OK', onPress: () => router.canGoBack() ? router.back() : navigateToMyCourses() }]
+                            );
+                            return;
+                        }
+                    }
+                }
             }
 
             setCourse(courseData);

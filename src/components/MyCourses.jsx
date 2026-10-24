@@ -244,13 +244,16 @@ const MyCourses = () => {
             const courseMap = new Map();
             allCourses.forEach(enrollment => {
                 const courseId = enrollment.course_id;
+                const isExpired = Boolean(enrollment.expires_at && new Date(enrollment.expires_at) < new Date());
+                const enriched = { ...enrollment, isExpired };
+
                 if (!courseMap.has(courseId)) {
-                    courseMap.set(courseId, enrollment);
+                    courseMap.set(courseId, enriched);
                 } else {
-                    // Prefer manual enrollments (they have real progress data)
+                    // Prefer manual enrollments (they have real progress data and accurate expiry)
                     const existing = courseMap.get(courseId);
                     if (enrollment.source !== 'batch' && enrollment.source !== 'public') {
-                        courseMap.set(courseId, enrollment);
+                        courseMap.set(courseId, enriched);
                     }
                 }
             });
@@ -607,6 +610,7 @@ const MyCourses = () => {
                             {filteredCourses.map((enrollment) => {
                                 const progress = enrollment.progress || 0;
                                 const isCompleted = progress === 100;
+                                const isExpired = Boolean(enrollment.isExpired);
                                 const isFree = Boolean(
                                     enrollment.courses?.is_public === true &&
                                     (!enrollment.courses?.allowed_products || enrollment.courses.allowed_products.length === 0)
@@ -615,8 +619,14 @@ const MyCourses = () => {
                                 return (
                                     <tr
                                         key={enrollment.id}
-                                        onClick={() => navigate(`/student/course/${enrollment.course_id}`)}
-                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => {
+                                            if (isExpired) {
+                                                alert('Your validity for this course has expired. Please repurchase the product from the store to renew access and start fresh exam attempts.');
+                                                return;
+                                            }
+                                            navigate(`/student/course/${enrollment.course_id}`);
+                                        }}
+                                        style={{ cursor: 'pointer', opacity: isExpired ? 0.75 : 1 }}
                                     >
                                         <td>
                                             <div className="course-info-cell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '10px' }}>
@@ -634,15 +644,15 @@ const MyCourses = () => {
                                                                 fontWeight: '700',
                                                                 padding: '1px 6px',
                                                                 borderRadius: '10px',
-                                                                backgroundColor: isFree ? '#ecfdf5' : '#eff6ff',
-                                                                color: isFree ? '#059669' : '#2563eb',
-                                                                border: `1px solid ${isFree ? '#a7f3d0' : '#bfdbfe'}`,
+                                                                backgroundColor: isExpired ? '#fee2e2' : isFree ? '#ecfdf5' : '#eff6ff',
+                                                                color: isExpired ? '#b91c1c' : isFree ? '#059669' : '#2563eb',
+                                                                border: `1px solid ${isExpired ? '#fca5a5' : isFree ? '#a7f3d0' : '#bfdbfe'}`,
                                                                 letterSpacing: '0.03em',
                                                                 display: 'inline-flex',
                                                                 alignItems: 'center',
                                                                 flexShrink: 0
                                                             }}>
-                                                                {isFree ? 'FREE' : 'PAID'}
+                                                                {isExpired ? 'EXPIRED' : isFree ? 'FREE' : 'PAID'}
                                                             </span>
                                                         </div>
                                                         <div className="course-list-meta" style={{ marginTop: '2px', fontSize: '11px', gap: '10px' }}>

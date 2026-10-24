@@ -63,10 +63,20 @@ export default function Exams() {
             // 2. Fetch Enrollments
             const { data: enrollments } = await supabase
                 .from('enrollments')
-                .select('course_id')
+                .select('course_id, enrolled_at, expires_at')
                 .eq('member_id', memberId)
                 .in('status', ['active', 'completed']);
-            const enrolledCourseIds = (enrollments || []).map(e => e.course_id);
+
+            const now = new Date();
+            const courseCycleMap = {};
+            const validEnrollments = (enrollments || []).filter(e => {
+                if (e.expires_at && new Date(e.expires_at) < now) return false;
+                if (e.course_id) {
+                    courseCycleMap[e.course_id] = e.enrolled_at;
+                }
+                return true;
+            });
+            const enrolledCourseIds = validEnrollments.map(e => e.course_id);
 
             // 3. Fetch Batches & Valid Subscriptions
             const { data: batchMembers } = await supabase
@@ -143,8 +153,10 @@ export default function Exams() {
                     .in('course_id', allCourseIds);
 
                 const chapterMap = {};
+                const chapterCourseMap = {};
                 (chapters || []).forEach(ch => {
                     chapterMap[ch.id] = ch.courses?.title;
+                    chapterCourseMap[ch.id] = ch.course_id;
                 });
 
                 const chapterIds = (chapters || []).map(c => c.id);
@@ -159,6 +171,7 @@ export default function Exams() {
                         if (cc.exams && cc.exams.id) {
                             examMap.set(cc.exams.id, {
                                 ...cc.exams,
+                                course_id: chapterCourseMap[cc.chapter_id] || cc.exams.course_id,
                                 course_title: chapterMap[cc.chapter_id] || null,
                                 content_id: cc.id
                             });
@@ -177,6 +190,7 @@ export default function Exams() {
                     if (!examMap.has(dex.id)) {
                         examMap.set(dex.id, {
                             ...dex,
+                            course_id: dex.course_id,
                             course_title: dex.courses?.title || null
                         });
                     }
@@ -207,19 +221,30 @@ export default function Exams() {
             });
 
             // 8. Assemble Exams with computed metadata
-            const now = new Date();
             const examList = Array.from(examMap.values()).map(exam => {
                 const userAttempts = attemptsByExam[exam.id] || [];
                 const submittedAttempts = userAttempts.filter(a => a.submitted_at);
-                const hasCompleted = submittedAttempts.length > 0;
+
+                const cycleStartDate = (exam.course_id && courseCycleMap[exam.course_id])
+                    ? new Date(courseCycleMap[exam.course_id])
+                    : null;
+
+                const cycleSubmittedAttempts = cycleStartDate
+                    ? submittedAttempts.filter(a => new Date(a.started_at) >= cycleStartDate)
+                    : submittedAttempts;
+
+                const hasCompleted = cycleSubmittedAttempts.length > 0;
 
                 let bestScore = null;
                 let latestScore = null;
                 let latestAttemptId = null;
 
-                if (hasCompleted) {
-                    bestScore = Math.max(...submittedAttempts.map(a => a.score ?? 0));
-                    latestScore = submittedAttempts[0].score ?? 0;
+                if (cycleSubmittedAttempts.length > 0) {
+                    bestScore = Math.max(...cycleSubmittedAttempts.map(a => a.score ?? 0));
+                    latestScore = cycleSubmittedAttempts[0].score ?? 0;
+                    latestAttemptId = cycleSubmittedAttempts[0].id;
+                } else if (submittedAttempts.length > 0) {
+                    // Fallback to historical latest attempt for reviewing prior answers if desired
                     latestAttemptId = submittedAttempts[0].id;
                 }
 
@@ -238,13 +263,13 @@ export default function Exams() {
                 }
 
                 const maxAttempts = exam.max_attempts || 0;
-                const canRetake = maxAttempts === 0 || submittedAttempts.length < maxAttempts;
+                const canRetake = maxAttempts === 0 || cycleSubmittedAttempts.length < maxAttempts;
 
                 return {
                     ...exam,
                     status,
                     hasCompleted,
-                    attemptsCount: submittedAttempts.length,
+                    attemptsCount: cycleSubmittedAttempts.length,
                     bestScore: bestScore !== null ? parseFloat(Number(bestScore).toFixed(2)) : null,
                     latestScore: latestScore !== null ? parseFloat(Number(latestScore).toFixed(2)) : null,
                     latestAttemptId,

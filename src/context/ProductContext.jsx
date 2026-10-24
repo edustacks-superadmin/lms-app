@@ -260,6 +260,40 @@ export const ProductProvider = ({ children }) => {
 
             if (error) throw error;
 
+            // If admin opted to apply this expiry to existing students
+            if (productData.syncExistingEnrollments && productData.validity) {
+                try {
+                    let expiresAt = null;
+                    if (productData.validityType === 'Fixed (calendar date)') {
+                        expiresAt = new Date(`${productData.validity}T23:59:59.999Z`).toISOString();
+                    } else if (productData.validityType === 'Relative (in days)') {
+                        const days = parseInt(productData.validity, 10);
+                        if (!isNaN(days) && days > 0) {
+                            expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+                        }
+                    }
+
+                    const pid = parseInt(id, 10);
+                    const { data: courses } = await supabase
+                        .from('courses')
+                        .select('id, allowed_products');
+
+                    const linkedCourseIds = (courses || [])
+                        .filter(c => Array.isArray(c.allowed_products) && c.allowed_products.includes(pid))
+                        .map(c => c.id);
+
+                    if (linkedCourseIds.length > 0) {
+                        await supabase
+                            .from('enrollments')
+                            .update({ expires_at: expiresAt })
+                            .in('course_id', linkedCourseIds);
+                        console.log(`[ProductContext] Synced expires_at (${expiresAt}) for courses:`, linkedCourseIds);
+                    }
+                } catch (syncErr) {
+                    console.warn('[ProductContext] Error syncing existing enrollments:', syncErr);
+                }
+            }
+
             // Update local state
             setProducts(prev =>
                 prev.map(p => p.id === id ? data[0] : p)

@@ -143,10 +143,27 @@ export default async function handler(req, res) {
                             productIdsToEnroll.some(pid => c.allowed_products.includes(pid))
                         );
 
+                        // Fetch product validity details
+                        const { data: productsData } = await supabase
+                            .from('products')
+                            .select('id, validity_type, validity')
+                            .in('id', productIdsToEnroll);
+
                         for (const c of matchedCourses) {
+                            const matchingProduct = (productsData || []).find(p => c.allowed_products.includes(p.id));
+                            let expiresAt = null;
+                            if (matchingProduct?.validity_type === 'Fixed (calendar date)' && matchingProduct.validity) {
+                                expiresAt = new Date(`${matchingProduct.validity}T23:59:59.999Z`).toISOString();
+                            } else if (matchingProduct?.validity_type === 'Relative (in days)' && matchingProduct.validity) {
+                                const days = parseInt(matchingProduct.validity, 10);
+                                if (!isNaN(days) && days > 0) {
+                                    expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+                                }
+                            }
+
                             const { data: existing } = await supabase
                                 .from('enrollments')
-                                .select('id')
+                                .select('id, cycle_number')
                                 .eq('member_id', member.id)
                                 .eq('course_id', c.id)
                                 .maybeSingle();
@@ -160,9 +177,23 @@ export default async function handler(req, res) {
                                         institute_id: member.institute_id || instituteId || 10,
                                         status: 'active',
                                         progress: 0,
-                                        enrolled_at: new Date().toISOString()
+                                        enrolled_at: new Date().toISOString(),
+                                        expires_at: expiresAt,
+                                        cycle_number: 1
                                     });
                                 console.log(`[verify-payment] Enrolled member ${member.id} in course ${c.id}`);
+                            } else {
+                                // Repurchase / renewal: Reactivate and increment cycle
+                                await supabase
+                                    .from('enrollments')
+                                    .update({
+                                        status: 'active',
+                                        enrolled_at: new Date().toISOString(),
+                                        expires_at: expiresAt,
+                                        cycle_number: (existing.cycle_number || 1) + 1
+                                    })
+                                    .eq('id', existing.id);
+                                console.log(`[verify-payment] Renewed enrollment (cycle ${(existing.cycle_number || 1) + 1}) for member ${member.id} in course ${c.id}`);
                             }
                         }
 

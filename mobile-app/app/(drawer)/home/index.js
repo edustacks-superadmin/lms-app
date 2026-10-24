@@ -88,11 +88,16 @@ export default function Dashboard() {
                         // 1. Manual Enrollments
                         const { data: manualEnrollments } = await supabase
                             .from('enrollments')
-                            .select('course_id')
+                            .select('course_id, expires_at')
                             .eq('member_id', memberId)
                             .in('status', ['active', 'completed']);
 
-                        (manualEnrollments || []).forEach(e => countedCourseIds.add(e.course_id));
+                        const nowIso = new Date();
+                        (manualEnrollments || []).forEach(e => {
+                            if (!e.expires_at || new Date(e.expires_at) >= nowIso) {
+                                countedCourseIds.add(e.course_id);
+                            }
+                        });
 
                         // 2. Batch Courses (via subscriptions)
                         const { data: batchMemberships } = await supabase

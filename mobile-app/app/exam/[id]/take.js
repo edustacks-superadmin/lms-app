@@ -148,6 +148,7 @@ export default function NativeExamScreen() {
     const [showPalette, setShowPalette] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const lastTapRef = useRef({ time: 0, questionId: null, optionIndex: null });
+    const enrollmentCycleRef = useRef(null);
 
     // Math Equation Horizontal Scroll Locking
     const [isMathScrolling, setIsMathScrolling] = useState(false);
@@ -476,21 +477,62 @@ export default function NativeExamScreen() {
             }
 
             if (memberData) {
-                // Count previous attempts
-                const { count: previousAttempts, error: countError } = await supabase
+                // Fetch enrollment to verify access validity and enable cycle-aware attempt counting
+                let activeCourseId = courseId;
+                if (!activeCourseId) {
+                    const { data: contentItem } = await supabase
+                        .from('chapter_contents')
+                        .select('chapters(course_id)')
+                        .eq('exam_id', id)
+                        .maybeSingle();
+                    activeCourseId = contentItem?.chapters?.course_id;
+                }
+
+                let enrollment = null;
+                if (activeCourseId) {
+                    const { data: enrollData } = await supabase
+                        .from('enrollments')
+                        .select('id, enrolled_at, expires_at, status')
+                        .or(`member_id.eq.${memberData.id},student_id.eq.${memberData.id}`)
+                        .eq('course_id', activeCourseId)
+                        .maybeSingle();
+                    enrollment = enrollData;
+                }
+
+                if (enrollment) {
+                    enrollmentCycleRef.current = enrollment;
+                    // Check if access is expired
+                    if (enrollment.expires_at && new Date(enrollment.expires_at) < new Date()) {
+                        Alert.alert(
+                            '🔒 Access Expired',
+                            'Your validity for this course/test series has expired. Please repurchase to renew your access.',
+                            [{ text: 'Go Back', onPress: () => router.back() }]
+                        );
+                        return;
+                    }
+                }
+
+                // Count previous attempts in current cycle
+                let attemptsQuery = supabase
                     .from('exam_attempts')
                     .select('*', { count: 'exact', head: true })
                     .eq('exam_id', id)
                     .eq('member_id', memberData.id)
                     .not('submitted_at', 'is', null);
 
+                if (enrollment?.enrolled_at) {
+                    attemptsQuery = attemptsQuery.gte('started_at', enrollment.enrolled_at);
+                }
+
+                const { count: previousAttempts, error: countError } = await attemptsQuery;
+
                 if (!countError && examData.max_attempts > 0) {
-                    // Check if limit reached
+                    // Check if limit reached for current cycle
                     if (previousAttempts >= examData.max_attempts) {
                         const attemptWord = examData.max_attempts === 1 ? 'attempt' : 'attempts';
                         Alert.alert(
                             '🚫 All Attempts Used',
-                            `You've completed all ${examData.max_attempts} ${attemptWord} for this exam.\n\n📊 Would you like to view your previous results instead?`,
+                            `You've completed all ${examData.max_attempts} ${attemptWord} for this exam in your current enrollment cycle.\n\n📊 Would you like to view your previous results instead?`,
                             [
                                 { text: 'View Results', onPress: () => router.push(`/exam/${id}/review`) },
                                 { text: 'Go Back', onPress: () => router.back(), style: 'cancel' }
@@ -646,13 +688,19 @@ export default function NativeExamScreen() {
             });
             score = Math.max(0, Math.round(score * 100) / 100);
 
-            // 2.5. Count previous attempts to get correct attempt_number
-            const { count: previousAttempts } = await supabase
+            // 2.5. Count previous attempts in current cycle to get correct attempt_number
+            let attemptCountQuery = supabase
                 .from('exam_attempts')
                 .select('*', { count: 'exact', head: true })
                 .eq('exam_id', id)
                 .eq('member_id', memberData.id)
                 .not('submitted_at', 'is', null);
+
+            if (enrollmentCycleRef.current?.enrolled_at) {
+                attemptCountQuery = attemptCountQuery.gte('started_at', enrollmentCycleRef.current.enrolled_at);
+            }
+
+            const { count: previousAttempts } = await attemptCountQuery;
 
             const currentAttemptNumber = (previousAttempts || 0) + 1;
 

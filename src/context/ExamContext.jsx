@@ -283,7 +283,7 @@ export const ExamProvider = ({ children }) => {
         }
     };
 
-    const getStudentAttempts = async (examId, userId) => {
+    const getStudentAttempts = async (examId, userId, currentCycleOnly = false) => {
         try {
             const memberId = await resolveMemberId(userId);
             let query = supabase
@@ -293,6 +293,33 @@ export const ExamProvider = ({ children }) => {
 
             if (memberId) {
                 query = query.eq('member_id', memberId);
+            }
+
+            if (currentCycleOnly && memberId) {
+                // Find course_id for this exam
+                const exam = await getExamById(examId);
+                let courseId = exam?.course_id;
+                if (!courseId) {
+                    const { data: contentItem } = await supabase
+                        .from('chapter_contents')
+                        .select('chapters(course_id)')
+                        .eq('exam_id', examId)
+                        .maybeSingle();
+                    courseId = contentItem?.chapters?.course_id;
+                }
+
+                if (courseId) {
+                    const { data: enrollment } = await supabase
+                        .from('enrollments')
+                        .select('enrolled_at')
+                        .or(`member_id.eq.${memberId},student_id.eq.${memberId}`)
+                        .eq('course_id', courseId)
+                        .maybeSingle();
+
+                    if (enrollment?.enrolled_at) {
+                        query = query.gte('started_at', enrollment.enrolled_at);
+                    }
+                }
             }
 
             const { data, error } = await query.order('attempt_number', { ascending: true });
@@ -308,9 +335,9 @@ export const ExamProvider = ({ children }) => {
     const createAttempt = async (examId, userId, instituteId = 10) => {
         try {
             const memberId = await resolveMemberId(userId);
-            // Get existing attempts count
-            const attempts = await getStudentAttempts(examId, memberId || userId);
-            const attemptNumber = attempts.length + 1;
+            // Get existing attempts count in current cycle
+            const cycleAttempts = await getStudentAttempts(examId, memberId || userId, true);
+            const attemptNumber = cycleAttempts.length + 1;
 
             const { data, error } = await supabase
                 .from('exam_attempts')
@@ -364,12 +391,38 @@ export const ExamProvider = ({ children }) => {
             const exam = await getExamById(examId);
             if (!exam) return { canTake: false, reason: 'Exam not found' };
 
-            // Check attempts
-            const attempts = await getStudentAttempts(examId, userId);
+            const memberId = await resolveMemberId(userId);
+
+            // Verify course enrollment validity / expiry
+            let courseId = exam.course_id;
+            if (!courseId) {
+                const { data: contentItem } = await supabase
+                    .from('chapter_contents')
+                    .select('chapters(course_id)')
+                    .eq('exam_id', examId)
+                    .maybeSingle();
+                courseId = contentItem?.chapters?.course_id;
+            }
+
+            if (courseId && memberId) {
+                const { data: enrollment } = await supabase
+                    .from('enrollments')
+                    .select('expires_at, status')
+                    .or(`member_id.eq.${memberId},student_id.eq.${memberId}`)
+                    .eq('course_id', courseId)
+                    .maybeSingle();
+
+                if (enrollment?.expires_at && new Date(enrollment.expires_at) < new Date()) {
+                    return { canTake: false, reason: 'Course validity has expired. Please repurchase to renew your access.' };
+                }
+            }
+
+            // Check cycle-aware attempts
+            const attempts = await getStudentAttempts(examId, userId, true);
 
             // Check max attempts
             if (exam.max_attempts > 0 && attempts.length >= exam.max_attempts) {
-                return { canTake: false, reason: `Maximum attempts (${exam.max_attempts}) reached` };
+                return { canTake: false, reason: `Maximum attempts (${exam.max_attempts}) reached for your current enrollment cycle` };
             }
 
             // Check gap between attempts

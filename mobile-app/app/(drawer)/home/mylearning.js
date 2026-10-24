@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Image, Alert } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
 import { DrawerActions, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../../lib/supabase';
@@ -195,13 +195,16 @@ export default function MyLearning() {
             const courseMap = new Map();
             allCourses.forEach(enrollment => {
                 const courseId = enrollment.course_id;
-                // Prefer manual enrollments for progress
+                const isExpired = Boolean(enrollment.expires_at && new Date(enrollment.expires_at) < new Date());
+                const enriched = { ...enrollment, isExpired };
+
+                // Prefer manual enrollments for progress and expiration accuracy
                 if (!courseMap.has(courseId)) {
-                    courseMap.set(courseId, enrollment);
+                    courseMap.set(courseId, enriched);
                 } else {
                     const existing = courseMap.get(courseId);
                     if (enrollment.source !== 'batch' && enrollment.source !== 'public' && enrollment.source !== 'product') {
-                        courseMap.set(courseId, enrollment);
+                        courseMap.set(courseId, enriched);
                     }
                 }
             });
@@ -235,12 +238,24 @@ export default function MyLearning() {
         const chapCount = course.chapters?.length || 0;
         const progress = item.progress || 0;
         const iconOrThumb = course.image || course.thumbnail_url || course.thumbnail || course.image_url;
+        const isExpired = Boolean(item.isExpired);
 
         return (
             <TouchableOpacity
                 className="bg-white border-b border-gray-100 flex-row"
                 style={{ height: 80 }}
                 onPress={() => {
+                    if (isExpired) {
+                        Alert.alert(
+                            '🔒 Access Expired',
+                            'Your access to this course has expired. Please repurchase the product from the store to renew access and start fresh attempts.',
+                            [
+                                { text: 'View Store', onPress: () => router.push('/store') },
+                                { text: 'Cancel', style: 'cancel' }
+                            ]
+                        );
+                        return;
+                    }
                     if (course && course.id) {
                         router.push({
                             pathname: '/course/[id]',
@@ -275,9 +290,9 @@ export default function MyLearning() {
                     </Text>
 
                     <View className="flex-row items-center">
-                        <View className={`${course.is_public ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'} border px-2 py-0.5 rounded mr-2`}>
-                            <Text className={`text-[10px] ${course.is_public ? 'text-green-600' : 'text-amber-600'} font-bold`}>
-                                {course.is_public ? 'FREE' : 'PAID'}
+                        <View className={`${isExpired ? 'bg-rose-50 border-rose-200' : course.is_public ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'} border px-2 py-0.5 rounded mr-2`}>
+                            <Text className={`text-[10px] ${isExpired ? 'text-rose-600' : course.is_public ? 'text-green-600' : 'text-amber-600'} font-bold`}>
+                                {isExpired ? 'EXPIRED' : (course.is_public ? 'FREE' : 'PAID')}
                             </Text>
                         </View>
                         <Text className="text-xs text-slate-400 font-medium">
@@ -286,9 +301,13 @@ export default function MyLearning() {
                     </View>
                 </View>
 
-                {/* Play Button */}
+                {/* Action Icon */}
                 <View className="justify-center pr-4">
-                    <Ionicons name="play-circle" size={28} color="#2563EB" opacity={0.8} />
+                    {isExpired ? (
+                        <Ionicons name="lock-closed" size={24} color="#f43f5e" opacity={0.8} />
+                    ) : (
+                        <Ionicons name="play-circle" size={28} color="#2563EB" opacity={0.8} />
+                    )}
                 </View>
             </TouchableOpacity>
         );
