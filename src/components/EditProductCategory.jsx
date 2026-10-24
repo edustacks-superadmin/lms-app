@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useProductCategories } from '../context/ProductCategoryContext';
+import { supabase } from '../supabaseClient';
 
 const EditProductCategory = () => {
     const { id } = useParams();
@@ -21,16 +22,48 @@ const EditProductCategory = () => {
     }, []);
 
     useEffect(() => {
-        const category = categories.find(c => c.id === id);
-        if (category) {
-            setFormData({
-                name: category.name || '',
-                description: category.description || '',
-                color: category.color || '#0055aa'
-            });
-            setLoading(false);
+        let isMounted = true;
+        const loadCategory = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // Try from local categories first with string comparison
+                let category = categories.find(c => String(c.id) === String(id));
+
+                if (!category) {
+                    const { data, error: fetchErr } = await supabase
+                        .from('product_categories')
+                        .select('*')
+                        .eq('id', id)
+                        .maybeSingle();
+
+                    if (fetchErr) throw fetchErr;
+                    category = data;
+                }
+
+                if (isMounted) {
+                    if (category) {
+                        setFormData({
+                            name: category.name || '',
+                            description: category.description || '',
+                            color: category.color || '#0055aa'
+                        });
+                    } else if (categories.length > 0) {
+                        setError('Category not found');
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading category:', err);
+                if (isMounted) setError(err.message || 'Error loading category');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        if (id) {
+            loadCategory();
         }
-    }, [categories, id]);
+    }, [id, categories]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,7 +81,11 @@ const EditProductCategory = () => {
     };
 
     if (loading) {
-        return <div style={{ flex: 1, padding: '20px' }}>Loading...</div>;
+        return (
+            <div style={{ flex: 1, padding: '40px', textAlign: 'center', color: '#666' }}>
+                <p>Loading category...</p>
+            </div>
+        );
     }
 
     return (
@@ -103,7 +140,7 @@ const EditProductCategory = () => {
                             fontSize: '14px',
                             maxWidth: '600px'
                         }}
-                        placeholder="e.g., 538, 400, 543"
+                        placeholder="e.g., APPSC AEE, 538, 400"
                     />
                 </div>
 

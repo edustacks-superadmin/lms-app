@@ -85,7 +85,7 @@ export const ProductCategoryProvider = ({ children }) => {
 
             // Update local state
             setCategories(prev =>
-                prev.map(cat => cat.id === id ? { ...cat, ...data[0] } : cat)
+                prev.map(cat => String(cat.id) === String(id) ? { ...cat, ...data[0] } : cat)
             );
             return { success: true, data };
         } catch (err) {
@@ -109,7 +109,7 @@ export const ProductCategoryProvider = ({ children }) => {
             if (error) throw error;
 
             // Remove from local state
-            setCategories(prev => prev.filter(cat => cat.id !== id));
+            setCategories(prev => prev.filter(cat => String(cat.id) !== String(id)));
             return { success: true };
         } catch (err) {
             console.error('Error deleting category:', err);
