@@ -280,7 +280,7 @@ const SettingsMobileApp = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
-                                Current Version
+                                Current Version (Latest on Play Store)
                             </label>
                             <input
                                 type="text"
@@ -290,6 +290,9 @@ const SettingsMobileApp = () => {
                                 placeholder="1.0.4"
                                 style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
                             />
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                                Triggers soft in-app banner for students on older versions.
+                            </p>
                         </div>
                         <div>
                             <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
@@ -303,7 +306,57 @@ const SettingsMobileApp = () => {
                                 placeholder="1.0.0"
                                 style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px' }}
                             />
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                                Used when Force Update is enabled to block versions older than this.
+                            </p>
                         </div>
+                    </div>
+
+                    {/* Force Update Toggle Switch */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        padding: '16px',
+                        backgroundColor: config.forceUpdate ? '#fef2f2' : '#f9fafb',
+                        borderRadius: '8px',
+                        border: `1px solid ${config.forceUpdate ? '#fecaca' : '#e5e7eb'}`,
+                        marginBottom: '20px'
+                    }}>
+                        <div style={{ maxWidth: '80%' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <AlertTriangle size={16} color={config.forceUpdate ? '#dc2626' : '#6b7280'} />
+                                <strong style={{ fontSize: '15px', color: config.forceUpdate ? '#991b1b' : '#1f2937' }}>
+                                    Enforce Mandatory App Update (Force Update)
+                                </strong>
+                                {config.forceUpdate ? (
+                                    <span style={{ fontSize: '11px', backgroundColor: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>Active (Blocking)</span>
+                                ) : (
+                                    <span style={{ fontSize: '11px', backgroundColor: '#f3f4f6', color: '#6b7280', padding: '2px 8px', borderRadius: '12px', fontWeight: '600' }}>Off (Soft Banner Only)</span>
+                                )}
+                            </div>
+                            <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0 0 0', lineHeight: '1.4' }}>
+                                When enabled, students running any version below <strong>Minimum Required Version ({config.minimumVersion})</strong> will be completely blocked with a full-screen prompt and forced to update from Google Play before they can access the app.
+                            </p>
+                        </div>
+                        <label style={{ position: 'relative', display: 'inline-block', width: '48px', height: '24px', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={config.forceUpdate}
+                                onChange={() => handleToggle('forceUpdate')}
+                                style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{
+                                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                                backgroundColor: config.forceUpdate ? '#dc2626' : '#ccc',
+                                borderRadius: '24px', transition: '.3s'
+                            }}>
+                                <span style={{
+                                    position: 'absolute', content: '""', height: '18px', width: '18px', left: config.forceUpdate ? '26px' : '3px', bottom: '3px',
+                                    backgroundColor: 'white', borderRadius: '50%', transition: '.3s'
+                                }} />
+                            </span>
+                        </label>
                     </div>
 
                     <div style={{ marginBottom: '20px' }}>

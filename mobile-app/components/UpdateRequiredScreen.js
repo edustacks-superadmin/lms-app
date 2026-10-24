@@ -9,16 +9,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { getAppVersion } from '../lib/configService';
 
 export default function UpdateRequiredScreen({ config }) {
-    const { updateMessage, playStoreUrl, current, minimum } = config?.version || {};
+    const { updateMessage, playStoreUrl, storeUrl, current, minimum } = config?.version || {};
     const appVersion = getAppVersion();
 
-    const handleUpdate = () => {
-        const url = playStoreUrl ||
-            (Platform.OS === 'android'
-                ? 'https://play.google.com/store/apps/details?id=com.maheshiesacademy.mobile'
-                : 'https://apps.apple.com/app/id0000000000');
+    const handleUpdate = async () => {
+        const packageName = 'com.maheshiesacademy.mobile';
+        const marketUrl = `market://details?id=${packageName}`;
+        const webUrl = storeUrl || playStoreUrl || `https://play.google.com/store/apps/details?id=${packageName}`;
 
-        Linking.openURL(url).catch(err => console.error('Error opening store:', err));
+        if (Platform.OS === 'android') {
+            try {
+                const canOpen = await Linking.canOpenURL(marketUrl);
+                if (canOpen) {
+                    await Linking.openURL(marketUrl);
+                    return;
+                }
+            } catch (err) {
+                console.log('Fallback to web store URL');
+            }
+        }
+
+        Linking.openURL(webUrl).catch(err => console.error('Error opening store:', err));
     };
 
     return (
