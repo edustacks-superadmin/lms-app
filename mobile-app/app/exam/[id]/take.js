@@ -895,7 +895,7 @@ export default function NativeExamScreen() {
                 </View>
 
                 {/* Unified Question & Options with dividing line - Edge-to-edge (no wasted surrounding padding) */}
-                <View className="bg-white border-y border-slate-200 mb-2.5">
+                <View className="bg-white border-y border-slate-200">
                     {/* Question Section */}
                     <View className="px-4 py-3">
                         <MathWebView
@@ -910,42 +910,45 @@ export default function NativeExamScreen() {
 
                     {/* Options list with line between each */}
                     <View>
-                        {item.options.map((opt, idx) => (
-                            <OptionCard
-                                key={idx}
-                                item={item}
-                                index={idx}
-                                isLast={idx === item.options.length - 1}
-                                isSelectedOption={isSelectedOption}
-                                handleOptionSelect={handleOptionSelect}
-                                quizMode={quizMode}
-                            />
-                        ))}
+                        {item.options.map((opt, idx) => {
+                            const hasExplanationBelow = quizMode && isSelectedOption !== undefined && !!item.explanation;
+                            return (
+                                <OptionCard
+                                    key={idx}
+                                    item={item}
+                                    index={idx}
+                                    isLast={!hasExplanationBelow && idx === item.options.length - 1}
+                                    isSelectedOption={isSelectedOption}
+                                    handleOptionSelect={handleOptionSelect}
+                                    quizMode={quizMode}
+                                />
+                            );
+                        })}
                     </View>
+
+                    {/* Explanation Box (Quiz Mode Only) - seamlessly attached inside container */}
+                    {quizMode && isSelectedOption !== undefined && item.explanation && (
+                        <View className="bg-blue-50/60 px-4 py-3 border-t border-slate-100">
+                            <View className="flex-row items-center mb-1">
+                                <Ionicons name="information-circle" size={16} color="#2563EB" />
+                                <Text className="text-blue-700 font-bold ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
+                            </View>
+                            <MathWebView
+                                content={item.explanation}
+                                style={{ minHeight: 20, backgroundColor: 'transparent' }}
+                                onScrollStatusChange={handleMathScrollStatusChange}
+                            />
+                        </View>
+                    )}
                 </View>
 
                 {/* Helpful Clear Response Tip when an option is selected */}
                 {!quizMode && isSelectedOption !== undefined && (
-                    <View className="flex-row items-center justify-center mt-2 px-4 opacity-70">
+                    <View className="flex-row items-center justify-center mt-3 px-4 opacity-70">
                         <Ionicons name="information-circle-outline" size={13} color="#94a3b8" />
                         <Text className="text-slate-400 text-[11px] font-medium ml-1">
                             Double tap selected option to clear response
                         </Text>
-                    </View>
-                )}
-
-                {/* Explanation Box (Quiz Mode Only) - Edge-to-edge */}
-                {quizMode && isSelectedOption !== undefined && item.explanation && (
-                    <View className="mt-2.5 bg-blue-50/70 border-y border-blue-200 px-4 py-3 mb-4">
-                        <View className="flex-row items-center mb-1.5">
-                            <Ionicons name="information-circle" size={17} color="#2563EB" />
-                            <Text className="text-blue-700 font-bold ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
-                        </View>
-                        <MathWebView
-                            content={item.explanation}
-                            style={{ minHeight: 24, backgroundColor: 'transparent' }}
-                            onScrollStatusChange={handleMathScrollStatusChange}
-                        />
                     </View>
                 )}
             </ScrollView>

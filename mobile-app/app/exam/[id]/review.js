@@ -489,10 +489,10 @@ export default function ExamReviewScreen() {
                     </View>
                 </View>
 
-                {/* Unified Question & Options with dividing line - Edge-to-edge */}
-                <View className="bg-white border-y border-slate-200 mb-2.5">
+                {/* Unified Question, Options & Explanation Container - Edge-to-edge */}
+                <View className="bg-white border-y border-slate-200">
                     {/* Question Section */}
-                    <View className="px-4 py-3.5">
+                    <View className="px-4 py-3">
                         <MathWebView
                             content={item.question}
                             style={{ minHeight: 24 }}
@@ -512,6 +512,7 @@ export default function ExamReviewScreen() {
                             // 2. Did the user SELECT this?
                             const isSelectedByUser = selectedIndex === idx;
                             const isLast = idx === item.options.length - 1;
+                            const hasExplanationBelow = !!item.explanation;
 
                             let bgClass = 'bg-white';
                             let icon = null;
@@ -535,7 +536,7 @@ export default function ExamReviewScreen() {
                             return (
                                 <View
                                     key={idx}
-                                    className={`flex-row items-center py-3.5 px-4 ${bgClass} ${!isLast ? 'border-b border-slate-100' : ''}`}
+                                    className={`flex-row items-center py-3.5 px-4 ${bgClass} ${(!hasExplanationBelow && isLast) ? '' : 'border-b border-slate-100'}`}
                                 >
                                     <View className="flex-1">
                                         <View pointerEvents="none">
@@ -550,22 +551,23 @@ export default function ExamReviewScreen() {
                             );
                         })}
                     </View>
+
+                    {/* Explanation Section - Seamlessly integrated directly under options with a dividing line */}
+                    {item.explanation && (
+                        <View className="bg-blue-50/60 px-4 py-3">
+                            <View className="flex-row items-center mb-1">
+                                <Ionicons name="information-circle" size={16} color="#2563EB" />
+                                <Text className="font-bold text-blue-800 ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
+                            </View>
+                            <MathWebView
+                                content={item.explanation}
+                                style={{ minHeight: 20 }}
+                                onScrollStatusChange={handleMathScrollStatusChange}
+                            />
+                        </View>
+                    )}
                 </View>
 
-                {/* Explanation - Edge-to-edge */}
-                {item.explanation && (
-                    <View className="bg-blue-50/70 border-y border-blue-200 px-4 py-3">
-                        <View className="flex-row items-center mb-1.5">
-                            <Ionicons name="information-circle" size={17} color="#2563EB" />
-                            <Text className="font-bold text-blue-800 ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
-                        </View>
-                        <MathWebView
-                            content={item.explanation}
-                            style={{ minHeight: 24 }}
-                            onScrollStatusChange={handleMathScrollStatusChange}
-                        />
-                    </View>
-                )}
                 {/* Subject Info */}
                 {item.subjectInfo && (
                     <View className="mt-2.5 mx-4 pb-2">
