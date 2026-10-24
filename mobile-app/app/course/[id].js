@@ -415,7 +415,7 @@ export default function CoursePlayer() {
             </View>
 
             {/* Tab Content */}
-            <ScrollView className="flex-1 pt-3" contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
                 {activeTab === 'learn' && (
                     <View className="pb-8">
                         <View className="bg-white border-t border-slate-200">
@@ -525,9 +525,6 @@ export default function CoursePlayer() {
 
                 {activeTab === 'running' && (
                     <View>
-                        <View className="px-4 mb-3">
-                            <Text className="text-lg font-bold text-slate-800">Running Exams</Text>
-                        </View>
                         {runningExams.length > 0 ? (
                             <View className="bg-white border-t border-slate-200">
                                 {runningExams.map((exam, index) => renderExamCard(exam, 'running', index))}
@@ -543,9 +540,6 @@ export default function CoursePlayer() {
 
                 {activeTab === 'upcoming' && (
                     <View>
-                        <View className="px-4 mb-3">
-                            <Text className="text-lg font-bold text-slate-800">Upcoming Exams</Text>
-                        </View>
                         {upcomingExams.length > 0 ? (
                             <View className="bg-white border-t border-slate-200">
                                 {upcomingExams.map((exam, index) => renderExamCard(exam, 'upcoming', index))}
@@ -561,11 +555,8 @@ export default function CoursePlayer() {
 
                 {activeTab === 'leaderboard' && (
                     <View>
-                        <View className="px-4 mb-3">
-                            <Text className="text-lg font-bold text-slate-800">Course Leaderboard</Text>
-                        </View>
                         {leaderboardLoading ? (
-                            <ActivityIndicator size="large" color="#2563EB" />
+                            <ActivityIndicator size="large" color="#2563EB" style={{ marginTop: 24 }} />
                         ) : leaderboard.length > 0 ? (
                             <View className="bg-white border-t border-slate-200">
                                 {leaderboard.slice(0, 50).map(item => renderLeaderboardItem(item))}
