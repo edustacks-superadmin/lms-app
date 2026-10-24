@@ -4,7 +4,7 @@ import { useChapters } from '../context/ChapterContext';
 import { useCourses } from '../context/CourseContext';
 import { useExams } from '../context/ExamContext';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { ArrowLeft, Plus, Folder, FileText, Video, File, GripVertical, ArrowRight, Eye, ExternalLink, BarChart3, X, Search } from 'lucide-react';
+import { ArrowLeft, Plus, Folder, FileText, Video, File, GripVertical, ArrowRight, Eye, ExternalLink, BarChart3, X, Search, Edit2, Trash2, Save } from 'lucide-react';
 import PDFViewer from './PDFViewer';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { supabase } from '../supabaseClient';
@@ -12,12 +12,13 @@ import { supabase } from '../supabaseClient';
 const ChapterContents = () => {
     const { id: courseId, chapterId } = useParams();
     const navigate = useNavigate();
-    const { chapters, fetchChapters, addContent, updateContent, deleteContent, addChapter } = useChapters();
+    const { chapters, fetchChapters, addContent, updateContent, deleteContent, addChapter, updateChapter, deleteChapter } = useChapters();
     const { courses } = useCourses();
     const { exams } = useExams();
 
     const [course, setCourse] = useState(null);
     const [chapter, setChapter] = useState(null);
+    const [parentChapter, setParentChapter] = useState(null);
     const [contents, setContents] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -38,8 +39,9 @@ const ChapterContents = () => {
     const [examSearchQuery, setExamSearchQuery] = useState('');
 
     // Sub-Chapter Modal State
-    const [subChapterModal, setSubChapterModal] = useState({ isOpen: false });
-    const [subChapterFormData, setSubChapterFormData] = useState({ title: '', description: '', imageFile: null });
+    const [subChapterModal, setSubChapterModal] = useState({ isOpen: false, subChapter: null });
+    const [subChapterFormData, setSubChapterFormData] = useState({ title: '', description: '', image: '', imageFile: null });
+    const [deleteSubChapterModal, setDeleteSubChapterModal] = useState({ isOpen: false, subChapter: null });
 
     // PDF/Video Viewer State
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
@@ -86,6 +88,17 @@ const ChapterContents = () => {
             // Sort contents by order
             const sortedContents = (chapterData.chapter_contents || []).sort((a, b) => a.order - b.order);
             setContents(sortedContents);
+
+            if (chapterData.parent_id) {
+                const { data: parentData } = await supabase
+                    .from('chapters')
+                    .select('id, name')
+                    .eq('id', chapterData.parent_id)
+                    .single();
+                setParentChapter(parentData);
+            } else {
+                setParentChapter(null);
+            }
         }
 
         // Get sub-chapters
@@ -109,10 +122,52 @@ const ChapterContents = () => {
         setLoading(false);
     };
 
+    const handleOpenAddSubChapterModal = () => {
+        setSubChapterModal({ isOpen: true, subChapter: null });
+        setSubChapterFormData({ title: '', description: '', image: '', imageFile: null });
+        setShowAddDropdown(false);
+    };
+
+    const handleOpenEditSubChapterModal = (subChapter) => {
+        setSubChapterModal({ isOpen: true, subChapter });
+        setSubChapterFormData({
+            title: subChapter.name || subChapter.title || '',
+            description: subChapter.description || '',
+            image: subChapter.image || subChapter.icon || '',
+            imageFile: null
+        });
+    };
+
+    const handleCloseSubChapterModal = () => {
+        setSubChapterModal({ isOpen: false, subChapter: null });
+        setSubChapterFormData({ title: '', description: '', image: '', imageFile: null });
+    };
+
+    const handleDeleteSubChapterClick = (subChapter) => {
+        setDeleteSubChapterModal({ isOpen: true, subChapter });
+    };
+
+    const handleDeleteSubChapterConfirm = async () => {
+        if (deleteSubChapterModal.subChapter) {
+            const idToDelete = deleteSubChapterModal.subChapter.id;
+            const isCurrentChapter = chapter && chapter.id === idToDelete;
+            const parentId = chapter?.parent_id;
+
+            await deleteChapter(idToDelete);
+            setDeleteSubChapterModal({ isOpen: false, subChapter: null });
+
+            if (isCurrentChapter && parentId) {
+                navigate(`/courses/${courseId}/chapters/${parentId}/contents`);
+            } else {
+                await loadData();
+            }
+        }
+    };
+
     const handleSubChapterSubmit = async (e) => {
         e.preventDefault();
 
-        let imageUrl = null;
+        let imageUrl = subChapterFormData.image || null;
 
         if (subChapterFormData.imageFile) {
             try {
@@ -134,24 +189,31 @@ const ChapterContents = () => {
                 imageUrl = publicUrl;
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('Failed to upload image');
+                alert('Failed to upload image: ' + error.message);
                 return;
             }
         }
 
-        const newChapter = {
-            course_id: courseId,
-            title: subChapterFormData.title,
-            description: subChapterFormData.description,
-            parent_id: chapterId,
-            order: subChapters.length,
-            image: imageUrl
-        };
+        if (subChapterModal.subChapter) {
+            // Edit existing sub-chapter
+            await updateChapter(subChapterModal.subChapter.id, {
+                title: subChapterFormData.title,
+                image: imageUrl
+            });
+        } else {
+            // Add new sub-chapter
+            const newChapter = {
+                course_id: courseId,
+                title: subChapterFormData.title,
+                parent_id: chapterId,
+                order: subChapters.length,
+                image: imageUrl
+            };
+            await addChapter(newChapter);
+        }
 
-        await addChapter(newChapter);
-        setSubChapterModal({ isOpen: false });
-        setSubChapterFormData({ title: '', description: '', imageFile: null });
-        loadData();
+        handleCloseSubChapterModal();
+        await loadData();
     };
 
     const handleOpenContentModal = (type) => {
@@ -317,7 +379,7 @@ const ChapterContents = () => {
     return (
         <div className="chapter-contents-container">
             {/* Breadcrumb */}
-            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', flexWrap: 'wrap' }}>
                 <button
                     onClick={() => navigate('/courses')}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0, color: '#666' }}
@@ -329,6 +391,12 @@ const ChapterContents = () => {
                 <span style={{ color: '#666', cursor: 'pointer' }} onClick={() => navigate(`/courses/${courseId}/chapters`)}>{course?.title}</span>
                 <span style={{ color: '#ccc' }}>/</span>
                 <span style={{ color: '#666', cursor: 'pointer' }} onClick={() => navigate(`/courses/${courseId}/chapters`)}>Chapters</span>
+                {parentChapter && (
+                    <>
+                        <span style={{ color: '#ccc' }}>/</span>
+                        <span style={{ color: '#666', cursor: 'pointer' }} onClick={() => navigate(`/courses/${courseId}/chapters/${parentChapter.id}/contents`)}>{parentChapter.name || parentChapter.title}</span>
+                    </>
+                )}
                 <span style={{ color: '#ccc' }}>/</span>
                 <span style={{ color: '#111', fontWeight: '600' }}>{chapter.name || chapter.title}</span>
             </div>
@@ -336,7 +404,53 @@ const ChapterContents = () => {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
-                    <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#111', margin: 0 }}>{chapter.name || chapter.title}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <h2 style={{ fontSize: '28px', fontWeight: '700', color: '#111', margin: 0 }}>{chapter.name || chapter.title}</h2>
+                        {chapter.parent_id && (
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => handleOpenEditSubChapterModal(chapter)}
+                                    style={{
+                                        background: '#f3f4f6',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '6px',
+                                        padding: '5px 10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        fontWeight: '500',
+                                        color: '#374151',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Edit this Sub-Chapter"
+                                >
+                                    <Edit2 size={13} /> Edit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteSubChapterClick(chapter)}
+                                    style={{
+                                        background: '#fef2f2',
+                                        border: '1px solid #fee2e2',
+                                        borderRadius: '6px',
+                                        padding: '5px 10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        fontWeight: '500',
+                                        color: '#dc2626',
+                                        cursor: 'pointer'
+                                    }}
+                                    title="Delete this Sub-Chapter"
+                                >
+                                    <Trash2 size={13} /> Delete
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     {chapter.description && <p style={{ color: '#666', marginTop: '4px', fontSize: '14px' }}>{chapter.description}</p>}
                 </div>
                 <div style={{ position: 'relative' }}>
@@ -375,7 +489,7 @@ const ChapterContents = () => {
                             overflow: 'hidden'
                         }}>
                             {contents.length === 0 && (
-                                <button onClick={() => { setSubChapterModal({ isOpen: true }); setShowAddDropdown(false); }} style={dropdownItemStyle}>
+                                <button onClick={handleOpenAddSubChapterModal} style={dropdownItemStyle}>
                                     <Folder size={16} /> Add Sub-chapter
                                 </button>
                             )}
@@ -457,7 +571,57 @@ const ChapterContents = () => {
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    <ArrowRight size={18} color="#9ca3af" />
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleOpenEditSubChapterModal(subChapter);
+                                                            }}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: '#6b7280',
+                                                                cursor: 'pointer',
+                                                                padding: '6px',
+                                                                borderRadius: '6px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            title="Edit Sub-Chapter"
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#00bfa5'; e.currentTarget.style.backgroundColor = '#f0fdf4'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteSubChapterClick(subChapter);
+                                                            }}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                color: '#6b7280',
+                                                                cursor: 'pointer',
+                                                                padding: '6px',
+                                                                borderRadius: '6px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                            title="Delete Sub-Chapter"
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.backgroundColor = '#fef2f2'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                        <ArrowRight size={18} color="#9ca3af" />
+                                                    </div>
                                                 </div>
                                             )}
                                         </Draggable>
@@ -887,32 +1051,67 @@ const ChapterContents = () => {
 
             <DeleteConfirmationModal isOpen={deleteContentModal.isOpen} itemName={deleteContentModal.content?.title || 'this content'} onConfirm={() => { handleDeleteContentConfirm(); setDeleteContentModal({ isOpen: false, content: null }); }} onCancel={() => setDeleteContentModal({ isOpen: false, content: null })} />
 
+            <DeleteConfirmationModal
+                isOpen={deleteSubChapterModal.isOpen}
+                itemName={deleteSubChapterModal.subChapter?.name || deleteSubChapterModal.subChapter?.title || 'this sub-chapter'}
+                onConfirm={handleDeleteSubChapterConfirm}
+                onCancel={() => setDeleteSubChapterModal({ isOpen: false, subChapter: null })}
+            />
+
             {/* Sub-Chapter Modal */}
             {subChapterModal.isOpen && (
                 <div style={modalOverlayStyle}>
                     <div style={modalContentStyle}>
                         <div style={modalHeaderStyle}>
-                            <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111' }}>Add Sub-Chapter</h3>
-                            <button onClick={() => setSubChapterModal({ isOpen: false })} style={closeButtonStyle}>
+                            <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#111' }}>
+                                {subChapterModal.subChapter ? 'Edit Sub-Chapter' : 'Add Sub-Chapter'}
+                            </h3>
+                            <button onClick={handleCloseSubChapterModal} style={closeButtonStyle}>
                                 <X size={24} />
                             </button>
                         </div>
                         <form onSubmit={handleSubChapterSubmit} style={{ padding: '24px' }}>
                             <div style={{ marginBottom: '20px' }}>
                                 <label style={labelStyle}>Title</label>
-                                <input type="text" value={subChapterFormData.title} onChange={(e) => setSubChapterFormData({ ...subChapterFormData, title: e.target.value })} required placeholder="e.g. Topic 1" style={inputStyle} />
+                                <input
+                                    type="text"
+                                    value={subChapterFormData.title}
+                                    onChange={(e) => setSubChapterFormData({ ...subChapterFormData, title: e.target.value })}
+                                    required
+                                    placeholder="e.g. Topic 1"
+                                    style={inputStyle}
+                                />
                             </div>
                             <div style={{ marginBottom: '20px' }}>
                                 <label style={labelStyle}>Icon (Optional)</label>
-                                <input type="file" onChange={(e) => setSubChapterFormData({ ...subChapterFormData, imageFile: e.target.files[0] })} accept="image/*" style={inputStyle} />
+                                <input
+                                    type="file"
+                                    onChange={(e) => setSubChapterFormData({ ...subChapterFormData, imageFile: e.target.files[0] })}
+                                    accept="image/*"
+                                    style={inputStyle}
+                                />
+                                {subChapterFormData.image && !subChapterFormData.imageFile && (
+                                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
+                                        Current icon: <a href={subChapterFormData.image} target="_blank" rel="noopener noreferrer" style={{ color: '#00bfa5' }}>View</a>
+                                    </div>
+                                )}
                             </div>
                             <div style={{ marginBottom: '32px' }}>
-                                <label style={labelStyle}>Description</label>
-                                <textarea value={subChapterFormData.description} onChange={(e) => setSubChapterFormData({ ...subChapterFormData, description: e.target.value })} placeholder="Brief description..." rows={3} style={textareaStyle} />
+                                <label style={labelStyle}>Description (Optional)</label>
+                                <textarea
+                                    value={subChapterFormData.description}
+                                    onChange={(e) => setSubChapterFormData({ ...subChapterFormData, description: e.target.value })}
+                                    placeholder="Brief description..."
+                                    rows={3}
+                                    style={textareaStyle}
+                                />
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                                <button type="button" onClick={() => setSubChapterModal({ isOpen: false })} style={cancelButtonStyle}>Cancel</button>
-                                <button type="submit" style={saveButtonStyle}><Plus size={18} /> Add Sub-Chapter</button>
+                                <button type="button" onClick={handleCloseSubChapterModal} style={cancelButtonStyle}>Cancel</button>
+                                <button type="submit" style={saveButtonStyle}>
+                                    {subChapterModal.subChapter ? <Save size={18} /> : <Plus size={18} />}
+                                    {subChapterModal.subChapter ? 'Save Changes' : 'Add Sub-Chapter'}
+                                </button>
                             </div>
                         </form>
                     </div>
