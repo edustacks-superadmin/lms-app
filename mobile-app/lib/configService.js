@@ -127,24 +127,21 @@ export const fetchAppConfig = async (forceRefresh = false) => {
     } catch (httpError) {
         console.warn('[configService] HTTP config fetch failed:', httpError);
     }
-    } catch (error) {
-        console.error('Error fetching config:', error);
 
-        // Try to get cached config from storage
-        try {
-            const stored = await AsyncStorage.getItem(CONFIG_CACHE_KEY);
-            if (stored) {
-                const { config } = JSON.parse(stored);
-                cachedConfig = config;
-                return config;
-            }
-        } catch (e) {
-            console.error('Error reading cached config:', e);
+    // 3. Try to get cached config from storage
+    try {
+        const stored = await AsyncStorage.getItem(CONFIG_CACHE_KEY);
+        if (stored) {
+            const { config } = JSON.parse(stored);
+            cachedConfig = config;
+            return config;
         }
-
-        // Return default config if all else fails
-        return getDefaultConfig();
+    } catch (e) {
+        console.error('Error reading cached config:', e);
     }
+
+    // 4. Return default config if all else fails
+    return getDefaultConfig();
 };
 
 /**
