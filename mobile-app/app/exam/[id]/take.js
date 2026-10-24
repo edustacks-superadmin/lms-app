@@ -879,12 +879,12 @@ export default function NativeExamScreen() {
 
         return (
             <ScrollView
-                className="flex-1 px-4 py-4"
+                className="flex-1 py-2"
                 contentContainerStyle={{ paddingBottom: 150 }} // Add extra padding for Bottom Bar
                 style={{ width: width }}
             >
                 {/* Question metadata */}
-                <View className="flex-row justify-between items-center mb-2">
+                <View className="flex-row justify-between items-center mb-2 px-4">
                     <Text className="text-gray-500 text-xs font-bold">Question {index + 1} of {questions.length}</Text>
                     <View className="flex-row items-center gap-1.5">
                         <Text className="text-green-600 text-xs font-bold">+{item.marks} {item.marks === 1 ? 'Mark' : 'Marks'}</Text>
@@ -896,10 +896,10 @@ export default function NativeExamScreen() {
                     </View>
                 </View>
 
-                {/* Unified Question & Options with dividing line */}
-                <View className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-4">
+                {/* Unified Question & Options with dividing line - Edge-to-edge (no wasted surrounding padding) */}
+                <View className="bg-white border-y border-slate-200 mb-4">
                     {/* Question Section */}
-                    <View className="p-4">
+                    <View className="px-4 py-3.5">
                         <MathWebView
                             content={item.question}
                             style={{ minHeight: 24 }}
@@ -929,7 +929,7 @@ export default function NativeExamScreen() {
 
                 {/* Helpful Clear Response Tip when an option is selected */}
                 {!quizMode && isSelectedOption !== undefined && (
-                    <View className="flex-row items-center justify-center mt-3 opacity-70">
+                    <View className="flex-row items-center justify-center mt-2 px-4 opacity-70">
                         <Ionicons name="information-circle-outline" size={13} color="#94a3b8" />
                         <Text className="text-slate-400 text-[11px] font-medium ml-1">
                             Double tap selected option to clear response
@@ -939,7 +939,7 @@ export default function NativeExamScreen() {
 
                 {/* Explanation Box (Quiz Mode Only) */}
                 {quizMode && isSelectedOption !== undefined && item.explanation && (
-                    <View className="mt-4 bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
+                    <View className="mt-4 mx-4 bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
                         <View className="flex-row items-center mb-2">
                             <Ionicons name="information-circle" size={20} color="#2563EB" />
                             <Text className="text-blue-700 font-bold ml-2">Explanation</Text>

@@ -451,14 +451,14 @@ export default function ExamReviewScreen() {
 
         return (
             <ScrollView
-                className="flex-1 px-4 py-4"
+                className="flex-1 py-2"
                 contentContainerStyle={{ paddingBottom: 100 }}
                 style={{ width: width }}
             >
 
 
                 {/* Metadata & Actions */}
-                <View className="flex-row justify-between items-center mb-2">
+                <View className="flex-row justify-between items-center mb-2 px-4">
                     <View>
                         <Text className="text-gray-500 text-xs font-bold">Q {index + 1}</Text>
                         <View className="flex-row items-center gap-1.5 mt-0.5">
@@ -489,10 +489,10 @@ export default function ExamReviewScreen() {
                     </View>
                 </View>
 
-                {/* Unified Question & Options with dividing line */}
-                <View className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-4">
+                {/* Unified Question & Options with dividing line - Edge-to-edge */}
+                <View className="bg-white border-y border-slate-200 mb-4">
                     {/* Question Section */}
-                    <View className="p-4">
+                    <View className="px-4 py-3.5">
                         <MathWebView
                             content={item.question}
                             style={{ minHeight: 24 }}
@@ -554,7 +554,7 @@ export default function ExamReviewScreen() {
 
                 {/* Explanation */}
                 {item.explanation && (
-                    <View className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <View className="mt-4 mx-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <Text className="font-bold text-blue-800 mb-2">Explanation:</Text>
                         <MathWebView
                             content={item.explanation}
