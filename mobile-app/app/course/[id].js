@@ -40,7 +40,7 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
     }));
 
     return (
-        <View className="bg-white">
+        <View className="bg-white border-b border-slate-200">
             <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={onToggle}
@@ -67,7 +67,7 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
             </TouchableOpacity>
 
             <Animated.View style={animatedStyle}>
-                <View className="bg-slate-50/50 divide-y divide-slate-100 border-t border-slate-100">
+                <View className="bg-slate-50/50 border-t border-slate-100">
                     {chapter.contents?.length > 0 ? (
                         chapter.contents.map((content, idx) => {
                             const isSelected = currentContentId === content.id;
@@ -89,7 +89,7 @@ const ChapterAccordion = ({ chapter, index, isExpanded, onToggle, onContentPress
                                 <TouchableOpacity
                                     key={content.id}
                                     onPress={() => onContentPress(content)}
-                                    className={`flex-row items-center py-3.5 px-4 pl-6 ${isSelected ? 'bg-blue-50/60' : 'bg-white'}`}
+                                    className={`flex-row items-center py-3.5 px-4 pl-6 border-b border-slate-100 ${isSelected ? 'bg-blue-50/60' : 'bg-white'}`}
                                 >
                                     <View className="w-1.5 h-6 rounded-full bg-slate-200 mr-3" />
                                     <Ionicons name={iconName} size={18} color={iconColor} style={{ marginRight: 12 }} />
@@ -314,7 +314,7 @@ export default function CoursePlayer() {
         <TouchableOpacity
             key={`${exam.id}-${exam.content_id || index}`}
             onPress={() => handleExamPress(exam)}
-            className="p-4 bg-white"
+            className="p-4 bg-white border-b border-slate-200"
         >
             <View className="flex-row items-center justify-between">
                 <View className="flex-1">
@@ -346,7 +346,7 @@ export default function CoursePlayer() {
     );
 
     const renderLeaderboardItem = (item) => (
-        <View key={item.member_id} className="p-4 bg-white flex-row items-center">
+        <View key={item.member_id} className="p-4 bg-white flex-row items-center border-b border-slate-200">
             <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${item.rank <= 3 ? 'bg-yellow-100' : 'bg-gray-100'}`}>
                 <Text className={`font-bold text-sm ${item.rank <= 3 ? 'text-yellow-600' : 'text-gray-600'}`}>{item.rank}</Text>
             </View>
@@ -418,7 +418,7 @@ export default function CoursePlayer() {
             <ScrollView className="flex-1 pt-3" contentContainerStyle={{ paddingBottom: 40 }}>
                 {activeTab === 'learn' && (
                     <View className="pb-8">
-                        <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
+                        <View className="bg-white border-t border-slate-200">
                             {/* Breadcrumb when drilled into a parent chapter */}
                             {currentParentChapter && (
                                 <TouchableOpacity
@@ -427,7 +427,7 @@ export default function CoursePlayer() {
                                         setActiveChapterId(null);
                                     }}
                                     activeOpacity={0.7}
-                                    className="flex-row items-center p-3.5 bg-blue-50/60"
+                                    className="flex-row items-center p-3.5 bg-blue-50/60 border-b border-blue-200"
                                 >
                                     <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-2.5">
                                         <Ionicons name="arrow-back" size={18} color="#2563EB" />
@@ -463,7 +463,7 @@ export default function CoursePlayer() {
 
                                 if (visibleList.length === 0) {
                                     return (
-                                        <View className="p-8 items-center bg-white">
+                                        <View className="p-8 items-center bg-white border-b border-slate-200">
                                             <Ionicons name="folder-open-outline" size={40} color="#94a3b8" />
                                             <Text className="text-slate-400 text-sm mt-2 font-medium">No contents available</Text>
                                         </View>
@@ -483,7 +483,7 @@ export default function CoursePlayer() {
                                                     setCurrentParentChapter(chapter);
                                                     setActiveChapterId(null);
                                                 }}
-                                                className="p-4 bg-white flex-row items-center justify-between"
+                                                className="p-4 bg-white flex-row items-center justify-between border-b border-slate-200"
                                             >
                                                 <View className="flex-row items-center flex-1 pr-3">
                                                     <View className="w-10 h-10 rounded-lg bg-blue-50 items-center justify-center mr-3 border border-blue-100">
@@ -529,7 +529,7 @@ export default function CoursePlayer() {
                             <Text className="text-lg font-bold text-slate-800">Running Exams</Text>
                         </View>
                         {runningExams.length > 0 ? (
-                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
+                            <View className="bg-white border-t border-slate-200">
                                 {runningExams.map((exam, index) => renderExamCard(exam, 'running', index))}
                             </View>
                         ) : (
@@ -547,7 +547,7 @@ export default function CoursePlayer() {
                             <Text className="text-lg font-bold text-slate-800">Upcoming Exams</Text>
                         </View>
                         {upcomingExams.length > 0 ? (
-                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
+                            <View className="bg-white border-t border-slate-200">
                                 {upcomingExams.map((exam, index) => renderExamCard(exam, 'upcoming', index))}
                             </View>
                         ) : (
@@ -567,7 +567,7 @@ export default function CoursePlayer() {
                         {leaderboardLoading ? (
                             <ActivityIndicator size="large" color="#2563EB" />
                         ) : leaderboard.length > 0 ? (
-                            <View className="bg-white border-y border-slate-200 divide-y divide-slate-100">
+                            <View className="bg-white border-t border-slate-200">
                                 {leaderboard.slice(0, 50).map(item => renderLeaderboardItem(item))}
                             </View>
                         ) : (
