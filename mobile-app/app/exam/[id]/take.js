@@ -31,7 +31,7 @@ const formatTime = (seconds) => {
 };
 
 // Helper: Option Card Component with Animation and Haptics
-const OptionCard = React.memo(({ item, index, isLast, isSelectedOption, handleOptionSelect, quizMode, onScrollStatusChange }) => {
+const OptionCard = React.memo(({ item, index, isLast, isSelectedOption, handleOptionSelect, quizMode }) => {
     const scale = useSharedValue(1);
     const translateX = useSharedValue(0);
 
@@ -105,12 +105,10 @@ const OptionCard = React.memo(({ item, index, isLast, isSelectedOption, handleOp
                         <View className="w-2 h-2 rounded-full bg-white" />
                     )}
                 </View>
-                <View className="flex-1">
+                <View className="flex-1" pointerEvents="none">
                     <MathWebView
                         content={item.options[index] || ''}
                         style={{ minHeight: 20 }}
-                        onOptionPress={selectOption}
-                        onScrollStatusChange={onScrollStatusChange}
                     />
                 </View>
             </TouchableOpacity>
@@ -921,7 +919,6 @@ export default function NativeExamScreen() {
                                 isSelectedOption={isSelectedOption}
                                 handleOptionSelect={handleOptionSelect}
                                 quizMode={quizMode}
-                                onScrollStatusChange={handleMathScrollStatusChange}
                             />
                         ))}
                     </View>
