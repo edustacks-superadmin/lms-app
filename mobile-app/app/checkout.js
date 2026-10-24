@@ -264,52 +264,61 @@ export default function Checkout() {
             // Check if already enrolled in any of these courses
             const { data: existingEnrollments } = await supabase
                 .from('enrollments')
-                .select('course_id')
+                .select('id, course_id, expires_at, cycle_number')
                 .eq('member_id', memberData.id)
                 .in('course_id', courses.map(c => c.id));
 
             console.log('Existing Enrollments:', existingEnrollments);
 
-            const enrolledCourseIds = existingEnrollments?.map(e => e.course_id) || [];
-            const coursesToEnroll = courses.filter(c => !enrolledCourseIds.includes(c.id));
+            const now = new Date();
+            const activeEnrolledCourseIds = (existingEnrollments || [])
+                .filter(e => !e.expires_at || new Date(e.expires_at) >= now)
+                .map(e => e.course_id);
 
-            console.log('Courses to enroll:', coursesToEnroll);
-
-            if (coursesToEnroll.length === 0) {
+            // If ALL courses linked to this product are currently active, inform the student
+            if (courses.length > 0 && courses.every(c => activeEnrolledCourseIds.includes(c.id))) {
                 Alert.alert(
                     'Already Enrolled',
-                    `You already have access to ${courses.length > 1 ? 'these courses' : 'this course'}`,
+                    `You already have active access to ${courses.length > 1 ? 'these courses' : 'this course'}`,
                     [{ text: 'OK', onPress: () => navigateToMyCourses() }]
                 );
                 return;
             }
 
-            // Create enrollments for all linked courses
-            const enrollmentData = coursesToEnroll.map(course => ({
-                member_id: memberData.id,
-                course_id: course.id,
-                status: 'active',
-                enrolled_at: new Date().toISOString(),
-                progress: 0
-            }));
-
-            console.log('Enrollment Data to Insert:', enrollmentData);
-
-            const { error: enrollError } = await supabase
-                .from('enrollments')
-                .insert(enrollmentData);
-
-            console.log('Enrollment Error:', enrollError);
-
-            if (enrollError) {
-                if (enrollError.code === '23505') {
-                    // Duplicate key - already enrolled
-                    Alert.alert('Already Enrolled', 'You already have access to this course');
-                    navigateToMyCourses();
-                } else {
-                    throw enrollError;
+            // Compute expires_at for this product
+            let expiresAt = null;
+            if (product.validity_type === 'Fixed (calendar date)' && product.validity) {
+                expiresAt = new Date(`${product.validity}T23:59:59.999Z`).toISOString();
+            } else if (product.validity_type === 'Relative (in days)' && product.validity) {
+                const days = parseInt(product.validity, 10);
+                if (!isNaN(days) && days > 0) {
+                    expiresAt = new Date(Date.now() + days * 86400000).toISOString();
                 }
-                return;
+            }
+
+            for (const course of courses) {
+                const existing = (existingEnrollments || []).find(e => e.course_id === course.id);
+                if (!existing) {
+                    const { error: insertErr } = await supabase.from('enrollments').insert({
+                        member_id: memberData.id,
+                        course_id: course.id,
+                        status: 'active',
+                        enrolled_at: new Date().toISOString(),
+                        expires_at: expiresAt,
+                        cycle_number: 1,
+                        progress: 0
+                    });
+                    if (insertErr && insertErr.code !== '23505') throw insertErr;
+                } else if (existing.expires_at && new Date(existing.expires_at) < now) {
+                    // Reactivate expired enrollment with new cycle!
+                    const { error: updateErr } = await supabase.from('enrollments').update({
+                        status: 'active',
+                        enrolled_at: new Date().toISOString(),
+                        expires_at: expiresAt,
+                        cycle_number: (existing.cycle_number || 1) + 1
+                    }).eq('id', existing.id);
+                    if (updateErr) throw updateErr;
+                }
             }
 
             console.log('=== ENROLLMENT SUCCESS ===');

@@ -398,6 +398,7 @@ const CreateProduct = () => {
                                 <input
                                     type="date"
                                     name="validity"
+                                    min={new Date().toISOString().split('T')[0]}
                                     value={formData.validity}
                                     onChange={handleChange}
                                     style={{ ...inputStyle, width: '100%' }}

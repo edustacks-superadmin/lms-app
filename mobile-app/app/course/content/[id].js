@@ -152,14 +152,35 @@ export default function ContentPlayer() {
                 let attemptCount = 0;  // Declare outside if block
 
                 if (memberData) {
-                    const { data: attemptsData } = await supabase
+                    // Fetch enrollment to get cycle start date (enrolled_at)
+                    let enrollmentDate = null;
+                    const courseId = data.chapters?.course_id || data.course_id;
+                    if (courseId) {
+                        const { data: enrollment } = await supabase
+                            .from('enrollments')
+                            .select('enrolled_at')
+                            .eq('member_id', memberData.id)
+                            .eq('course_id', courseId)
+                            .maybeSingle();
+                        if (enrollment?.enrolled_at) {
+                            enrollmentDate = enrollment.enrolled_at;
+                        }
+                    }
+
+                    let attemptsQuery = supabase
                         .from('exam_attempts')
                         .select('*')
                         .eq('exam_id', data.exam_id)
                         .eq('member_id', memberData.id)
-                        .order('submitted_at', { ascending: false });
+                        .not('submitted_at', 'is', null);
+
+                    if (enrollmentDate) {
+                        attemptsQuery = attemptsQuery.gte('started_at', enrollmentDate);
+                    }
+
+                    const { data: attemptsData } = await attemptsQuery.order('submitted_at', { ascending: false });
                     setAttempts(attemptsData || []);
-                    attemptCount = attemptsData?.length || 0;  // Store count
+                    attemptCount = attemptsData?.length || 0;  // Store count for current cycle
                 }
 
                 // 2. Fetch Exam Metadata (Duration + Max Attempts)

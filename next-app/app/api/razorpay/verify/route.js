@@ -8,7 +8,10 @@ export const runtime = 'nodejs';
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { orderId, paymentId, signature, dbOrderId } = body;
+        const orderId = body.orderId || body.razorpay_order_id || body.order_id;
+        const paymentId = body.paymentId || body.razorpay_payment_id || body.payment_id;
+        const signature = body.signature || body.razorpay_signature;
+        const dbOrderId = body.dbOrderId || body.order_id;
 
         if (!orderId || !paymentId || !signature) {
             return NextResponse.json(

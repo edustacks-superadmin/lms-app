@@ -117,12 +117,15 @@ const ExamPortal = () => {
                 try {
                     const { data: enrollmentsData } = await supabase
                         .from('enrollments')
-                        .select('course_id')
+                        .select('course_id, expires_at')
                         .eq('member_id', member.id)
                         .in('status', ['active', 'completed']);
 
+                    const now = new Date();
                     (enrollmentsData || []).forEach(e => {
-                        if (e.course_id) enrolledCourseIds.add(e.course_id);
+                        if (e.course_id && (!e.expires_at || new Date(e.expires_at) >= now)) {
+                            enrolledCourseIds.add(e.course_id);
+                        }
                     });
                 } catch (enrErr) {
                     console.warn('Error fetching enrollments:', enrErr);
