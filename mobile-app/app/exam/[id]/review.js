@@ -552,10 +552,13 @@ export default function ExamReviewScreen() {
                     </View>
                 </View>
 
-                {/* Explanation */}
+                {/* Explanation - Edge-to-edge */}
                 {item.explanation && (
-                    <View className="mt-4 mx-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <Text className="font-bold text-blue-800 mb-2">Explanation:</Text>
+                    <View className="mt-4 bg-blue-50/70 border-y border-blue-200 px-4 py-3.5">
+                        <View className="flex-row items-center mb-2">
+                            <Ionicons name="information-circle" size={18} color="#2563EB" />
+                            <Text className="font-bold text-blue-800 ml-1.5">Explanation</Text>
+                        </View>
                         <MathWebView
                             content={item.explanation}
                             style={{ minHeight: 24 }}

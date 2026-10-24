@@ -934,9 +934,9 @@ export default function NativeExamScreen() {
                     </View>
                 )}
 
-                {/* Explanation Box (Quiz Mode Only) */}
+                {/* Explanation Box (Quiz Mode Only) - Edge-to-edge */}
                 {quizMode && isSelectedOption !== undefined && item.explanation && (
-                    <View className="mt-4 mx-4 bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
+                    <View className="mt-4 bg-blue-50/70 border-y border-blue-200 px-4 py-3.5 mb-4">
                         <View className="flex-row items-center mb-2">
                             <Ionicons name="information-circle" size={20} color="#2563EB" />
                             <Text className="text-blue-700 font-bold ml-2">Explanation</Text>
