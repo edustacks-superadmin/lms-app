@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -6,7 +6,8 @@ import { usePosts } from '../context/PostContext';
 import { useCategories } from '../context/CategoryContext';
 import { useBatches } from '../context/BatchContext';
 import { useProducts } from '../context/ProductContext';
-import { ArrowLeft, Plus, Code, Eye, Table, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Code, Eye, Table, Sparkles, Upload, X, Loader2, CheckCircle2 } from 'lucide-react';
+import { uploadToR2 } from '../utils/r2Upload';
 
 const CreatePost = () => {
     const navigate = useNavigate();
@@ -33,6 +34,9 @@ const CreatePost = () => {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(!!id);
     const [isHtmlMode, setIsHtmlMode] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
+    const quillRef = useRef(null);
 
     useEffect(() => {
         fetchProducts();
@@ -142,17 +146,79 @@ const CreatePost = () => {
         setFormData(prev => ({ ...prev, content }));
     };
 
-    const handleFileChange = (e) => {
-        // For now, we'll just store the file object. 
-        // In a real app, we'd upload this to Supabase Storage and get a URL.
-        // Since we don't have storage set up, we'll skip the actual upload logic 
-        // and just pretend we have a URL or store the filename.
-        const file = e.target.files[0];
-        if (file) {
-            // Mocking a URL for now since we don't have storage bucket setup in this session
-            setFormData(prev => ({ ...prev, coverImage: 'https://via.placeholder.com/800x400?text=' + file.name }));
+    const handleFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file (JPG, PNG, WebP, etc.).');
+            return;
+        }
+
+        if (file.size > 15 * 1024 * 1024) {
+            alert('File size exceeds 15MB. Please choose a smaller image.');
+            return;
+        }
+
+        setUploadingImage(true);
+        setUploadError(null);
+
+        try {
+            const res = await uploadToR2(file, 'posts');
+            if (res.success && res.url) {
+                setFormData(prev => ({ ...prev, coverImage: res.url }));
+            }
+        } catch (err) {
+            console.error('Error uploading cover image to Cloudflare R2:', err);
+            setUploadError(err.message || 'Image upload failed');
+            alert('Failed to upload image to Cloudflare R2: ' + (err.message || 'Network error'));
+        } finally {
+            setUploadingImage(false);
+            e.target.value = '';
         }
     };
+
+    const handleQuillImage = useCallback(() => {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file) return;
+
+            try {
+                const res = await uploadToR2(file, 'posts/content');
+                if (res.success && res.url) {
+                    const quill = quillRef.current?.getEditor();
+                    if (quill) {
+                        const range = quill.getSelection(true) || { index: 0 };
+                        quill.insertEmbed(range.index, 'image', res.url);
+                        quill.setSelection(range.index + 1);
+                    }
+                }
+            } catch (err) {
+                console.error('Quill inline image upload error:', err);
+                alert('Failed to upload inline image to Cloudflare R2: ' + err.message);
+            }
+        };
+    }, []);
+
+    const quillModules = useMemo(() => ({
+        toolbar: {
+            container: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                ['link', 'image'],
+                ['clean']
+            ],
+            handlers: {
+                image: handleQuillImage
+            }
+        }
+    }), [handleQuillImage]);
 
     const addBatch = (batchId) => {
         if (batchId && !formData.selectedBatches.includes(batchId)) {
@@ -261,20 +327,130 @@ const CreatePost = () => {
 
                 {/* Cover Image */}
                 <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>Cover Image</label>
-                    <div style={{ border: '2px dashed #e5e7eb', borderRadius: '8px', padding: '24px', textAlign: 'center', backgroundColor: '#f9fafb' }}>
-                        <input
-                            type="file"
-                            onChange={handleFileChange}
-                            accept="image/*"
-                            style={{ marginBottom: '8px' }}
-                        />
-                        <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                            Accepted image resolution is 1920x1080. File size should not be more than 2Mb.
-                        </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label style={{ fontWeight: '600', color: '#374151', fontSize: '14px' }}>
+                            Cover Image (Cloudflare R2 Storage)
+                        </label>
                         {formData.coverImage && (
-                            <div style={{ marginTop: '10px' }}>
-                                <img src={formData.coverImage} alt="Cover" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }} />
+                            <button
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, coverImage: '' }))}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '4px 10px',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    color: '#dc2626',
+                                    background: '#fee2e2',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <X size={14} /> Remove Image
+                            </button>
+                        )}
+                    </div>
+
+                    <div style={{
+                        border: uploadingImage ? '2px dashed #3b82f6' : '2px dashed #cbd5e1',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        textAlign: 'center',
+                        backgroundColor: uploadingImage ? '#eff6ff' : '#f8fafc',
+                        transition: 'all 0.2s'
+                    }}>
+                        {uploadingImage ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: '16px' }}>
+                                <Loader2 size={32} color="#2563eb" style={{ animation: 'spin 1s linear infinite' }} />
+                                <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>
+                                    Uploading to Cloudflare R2...
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                    Your image is being securely uploaded to Cloudflare R2 Cloud.
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <input
+                                    id="coverImageFileInput"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                />
+                                <label
+                                    htmlFor="coverImageFileInput"
+                                    style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '10px 20px',
+                                        backgroundColor: '#2563eb',
+                                        color: '#ffffff',
+                                        borderRadius: '8px',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                                        marginBottom: '10px'
+                                    }}
+                                >
+                                    <Upload size={16} /> Choose Image from Device
+                                </label>
+
+                                <div style={{ fontSize: '13px', color: '#64748b', marginTop: '6px' }}>
+                                    Images are automatically saved to Cloudflare R2 Cloud (up to 15MB).
+                                </div>
+
+                                {uploadError && (
+                                    <div style={{ marginTop: '10px', color: '#dc2626', fontSize: '13px', fontWeight: '500' }}>
+                                        ⚠️ {uploadError}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {formData.coverImage && (
+                            <div style={{
+                                marginTop: '16px',
+                                padding: '12px',
+                                background: '#ffffff',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}>
+                                <img
+                                    src={formData.coverImage}
+                                    alt="Cover Preview"
+                                    onError={(e) => {
+                                        console.warn('Cover image failed to load:', formData.coverImage);
+                                    }}
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '260px',
+                                        borderRadius: '8px',
+                                        objectFit: 'contain',
+                                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+                                    }}
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#16a34a', fontWeight: '500' }}>
+                                    <CheckCircle2 size={15} />
+                                    <span>Cloudflare R2 URL:</span>
+                                    <a
+                                        href={formData.coverImage}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ color: '#2563eb', textDecoration: 'underline', maxWidth: '350px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                    >
+                                        {formData.coverImage}
+                                    </a>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -397,19 +573,12 @@ const CreatePost = () => {
                     ) : (
                         <div style={{ height: '360px', marginBottom: '40px' }}>
                             <ReactQuill
+                                ref={quillRef}
                                 theme="snow"
                                 value={formData.content}
                                 onChange={handleContentChange}
                                 style={{ height: '100%', borderRadius: '8px' }}
-                                modules={{
-                                    toolbar: [
-                                        [{ 'header': [1, 2, 3, false] }],
-                                        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                                        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-                                        ['link', 'image'],
-                                        ['clean']
-                                    ],
-                                }}
+                                modules={quillModules}
                             />
                         </div>
                     )}

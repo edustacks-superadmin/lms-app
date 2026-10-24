@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1156.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.4",
@@ -20,6 +21,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@supabase/supabase-js": "^2.83.0",
+    "busboy": "^1.6.0",
     "dotenv": "^17.2.3",
     "katex": "^0.16.25",
     "lucide-react": "^0.554.0",
