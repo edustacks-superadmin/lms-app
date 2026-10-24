@@ -17,6 +17,7 @@ import {
     addNotificationResponseListener
 } from '../lib/pushNotifications';
 import * as ScreenCapture from 'expo-screen-capture';
+import * as Updates from 'expo-updates';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -42,6 +43,20 @@ export default function RootLayout() {
     useEffect(() => {
         async function prepare() {
             try {
+                // Check and apply OTA updates immediately on cold start
+                if (!__DEV__) {
+                    try {
+                        const update = await Updates.checkForUpdateAsync();
+                        if (update.isAvailable) {
+                            await Updates.fetchUpdateAsync();
+                            await Updates.reloadAsync();
+                            return;
+                        }
+                    } catch (updateErr) {
+                        console.log('[Updates] Auto-update check:', updateErr?.message);
+                    }
+                }
+
                 // Request notification permissions on app start
                 requestNotificationPermissions();
 

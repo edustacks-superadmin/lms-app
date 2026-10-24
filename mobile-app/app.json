@@ -3,7 +3,7 @@
     "name": "Mahesh IES Academy",
     "slug": "mobile-app",
     "scheme": "maheshiesacademy",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,11 +16,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.maheshiesacademy.mobile",
-      "buildNumber": "1.0.5"
+      "buildNumber": "1.0.6"
     },
     "android": {
       "package": "com.maheshiesacademy.mobile",
-      "versionCode": 27,
+      "versionCode": 29,
       "targetSdkVersion": 34,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -81,7 +81,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/94efc2fa-dfbe-40b5-a365-c2075cdc874a"
+      "url": "https://u.expo.dev/94efc2fa-dfbe-40b5-a365-c2075cdc874a",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 5000
     }
   }
 }
