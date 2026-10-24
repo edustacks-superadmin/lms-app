@@ -895,9 +895,9 @@ export default function NativeExamScreen() {
                 </View>
 
                 {/* Unified Question & Options with dividing line - Edge-to-edge (no wasted surrounding padding) */}
-                <View className="bg-white border-y border-slate-200 mb-4">
+                <View className="bg-white border-y border-slate-200 mb-2.5">
                     {/* Question Section */}
-                    <View className="px-4 py-3.5">
+                    <View className="px-4 py-3">
                         <MathWebView
                             content={item.question}
                             style={{ minHeight: 24 }}
@@ -936,10 +936,10 @@ export default function NativeExamScreen() {
 
                 {/* Explanation Box (Quiz Mode Only) - Edge-to-edge */}
                 {quizMode && isSelectedOption !== undefined && item.explanation && (
-                    <View className="mt-4 bg-blue-50/70 border-y border-blue-200 px-4 py-3.5 mb-4">
-                        <View className="flex-row items-center mb-2">
-                            <Ionicons name="information-circle" size={20} color="#2563EB" />
-                            <Text className="text-blue-700 font-bold ml-2">Explanation</Text>
+                    <View className="mt-2.5 bg-blue-50/70 border-y border-blue-200 px-4 py-3 mb-4">
+                        <View className="flex-row items-center mb-1.5">
+                            <Ionicons name="information-circle" size={17} color="#2563EB" />
+                            <Text className="text-blue-700 font-bold ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
                         </View>
                         <MathWebView
                             content={item.explanation}

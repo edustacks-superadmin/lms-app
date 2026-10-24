@@ -490,7 +490,7 @@ export default function ExamReviewScreen() {
                 </View>
 
                 {/* Unified Question & Options with dividing line - Edge-to-edge */}
-                <View className="bg-white border-y border-slate-200 mb-4">
+                <View className="bg-white border-y border-slate-200 mb-2.5">
                     {/* Question Section */}
                     <View className="px-4 py-3.5">
                         <MathWebView
@@ -554,10 +554,10 @@ export default function ExamReviewScreen() {
 
                 {/* Explanation - Edge-to-edge */}
                 {item.explanation && (
-                    <View className="mt-4 bg-blue-50/70 border-y border-blue-200 px-4 py-3.5">
-                        <View className="flex-row items-center mb-2">
-                            <Ionicons name="information-circle" size={18} color="#2563EB" />
-                            <Text className="font-bold text-blue-800 ml-1.5">Explanation</Text>
+                    <View className="bg-blue-50/70 border-y border-blue-200 px-4 py-3">
+                        <View className="flex-row items-center mb-1.5">
+                            <Ionicons name="information-circle" size={17} color="#2563EB" />
+                            <Text className="font-bold text-blue-800 ml-1.5 text-xs uppercase tracking-wider">Explanation</Text>
                         </View>
                         <MathWebView
                             content={item.explanation}
@@ -568,9 +568,9 @@ export default function ExamReviewScreen() {
                 )}
                 {/* Subject Info */}
                 {item.subjectInfo && (
-                    <View className="mt-4 mx-4 pt-4 border-t border-gray-200">
-                        <Text className="text-gray-500 text-xs font-medium">Subject:</Text>
-                        <Text className="text-slate-700 text-sm font-medium mt-1">
+                    <View className="mt-2.5 mx-4 pb-2">
+                        <Text className="text-gray-400 text-[11px] font-semibold uppercase tracking-wider">Subject</Text>
+                        <Text className="text-slate-700 text-sm font-medium mt-0.5">
                             {item.subjectInfo.parentName ? `${item.subjectInfo.parentName} > ` : ''}
                             <Text className="text-blue-600 font-semibold">{item.subjectInfo.name}</Text>
                         </Text>
