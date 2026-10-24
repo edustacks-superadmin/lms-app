@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { WebView } from 'react-native-webview';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 
 const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) => {
     const minHeight = style?.minHeight || 20;
@@ -26,23 +26,12 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
     const katexHtml = useMemo(() => {
         let safeContent = content || '';
 
-        // 1. Move trailing punctuation into the math expression so it never wraps to a separate line alone
-        safeContent = safeContent.replace(/\\\(([\s\S]*?)\\\)\s*([.,;:!?])/g, (match, formula, punct) => {
-            return `\\(${formula.trim()}\\text{${punct}}\\)`;
-        });
-        safeContent = safeContent.replace(/\\\[([\s\S]*?)\\\]\s*([.,;:!?])/g, (match, formula, punct) => {
-            return `\\[${formula.trim()}\\text{${punct}}\\]`;
-        });
-        safeContent = safeContent.replace(/\$\$([\s\S]*?)\$\$\s*([.,;:!?])/g, (match, formula, punct) => {
-            return `$$${formula.trim()}\\text{${punct}}$$`;
-        });
-
-        // 2. Promote standalone paragraph formulas (<p>\( ... \)</p> or <div>\( ... \)</div>)
+        // Promote standalone paragraph formulas (<p>\( ... \)</p> or <div>\( ... \)</div>)
         // to display equations (\[ ... \]) so they get proper block display and dedicated horizontal scrolling.
-        safeContent = safeContent.replace(/<p(\s*[^>]*)>\s*\\\(([\s\S]*?)\\\)\s*<\/p>/gi, (match, attrs, formula) => {
+        safeContent = safeContent.replace(/<p(\s*[^>]*)>\s*(?:<span[^>]*class=["']math-tex["'][^>]*>)?\s*\\\(([\s\S]*?)\\\)\s*(?:<\/span>)?\s*<\/p>/gi, (match, attrs, formula) => {
             return `<p${attrs}>\\[ ${formula.trim()} \\]</p>`;
         });
-        safeContent = safeContent.replace(/<div(\s*[^>]*)>\s*\\\(([\s\S]*?)\\\)\s*<\/div>/gi, (match, attrs, formula) => {
+        safeContent = safeContent.replace(/<div(\s*[^>]*)>\s*(?:<span[^>]*class=["']math-tex["'][^>]*>)?\s*\\\(([\s\S]*?)\\\)\s*(?:<\/span>)?\s*<\/div>/gi, (match, attrs, formula) => {
             return `<div${attrs}>\\[ ${formula.trim()} \\]</div>`;
         });
 
@@ -50,16 +39,32 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
       <!DOCTYPE html>
       <html>
         <head>
+          <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+          <meta name="color-scheme" content="light">
           
-          <!-- KaTeX CSS -->
+          <!-- KaTeX CSS with CDN fallback -->
           <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css" crossorigin="anonymous">
           
-          <!-- KaTeX JS & Auto-render extension -->
-          <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
-          <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/auto-render.min.js" crossorigin="anonymous"></script>
+          <!-- KaTeX JS & Auto-render extension with CDN fallback -->
+          <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+          <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+          <script>
+            if (typeof katex === 'undefined') {
+              document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js" crossorigin="anonymous"><\\/script>');
+            }
+          </script>
+          <script>
+            if (typeof renderMathInElement === 'undefined') {
+              document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js" crossorigin="anonymous"><\\/script>');
+            }
+          </script>
 
           <style>
+            :root {
+              color-scheme: light;
+            }
             *, *::before, *::after {
               box-sizing: border-box;
             }
@@ -67,7 +72,7 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
               margin: 0;
               padding: 0;
               background-color: transparent;
-              color: #1e293b;
+              color: #0f172a !important;
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
               font-size: 15px;
               line-height: 1.45;
@@ -184,6 +189,17 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
         <body>
           <div id="content">${safeContent}</div>
           <script>
+            function preprocessLatex(latex) {
+              if (!latex) return '';
+              return latex.replace(/(?<!\\[a-zA-Z]*)\\b([a-zA-Z]{2,}\\s+[a-zA-Z]{2,}(?:\\s+[a-zA-Z]{2,})*)\\b/g, function(match, words, offset, fullStr) {
+                var preceding = fullStr.slice(0, offset);
+                if (/\\\\text\\s*\\{[^}]*$/.test(preceding)) {
+                  return match;
+                }
+                return '\\\\text{' + match + '}';
+              });
+            }
+
             function renderKaTeX() {
               if (typeof renderMathInElement !== 'function') {
                 setTimeout(renderKaTeX, 30);
@@ -195,23 +211,32 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
                 var spans = document.querySelectorAll('.math-tex');
                 for (var i = 0; i < spans.length; i++) {
                   var s = spans[i];
-                  var t = s.textContent || '';
+                  var t = (s.textContent || '').trim();
                   if (t && t.indexOf('\\(') === -1 && t.indexOf('\\[') === -1 && t.indexOf('$') === -1) {
                     s.textContent = '\\(' + t + '\\)';
                   }
                 }
               } catch (e) {}
 
-              renderMathInElement(document.getElementById('content'), {
-                delimiters: [
-                  { left: '$$', right: '$$', display: true },
-                  { left: '\\\\[', right: '\\\\]', display: true },
-                  { left: '\\\\(', right: '\\\\)', display: false },
-                  { left: '$', right: '$', display: false }
-                ],
-                throwOnError: false,
-                strict: false
-              });
+              try {
+                renderMathInElement(document.getElementById('content'), {
+                  delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\\\[', right: '\\\\]', display: true },
+                    { left: '\\\\(', right: '\\\\)', display: false },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\\\begin{equation}', right: '\\\\end{equation}', display: true },
+                    { left: '\\\\begin{align}', right: '\\\\end{align}', display: true },
+                    { left: '\\\\begin{alignat}', right: '\\\\end{alignat}', display: true },
+                    { left: '\\\\begin{gather}', right: '\\\\end{gather}', display: true },
+                    { left: '\\\\begin{CD}', right: '\\\\end{CD}', display: true }
+                  ],
+                  preProcess: preprocessLatex,
+                  throwOnError: false,
+                  strict: false,
+                  trust: true
+                });
+              } catch (err) {}
 
               // Prevent orphan punctuation (. , : ; ! ?) from dropping onto a separate line alone after any math
               try {
@@ -290,6 +315,7 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
             setTimeout(postHeight, 100);
             setTimeout(postHeight, 300);
             setTimeout(postHeight, 800);
+            setTimeout(postHeight, 1500);
 
             // Handle touch detection for scrollable equations to prevent parent FlatList paging
             function findScrollableParent(target) {
@@ -375,7 +401,7 @@ const MathWebView = ({ content, style, onScrollStatusChange, onOptionPress }) =>
                 originWhitelist={['*']}
                 javaScriptEnabled={true}
                 domStorageEnabled={true}
-                androidLayerType="hardware"
+                androidLayerType={Platform.OS === 'android' ? 'software' : 'hardware'}
             />
         </View>
     );
