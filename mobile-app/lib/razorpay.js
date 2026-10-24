@@ -174,27 +174,68 @@ export const verifyAndCompletePayment = async (paymentData) => {
             .eq('email', user.email)
             .single();
 
-        // Get courses linked to this product
+        // Get courses linked to this product and validity info
         const { data: product } = await supabase
             .from('products')
-            .select('linked_courses')
+            .select('linked_courses, validity_type, validity')
             .eq('id', productId)
-            .single();
+            .maybeSingle();
 
-        if (product && product.linked_courses && product.linked_courses.length > 0) {
-            // Enroll user in all linked courses
-            const enrollments = product.linked_courses.map(courseId => ({
-                student_id: member.id,
-                course_id: courseId,
-                status: 'active',
-                enrolled_at: new Date().toISOString(),
-            }));
+        let expiresAt = null;
+        if (product?.validity_type === 'Fixed (calendar date)' && product.validity) {
+            expiresAt = new Date(`${product.validity}T23:59:59.999Z`).toISOString();
+        } else if (product?.validity_type === 'Relative (in days)' && product.validity) {
+            const days = parseInt(product.validity, 10);
+            if (!isNaN(days) && days > 0) {
+                expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+            }
+        }
 
-            const { error: enrollError } = await supabase
-                .from('enrollments')
-                .upsert(enrollments, { onConflict: 'student_id,course_id' });
+        // Also check courses table for allowed_products containing this productId
+        const { data: allowedCourses } = await supabase
+            .from('courses')
+            .select('id')
+            .contains('allowed_products', [productId]);
 
-            if (enrollError) console.error('Enrollment error:', enrollError);
+        const linkedCourseIds = [
+            ...(product?.linked_courses || []),
+            ...(allowedCourses || []).map(c => c.id)
+        ];
+        const uniqueCourseIds = [...new Set(linkedCourseIds)];
+
+        if (member && uniqueCourseIds.length > 0) {
+            for (const courseId of uniqueCourseIds) {
+                const { data: existing } = await supabase
+                    .from('enrollments')
+                    .select('id, cycle_number')
+                    .eq('member_id', member.id)
+                    .eq('course_id', courseId)
+                    .maybeSingle();
+
+                if (!existing) {
+                    await supabase
+                        .from('enrollments')
+                        .insert({
+                            member_id: member.id,
+                            course_id: courseId,
+                            status: 'active',
+                            progress: 0,
+                            enrolled_at: new Date().toISOString(),
+                            expires_at: expiresAt,
+                            cycle_number: 1
+                        });
+                } else {
+                    await supabase
+                        .from('enrollments')
+                        .update({
+                            status: 'active',
+                            enrolled_at: new Date().toISOString(),
+                            expires_at: expiresAt,
+                            cycle_number: (existing.cycle_number || 1) + 1
+                        })
+                        .eq('id', existing.id);
+                }
+            }
         }
 
         console.log('Payment verified and order confirmation email sent');

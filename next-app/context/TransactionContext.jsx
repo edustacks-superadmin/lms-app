@@ -158,23 +158,36 @@ export const TransactionProvider = ({ children }) => {
                     }
 
                     if (courseId) {
+                        // Compute expires_at based on product validity
+                        let expiresAt = null;
+                        if (product.validity_type === 'Fixed (calendar date)' && product.validity) {
+                            expiresAt = new Date(`${product.validity}T23:59:59.999Z`).toISOString();
+                        } else if (product.validity_type === 'Relative (in days)' && product.validity) {
+                            const days = parseInt(product.validity, 10);
+                            if (!isNaN(days) && days > 0) {
+                                expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+                            }
+                        }
+
                         // Check if already enrolled using the CORRECT courseId
                         const { data: existing } = await supabase
                             .from('enrollments')
-                            .select('id')
-                            .eq('student_id', member.id)
+                            .select('id, cycle_number')
+                            .eq('member_id', member.id)
                             .eq('course_id', courseId)
-                            .single();
+                            .maybeSingle();
 
                         if (!existing) {
                             const { error: insertError } = await supabase
                                 .from('enrollments')
                                 .insert({
-                                    student_id: member.id,
+                                    member_id: member.id,
                                     course_id: courseId,
                                     status: 'active',
                                     progress: 0,
-                                    enrolled_at: new Date().toISOString()
+                                    enrolled_at: new Date().toISOString(),
+                                    expires_at: expiresAt,
+                                    cycle_number: 1
                                 });
 
                             if (insertError) {
@@ -185,8 +198,24 @@ export const TransactionProvider = ({ children }) => {
                                 alert('Order Approved & Student Enrolled Successfully!');
                             }
                         } else {
-                            console.log('Student already enrolled in course:', courseId);
-                            alert('Order Approved. Student was already enrolled.');
+                            // Repurchase / renewal: Reactivate and start a new cycle!
+                            const { error: updateError } = await supabase
+                                .from('enrollments')
+                                .update({
+                                    status: 'active',
+                                    enrolled_at: new Date().toISOString(),
+                                    expires_at: expiresAt,
+                                    cycle_number: (existing.cycle_number || 1) + 1
+                                })
+                                .eq('id', existing.id);
+
+                            if (updateError) {
+                                console.error('Error renewing student enrollment:', updateError);
+                                alert('Order Approved, but Error renewing access: ' + updateError.message);
+                            } else {
+                                console.log('Successfully renewed student enrollment in course:', courseId);
+                                alert('Order Approved & Student Access Renewed Successfully!');
+                            }
                         }
                     } else {
                         console.warn('No matching course found for product:', product.title);

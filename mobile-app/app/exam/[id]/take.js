@@ -493,7 +493,7 @@ export default function NativeExamScreen() {
                     const { data: enrollData } = await supabase
                         .from('enrollments')
                         .select('id, enrolled_at, expires_at, status')
-                        .or(`member_id.eq.${memberData.id},student_id.eq.${memberData.id}`)
+                        .eq('member_id', memberData.id)
                         .eq('course_id', activeCourseId)
                         .maybeSingle();
                     enrollment = enrollData;

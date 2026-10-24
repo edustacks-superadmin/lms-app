@@ -312,7 +312,7 @@ export const ExamProvider = ({ children }) => {
                     const { data: enrollment } = await supabase
                         .from('enrollments')
                         .select('enrolled_at')
-                        .or(`member_id.eq.${memberId},student_id.eq.${memberId}`)
+                        .eq('member_id', memberId)
                         .eq('course_id', courseId)
                         .maybeSingle();
 
@@ -408,7 +408,7 @@ export const ExamProvider = ({ children }) => {
                 const { data: enrollment } = await supabase
                     .from('enrollments')
                     .select('expires_at, status')
-                    .or(`member_id.eq.${memberId},student_id.eq.${memberId}`)
+                    .eq('member_id', memberId)
                     .eq('course_id', courseId)
                     .maybeSingle();
 

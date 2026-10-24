@@ -179,7 +179,7 @@ export default function CoursePlayer() {
                         const { data: enrollment } = await supabase
                             .from('enrollments')
                             .select('expires_at, status')
-                            .or(`member_id.eq.${member.id},student_id.eq.${member.id}`)
+                            .eq('member_id', member.id)
                             .eq('course_id', id)
                             .maybeSingle();
 

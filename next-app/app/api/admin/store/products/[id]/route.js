@@ -15,8 +15,8 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
         }
 
-        // Extract tagIds separately as they're handled via junction table
-        const { id: _, tagIds, ...rawBody } = body;
+        // Extract tagIds and syncEnrollments separately
+        const { id: _, tagIds, syncEnrollments, ...rawBody } = body;
 
         // Proper type casting and cleaning for Prisma
         const updateData = {
@@ -71,6 +71,37 @@ export async function PUT(request, { params }) {
                 await prisma.$executeRawUnsafe(
                     `INSERT INTO "product_tags" ("product_id", "tag_id") VALUES ${values}`
                 );
+            }
+        }
+
+        // If syncEnrollments is true, update existing active enrollments with new expiry
+        if (syncEnrollments && updateData.validity_type) {
+            try {
+                let newExpiresAt = null;
+                if (updateData.validity_type === 'Fixed (calendar date)' && updateData.validity) {
+                    newExpiresAt = new Date(`${updateData.validity}T23:59:59.999Z`).toISOString();
+                } else if (updateData.validity_type === 'Relative (in days)' && updateData.validity) {
+                    const days = parseInt(updateData.validity, 10);
+                    if (!isNaN(days) && days > 0) {
+                        newExpiresAt = new Date(Date.now() + days * 86400000).toISOString();
+                    }
+                }
+
+                const { data: linkedCourses } = await supabaseAdmin
+                    .from('courses')
+                    .select('id')
+                    .contains('allowed_products', [idInt]);
+
+                if (linkedCourses && linkedCourses.length > 0) {
+                    const courseIds = linkedCourses.map(c => c.id);
+                    await supabaseAdmin
+                        .from('enrollments')
+                        .update({ expires_at: newExpiresAt })
+                        .in('course_id', courseIds)
+                        .eq('status', 'active');
+                }
+            } catch (syncErr) {
+                console.warn('Error syncing enrollments for product update:', syncErr.message);
             }
         }
 

@@ -99,7 +99,7 @@ export async function POST(request) {
                                 const { data: existing } = await supabaseAdmin
                                     .from('enrollments')
                                     .select('id, cycle_number')
-                                    .or(`member_id.eq.${member.id},student_id.eq.${member.id}`)
+                                    .eq('member_id', member.id)
                                     .eq('course_id', course.id)
                                     .maybeSingle();
 
@@ -108,7 +108,6 @@ export async function POST(request) {
                                         .from('enrollments')
                                         .insert({
                                             member_id: member.id,
-                                            student_id: member.id,
                                             course_id: course.id,
                                             status: 'active',
                                             progress: 0,
