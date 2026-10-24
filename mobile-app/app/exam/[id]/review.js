@@ -489,64 +489,67 @@ export default function ExamReviewScreen() {
                     </View>
                 </View>
 
-                {/* Question */}
-                <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4">
-                    <MathWebView
-                        content={item.question}
-                        style={{ minHeight: 24 }}
-                        onScrollStatusChange={handleMathScrollStatusChange}
-                    />
-                </View>
+                {/* Unified Question & Options with dividing line */}
+                <View className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-4">
+                    {/* Question Section */}
+                    <View className="p-4">
+                        <MathWebView
+                            content={item.question}
+                            style={{ minHeight: 24 }}
+                            onScrollStatusChange={handleMathScrollStatusChange}
+                        />
+                    </View>
 
-                {/* Options */}
-                <View className="space-y-2.5">
-                    {item.options.map((opt, idx) => {
-                        // Determine Style
-                        // 1. Is this the CORRECT answer?
-                        const isTheCorrectAnswer = opt.isCorrect;
-                        // 2. Did the user SELECT this?
-                        const isSelectedByUser = selectedIndex === idx;
+                    {/* Line between Question and Options */}
+                    <View className="h-px bg-slate-200" />
 
-                        let borderClass = 'border-gray-200';
-                        let bgClass = 'bg-white';
-                        let icon = null;
+                    {/* Options list with line between each */}
+                    <View>
+                        {item.options.map((opt, idx) => {
+                            // Determine Style
+                            // 1. Is this the CORRECT answer?
+                            const isTheCorrectAnswer = opt.isCorrect;
+                            // 2. Did the user SELECT this?
+                            const isSelectedByUser = selectedIndex === idx;
+                            const isLast = idx === item.options.length - 1;
 
-                        if (isTheCorrectAnswer) {
-                            borderClass = 'border-green-500';
-                            bgClass = 'bg-green-50';
-                            icon = <Ionicons name="checkmark-circle" size={20} color="#16a34a" />;
-                        }
+                            let bgClass = 'bg-white';
+                            let icon = null;
 
-                        if (isSelectedByUser) {
                             if (isTheCorrectAnswer) {
-                                // Correctly selected
-                                borderClass = 'border-green-600';
-                                bgClass = 'bg-green-100';
-                            } else {
-                                // Wrongly selected
-                                borderClass = 'border-red-500';
-                                bgClass = 'bg-red-50';
-                                icon = <Ionicons name="close-circle" size={20} color="#dc2626" />;
+                                bgClass = 'bg-emerald-50';
+                                icon = <Ionicons name="checkmark-circle" size={20} color="#16a34a" />;
                             }
-                        }
 
-                        return (
-                            <View
-                                key={idx}
-                                className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderClass} ${bgClass}`}
-                            >
-                                <View className="flex-1">
-                                    <View pointerEvents="none">
-                                        <MathWebView
-                                            content={opt.text}
-                                            style={{ minHeight: 20 }}
-                                        />
+                            if (isSelectedByUser) {
+                                if (isTheCorrectAnswer) {
+                                    // Correctly selected
+                                    bgClass = 'bg-emerald-100';
+                                } else {
+                                    // Wrongly selected
+                                    bgClass = 'bg-rose-50';
+                                    icon = <Ionicons name="close-circle" size={20} color="#dc2626" />;
+                                }
+                            }
+
+                            return (
+                                <View
+                                    key={idx}
+                                    className={`flex-row items-center py-3.5 px-4 ${bgClass} ${!isLast ? 'border-b border-slate-100' : ''}`}
+                                >
+                                    <View className="flex-1">
+                                        <View pointerEvents="none">
+                                            <MathWebView
+                                                content={opt.text}
+                                                style={{ minHeight: 20 }}
+                                            />
+                                        </View>
                                     </View>
+                                    {icon && <View className="ml-2">{icon}</View>}
                                 </View>
-                                {icon && <View className="ml-2">{icon}</View>}
-                            </View>
-                        );
-                    })}
+                            );
+                        })}
+                    </View>
                 </View>
 
                 {/* Explanation */}

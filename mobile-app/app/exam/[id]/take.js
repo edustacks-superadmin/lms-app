@@ -31,7 +31,7 @@ const formatTime = (seconds) => {
 };
 
 // Helper: Option Card Component with Animation and Haptics
-const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSelect, quizMode, onScrollStatusChange }) => {
+const OptionCard = React.memo(({ item, index, isLast, isSelectedOption, handleOptionSelect, quizMode, onScrollStatusChange }) => {
     const scale = useSharedValue(1);
     const translateX = useSharedValue(0);
 
@@ -59,9 +59,8 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
     }, [isSelectedOption, quizMode]); // Removed item from dependency to reduce checks
 
     const isSelected = isSelectedOption === index;
-    let borderColor = 'border-gray-200';
     let bgColor = 'bg-white';
-    let indicatorColor = 'border-gray-300';
+    let indicatorColor = 'border-slate-300';
     let indicatorBg = 'transparent';
 
     // Logic for styling
@@ -72,23 +71,20 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
 
         // Visual optimization: only calculate complex styles if needed
         if (isCorrectOption) {
-            borderColor = 'border-green-500';
-            bgColor = 'bg-green-50';
-            indicatorColor = 'border-green-500';
-            indicatorBg = 'bg-green-500';
+            bgColor = 'bg-emerald-50';
+            indicatorColor = 'border-emerald-500';
+            indicatorBg = 'bg-emerald-500';
         } else if (isSelectedWrong) {
-            borderColor = 'border-red-500';
-            bgColor = 'bg-red-50';
-            indicatorColor = 'border-red-500';
-            indicatorBg = 'bg-red-500';
+            bgColor = 'bg-rose-50';
+            indicatorColor = 'border-rose-500';
+            indicatorBg = 'bg-rose-500';
         }
     } else {
         // Standard Exam Mode
         if (isSelected) {
-            borderColor = 'border-blue-500';
-            bgColor = 'bg-blue-50/50';
-            indicatorColor = 'border-blue-500';
-            indicatorBg = 'bg-blue-500';
+            bgColor = 'bg-blue-50/70';
+            indicatorColor = 'border-blue-600';
+            indicatorBg = 'bg-blue-600';
         }
     }
 
@@ -99,14 +95,14 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
     return (
         <Animated.View style={animatedStyle}>
             <TouchableOpacity
-                activeOpacity={0.8}
+                activeOpacity={0.7}
                 delayPressIn={0}
                 onPress={selectOption}
-                className={`flex-row items-center py-3 px-3.5 rounded-xl border-2 ${borderColor} ${bgColor}`}
+                className={`flex-row items-center py-3.5 px-4 ${bgColor} ${!isLast ? 'border-b border-slate-100' : ''}`}
             >
-                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3.5 ${indicatorColor}`}>
+                <View className={`w-5 h-5 rounded-full border-2 items-center justify-center mr-3.5 ${indicatorColor} ${isSelected || (quizMode && isSelectedOption !== undefined && index === item.correctAnswerIndex) ? indicatorBg : 'bg-transparent'}`}>
                     {(isSelected || (quizMode && isSelectedOption !== undefined && index === item.correctAnswerIndex)) && (
-                        <View className={`w-3 h-3 rounded-full ${indicatorBg}`} />
+                        <View className="w-2 h-2 rounded-full bg-white" />
                     )}
                 </View>
                 <View className="flex-1">
@@ -126,7 +122,8 @@ const OptionCard = React.memo(({ item, index, isSelectedOption, handleOptionSele
         prevProps.isSelectedOption === nextProps.isSelectedOption &&
         prevProps.quizMode === nextProps.quizMode &&
         prevProps.index === nextProps.index &&
-        prevProps.item.id === nextProps.item.id
+        prevProps.item.id === nextProps.item.id &&
+        prevProps.isLast === nextProps.isLast
     );
 });
 
@@ -899,28 +896,35 @@ export default function NativeExamScreen() {
                     </View>
                 </View>
 
-                {/* Question Card */}
-                <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-4">
-                    <MathWebView
-                        content={item.question}
-                        style={{ minHeight: 24 }}
-                        onScrollStatusChange={handleMathScrollStatusChange}
-                    />
-                </View>
-
-                {/* Options */}
-                <View className="space-y-2.5">
-                    {item.options.map((opt, idx) => (
-                        <OptionCard
-                            key={idx}
-                            item={item}
-                            index={idx}
-                            isSelectedOption={isSelectedOption}
-                            handleOptionSelect={handleOptionSelect}
-                            quizMode={quizMode}
+                {/* Unified Question & Options with dividing line */}
+                <View className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden mb-4">
+                    {/* Question Section */}
+                    <View className="p-4">
+                        <MathWebView
+                            content={item.question}
+                            style={{ minHeight: 24 }}
                             onScrollStatusChange={handleMathScrollStatusChange}
                         />
-                    ))}
+                    </View>
+
+                    {/* Line between Question and Options */}
+                    <View className="h-px bg-slate-200" />
+
+                    {/* Options list with line between each */}
+                    <View>
+                        {item.options.map((opt, idx) => (
+                            <OptionCard
+                                key={idx}
+                                item={item}
+                                index={idx}
+                                isLast={idx === item.options.length - 1}
+                                isSelectedOption={isSelectedOption}
+                                handleOptionSelect={handleOptionSelect}
+                                quizMode={quizMode}
+                                onScrollStatusChange={handleMathScrollStatusChange}
+                            />
+                        ))}
+                    </View>
                 </View>
 
                 {/* Helpful Clear Response Tip when an option is selected */}
